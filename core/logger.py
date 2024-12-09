@@ -1,4 +1,4 @@
-# config.py
+# logger.py
 import logging
 import sys
 
@@ -10,7 +10,7 @@ formatter = logging.Formatter(
 )
 
 stream_handler = logging.StreamHandler(sys.stdout)
-file_handler = logging.FileHandler("app.log")
+file_handler = logging.FileHandler("../app.log")
 
 stream_handler.setFormatter(formatter)
 file_handler.setFormatter(formatter)

@@ -1,8 +1,7 @@
 from fastapi import FastAPI
-from api import api_router
 from api.v1 import communication, management
 from contextlib import asynccontextmanager
-from db.database import engine, Base, connect_db, disconnect_db
+from core.database import engine, Base, connect_db, disconnect_db
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

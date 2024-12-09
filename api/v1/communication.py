@@ -1,5 +1,5 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from services.communication_service import CommunicationService
+from services.communication.service import CommunicationService
 
 router = APIRouter()
 service = CommunicationService()

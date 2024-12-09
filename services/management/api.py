@@ -1,9 +1,10 @@
+# app/services/management/api.py
 from fastapi import APIRouter
-from services.management.service import ManagementService
+from .service import ManagementService
 
 router = APIRouter()
 service = ManagementService()
 
-@router.post("/generate-deployment-plan")
+@router.post("/generate-deployment")
 async def generate_deployment_plan(request: dict):
     return await service.generate_deployment_plan(request)

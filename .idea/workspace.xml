@@ -4,20 +4,22 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2ccd83dd-126f-4e6a-9422-f5cb017750ee" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/api/v1/communication.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api/v1/management.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/config.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/communication_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/management_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/prompt_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/validation_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/workers/llm_worker.py" afterDir="false" />
+    <list default="true" id="2ccd83dd-126f-4e6a-9422-f5cb017750ee" name="Changes" comment="services initialized">
+      <change afterPath="$PROJECT_DIR$/services/communication/api.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/management/api.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/api/user.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app.log" beforeDir="false" afterPath="$PROJECT_DIR$/app.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/user.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/v1/communication.py" beforeDir="false" afterPath="$PROJECT_DIR$/api/v1/communication.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/v1/management.py" beforeDir="false" afterPath="$PROJECT_DIR$/api/v1/management.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/logger.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/con.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/con.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/config.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/db/database.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/database.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/user.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/communication_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/communication/service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/management_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/management/service.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -95,6 +97,8 @@
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\thamb\OneDrive\Documents\GitHub\int-deplora-plan-gen\core" />
+      <recent name="C:\Users\thamb\OneDrive\Documents\GitHub\int-deplora-plan-gen\services\management" />
+      <recent name="C:\Users\thamb\OneDrive\Documents\GitHub\int-deplora-plan-gen\services\communication" />
     </key>
   </component>
   <component name="RunManager" selected="FastAPI.fastApiProject">
@@ -218,12 +222,25 @@
       <workItem from="1729073774881" duration="1191000" />
       <workItem from="1729610500175" duration="2442000" />
       <workItem from="1729710149403" duration="1084000" />
-      <workItem from="1733729227079" duration="7834000" />
+      <workItem from="1733729227079" duration="9332000" />
     </task>
+    <task id="LOCAL-00001" summary="services initialized">
+      <option name="closed" value="true" />
+      <created>1733763155823</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1733763155823</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="services initialized" />
+    <option name="LAST_COMMIT_MESSAGE" value="services initialized" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/int_deplora_plan_gen$fastApiProject.coverage" NAME="fastApiProject Coverage Results" MODIFIED="1728745972629" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
