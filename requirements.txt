@@ -1,4 +1,6 @@
-fastapi
+fastapi~=0.115.0
 uvicorn
-sqlalchemy
+sqlalchemy~=2.0.35
 psycopg2-binary
+logging~=0.4.9.6
+pydantic~=2.9.2
