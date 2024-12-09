@@ -8,4 +8,4 @@ __pycache__
 *.pyz
 *.idea
 *.egg-info
-
+./config.py

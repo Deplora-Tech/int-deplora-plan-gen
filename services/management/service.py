@@ -1,5 +1,5 @@
-from services.prompt_service import PromptService
-from services.validation_service import ValidationService
+from services.prompt.service import PromptService
+from services.validation.service import ValidationService
 from workers.llm_worker import send_to_llm
 
 class ManagementService:
