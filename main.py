@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from services.communication.api import router as communication_router
 from services.management.api import router as management_router
 from contextlib import asynccontextmanager
-from core.database import engine, Base
 
 # Initialize FastAPI application with lifespan event handlers
 app = FastAPI()

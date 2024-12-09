@@ -15,3 +15,7 @@ async def websocket_endpoint(websocket: WebSocket):
             await websocket.send_text(response)
     except Exception as e:
         service.disconnect(websocket)
+
+@router.post("/send-message")
+async def send_message(message: str):
+    return await service.process_message(message)
