@@ -4,3 +4,8 @@ sqlalchemy~=2.0.35
 psycopg2-binary
 logging~=0.4.9.6
 pydantic~=2.9.2
+python-dotenv
+neo4j
+langchain_groq
+pandas
+sentence_transformers
