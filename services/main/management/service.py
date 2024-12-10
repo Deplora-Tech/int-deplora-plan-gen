@@ -1,6 +1,6 @@
-from services.prompt.service import PromptService
-from services.validation.service import ValidationService
-from workers.llm_worker import send_to_llm
+from services.main.prompt.service import PromptService
+from services.main.validation.service import ValidationService
+from services.main.workers.llm_worker import send_to_llm
 
 class ManagementService:
     def __init__(self):
