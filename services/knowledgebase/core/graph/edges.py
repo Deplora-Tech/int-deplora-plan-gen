@@ -1,4 +1,5 @@
-from utils.utils import replace_special_characters
+from ...utils.utils import replace_special_characters
+
 
 async def add_entity_user_edge(self, user, entity, relationship, isPositive=True):
     """

@@ -16,20 +16,25 @@ class ContextGraph:
         self.driver = None
         self.embeding_manager = EmbeddingManager("all-MiniLM-L6-v2")
         
-    async def setup(self, uri):
+    async def setup(self):
         """
         Asynchronously setup the Neo4j driver.
         """
-        self.driver = await setup(uri)
+        if not self.driver:
+            self.driver = await setup(uri)
     
     async def add_user(self, name, organization):
         """
         Add a new user to the neo4j database.
         """
+        setup()
         return await add_user_node(self, name, organization)
         
 
     async def update(self, user, prompt):
+        setup()
+        
+        
         entities = await extract_entities_and_relationships(prompt)
         cleaned_entities = await clean_extracted_entities(entities, prompt)
         

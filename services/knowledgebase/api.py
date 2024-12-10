@@ -1,16 +1,8 @@
-from core.contextGaph import ContextGraph
+from .core.contextGaph import ContextGraph
 
 # Singleton instance of ContextGraph
 context_graph = ContextGraph()
 
-async def setup_context_graph(uri: str):
-    """
-    Initialize the ContextGraph connection.
-    
-    Args:
-        uri (str): The URI for the Neo4j database.
-    """
-    await context_graph.setup(uri)
 
 async def add_user(username: str, organization: str):
     """
@@ -45,9 +37,3 @@ async def update_context(username: str, prompt: str):
         return {"message": "Context updated successfully", "result": result}
     except Exception as e:
         return {"error": f"Error updating context: {str(e)}"}
-
-async def close_context_graph():
-    """
-    Close the ContextGraph connection.
-    """
-    await context_graph.close()

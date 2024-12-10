@@ -1,5 +1,5 @@
 import json
-from core.llm_interface.chat_groq import invoke_groq
+from ...core.llm_interface.chat_groq import invoke_groq
 
 async def extract_entities_and_relationships(prompt):
     """
