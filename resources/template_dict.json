@@ -1,0 +1,130 @@
+{
+  "application": {
+    "name": "app-name",
+    "type": ["client", "server", "microservice", "web", "API", "CLI", "desktop", "IoT", "serverless"],
+    "description": "Brief summary of the application's purpose",
+    "dependencies": [
+      {"name": "dependency-name", "version": "x.x.x", "required": true}
+    ],
+    "language": ["Python", "JavaScript", "Java", "Go", "Rust", "C++", "any applicable language"],
+    "framework": ["Django", "Express", "Spring", "FastAPI", "React", "Angular"],
+    "architecture": ["monolith", "microservice", "serverless", "event-driven", "hybrid"],
+    "logging_and_monitoring": {
+      "enabled": true,
+      "logging_format": ["structured", "unstructured"],
+      "monitoring_tool": ["Prometheus", "Grafana", "CloudWatch"]
+    }
+  },
+  "environment": {
+    "deployment_type": ["container", "virtual_machine", "bare-metal", "kubernetes", "serverless"],
+    "cloud_provider": ["AWS", "GCP", "Azure", "On-Premise", "Multi-cloud"],
+    "region": ["us-east", "europe-west", "asia-south", "any valid region"],
+    "scaling": {
+      "type": ["manual", "auto"],
+      "min_units": 1,
+      "max_units": 10
+    },
+    "runtime": ["Docker", "Kubernetes", "VM Image", "Lambda"],
+    "configuration_management": ["Ansible", "Puppet", "none"],
+    "environment_variables": "List of required environment variables"
+  },
+  "infrastructure": {
+    "iac_tool": ["Terraform", "Pulumi", "CloudFormation"],
+    "storage": [
+      {"type": "relational", "example": "PostgreSQL, MySQL"},
+      {"type": "NoSQL", "example": "MongoDB, DynamoDB"},
+      {"type": "object", "example": "S3, Azure Blob"}
+    ],
+    "networking": [
+      {"component": "VPC/Subnet", "purpose": "Network isolation"},
+      {"component": "Load Balancer", "type": "Application/Gateway"},
+      {"component": "Firewall/Security Group", "policy": "Access rules"}
+    ],
+    "monitoring_and_alerting": ["Prometheus", "Grafana", "CloudWatch"]
+  },
+  "ci_cd": {
+    "pipeline_tool": ["GitHub Actions", "Jenkins", "GitLab CI", "CircleCI"],
+    "steps": [
+      {"name": "build", "artifact": "binary, container image, etc."},
+      {"name": "test", "artifact": "test report"},
+      {"name": "deploy", "artifact": "deployment manifest, IaC plan"}
+    ],
+    "deployment_strategy": ["rolling", "canary", "blue-green"],
+    "rollback_mechanism": {
+      "strategy": "revert version, traffic shift, etc.",
+      "automated": true
+    }
+  },
+  "artifacts": {
+    "build_artifacts": [
+      {"type": "Dockerfile", "purpose": "Build container image"},
+      {"type": "IaC template", "example": "Terraform, CloudFormation"},
+      {"type": "Manifest", "example": "Kubernetes YAML files"}
+    ],
+    "pipeline_artifacts": [
+      {"type": "Pipeline config", "example": ".yml, .groovy"},
+      {"type": "Test report", "purpose": "Results from automated tests"}
+    ],
+    "deployment_artifacts": [
+      {"type": "Manifest", "example": "Helm chart or YAML for Kubernetes"},
+      {"type": "Binary or Image", "example": "Docker container, VM image"}
+    ],
+    "artifact_registry": ["DockerHub", "ECR", "GCR", "Custom Registry"]
+  },
+  "security": {
+    "authentication": ["OAuth2", "JWT", "SAML"],
+    "authorization": ["RBAC", "ABAC"],
+    "encryption": ["In-transit", "At-rest"],
+    "secret_management": ["Vault", "AWS Secrets Manager", "Kubernetes Secrets"]
+  },
+  "observability": {
+    "logging": {
+      "format": "structured",
+      "aggregation_tool": ["ELK Stack", "CloudWatch"]
+    },
+    "metrics": {
+      "system": "Prometheus, Grafana",
+      "custom": "Application-defined metrics"
+    },
+    "tracing": ["Jaeger", "OpenTelemetry"]
+  },
+  "testing": {
+    "unit_tests": {
+      "tool": ["JUnit", "PyTest", "Mocha"],
+      "artifact": "Test report"
+    },
+    "integration_tests": {
+      "tool": ["Postman", "Cypress"],
+      "artifact": "Integration test report"
+    },
+    "performance_tests": {
+      "tool": ["JMeter", "Locust"],
+      "artifact": "Performance metrics"
+    },
+    "security_tests": {
+      "tool": ["OWASP ZAP", "Snyk"],
+      "artifact": "Vulnerability scan report"
+    }
+  },
+  "notifications": {
+    "channels": ["Slack", "Teams", "Email", "PagerDuty"],
+    "alerts": ["Threshold-based", "Anomaly detection"]
+  },
+  "documentation": {
+    "required_documents": [
+      {"type": "README", "purpose": "Overview and instructions"},
+      {"type": "API Docs", "example": "Swagger/OpenAPI"},
+      {"type": "Deployment Guide", "purpose": "How to deploy and manage the application"}
+    ],
+    "storage_location": "Where the documents are stored (e.g., Confluence, GitHub)"
+  },
+  "additional_info": {
+    "constraints": "Specific policies, legal constraints, or business rules",
+    "dependencies": "Interdependencies with other systems or services",
+    "SLA_requirements": "Service Level Agreements",
+    "backup_and_recovery": {
+      "backup_frequency": "Daily/Weekly",
+      "recovery_time_objective": "Time required for recovery"
+    }
+  }
+}
