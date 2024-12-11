@@ -1,8 +1,9 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from services.main.communication.models import MessageRequest
+from services.main.communication.process_request import process_request
 from services.main.communication.service import CommunicationService
-
+from services.main.management.api import handle_message
 router = APIRouter()
 service = CommunicationService()
 
@@ -24,7 +25,6 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
 
 @router.post("/send-message")
 async def send_message(request: MessageRequest):
-    processed_message = await service.process_request(request.message)
-    print(processed_message)# Assuming "1" is the client_id
-    await service.publisher("1", processed_message)
-    return {"status": "Message sent", "processed_message": processed_message}
+    message = await process_request(request)
+    await service.publisher(request.client_id, message)
+    return {"status": "Message sent", "processed_message": message}
