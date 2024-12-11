@@ -4,6 +4,11 @@ sqlalchemy~=2.0.35
 psycopg2-binary
 logging~=0.4.9.6
 pydantic~=2.9.2
+python-dotenv
+neo4j
+langchain_groq
+pandas
+sentence_transformers
 transformers~=4.47.0
 python-dotenv~=1.0.1
 numpy~=2.0.2
