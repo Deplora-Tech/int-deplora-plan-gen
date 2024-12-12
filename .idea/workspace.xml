@@ -5,17 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2ccd83dd-126f-4e6a-9422-f5cb017750ee" name="Changes" comment="services initialized">
-      <change afterPath="$PROJECT_DIR$/services/main/communication/process_request.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/main/management/classifier.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/main/prompt/service.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/main/communication/api.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/communication/api.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/main/communication/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/communication/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/main/communication/service.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/communication/service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/main/communication/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/communication/utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/main/management/api.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/management/api.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/main/management/service.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/management/service.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/services/main/workers/llm_worker.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/workers/llm_worker.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -34,6 +27,11 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="conversation_service" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
@@ -76,7 +74,7 @@
     &quot;HTTP Request.generated-requests | #9.executor&quot;: &quot;Run&quot;,
     &quot;Python.main.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;conversation__service&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/thamb/OneDrive/Documents/GitHub/int-deplora-plan-gen/schemas&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
@@ -226,6 +224,7 @@
       <workItem from="1733842962526" duration="5420000" />
       <workItem from="1733848752573" duration="7004000" />
       <workItem from="1733903768644" duration="9483000" />
+      <workItem from="1733979104827" duration="3997000" />
     </task>
     <task id="LOCAL-00001" summary="services initialized">
       <option name="closed" value="true" />
@@ -241,12 +240,23 @@
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="services initialized" />
     <option name="LAST_COMMIT_MESSAGE" value="services initialized" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/int_deplora_plan_gen$fastApiProject.coverage" NAME="fastApiProject Coverage Results" MODIFIED="1733921960659" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/int_deplora_plan_gen$fastApiProject.coverage" NAME="fastApiProject Coverage Results" MODIFIED="1733983086394" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
     <SUITE FILE_PATH="coverage/main_py$fastApiProject.coverage" NAME="fastApiProject Coverage Results" MODIFIED="1733766787103" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
     <SUITE FILE_PATH="coverage/main_py$main.coverage" NAME="main Coverage Results" MODIFIED="1733729495626" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/int_deplora_plan_gen$main.coverage" NAME="main Coverage Results" MODIFIED="1729610704889" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
