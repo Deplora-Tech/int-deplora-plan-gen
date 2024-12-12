@@ -23,7 +23,7 @@ class LLMService:
         try:
             # Make the POST request
             response = requests.post(api_url, headers=headers, json=payload)
-            response.raise_for_status()  # Raise an error for HTTP codes 4xx/5xx
+            response.raise_for_status()
 
             # Extract JSON response
             response_json = response.json()
