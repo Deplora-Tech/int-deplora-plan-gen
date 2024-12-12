@@ -18,7 +18,6 @@ class ManagementService:
 
         # Step 3: Generate the deployment plan using LLM
         deployment_plan = await self.llm_service.generate_deployment_plan(prepared_prompt)
-
         # Step 4: Validate the generated deployment plan
         is_valid, errors = self.validation_service.validate_response(deployment_plan)
         if not is_valid:

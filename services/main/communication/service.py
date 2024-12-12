@@ -20,7 +20,7 @@ class CommunicationService:
         if client_id in self.active_connections:
             del self.active_connections[client_id]
 
-    async def publisher(self, client_id: str, message: dict): ## publisher for use anywhere in the application
+    async def publisher(self, client_id: str, message): ## publisher for use anywhere in the application
         websocket = self.active_connections.get(client_id)
         logger.debug(f"message: {message}, clientId: {client_id}, websocket: {websocket}")
         if websocket:

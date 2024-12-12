@@ -4,7 +4,7 @@ class ValidationService:
             return False, ["Prompt cannot be empty."]
         return True, []
 
-    def validate_response(self, response: str):
-        if "error" in response.lower():
+    def validate_response(self, response):
+        if "error" in response:
             return False, ["Invalid response from LLM."]
         return True, []
