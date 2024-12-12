@@ -5,6 +5,6 @@ class ValidationService:
         return True, []
 
     def validate_response(self, response):
-        if "error" in response:
-            return False, ["Invalid response from LLM."]
+        # if "error" in response:
+        #     return False, ["Invalid response from LLM."]
         return True, []

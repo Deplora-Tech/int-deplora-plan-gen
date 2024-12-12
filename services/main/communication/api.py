@@ -26,6 +26,5 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
 @router.post("/send-message")
 async def send_message(request: MessageRequest):
     message = await process_request(request)
-    print(message)
     await service.publisher(request.client_id, message)
     return {"status": "Message sent", "processed_message": message}

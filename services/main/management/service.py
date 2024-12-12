@@ -1,3 +1,4 @@
+from core.logger import logger
 from services.main.prompt.service import PromptService
 from services.main.validation.service import ValidationService
 from services.main.workers.llm_worker import LLMService
@@ -15,6 +16,7 @@ class ManagementService:
 
         # Step 1: Prepare the structured prompt
         prepared_prompt = self.prompt_service.prepare_prompt(client_id, project_id, raw_prompt, chat_history)
+        logger.debug(prepared_prompt)
 
         # Step 3: Generate the deployment plan using LLM
         deployment_plan = await self.llm_service.generate_deployment_plan(prepared_prompt)

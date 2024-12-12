@@ -7,8 +7,6 @@
     <list default="true" id="2ccd83dd-126f-4e6a-9422-f5cb017750ee" name="Changes" comment="services initialized">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/services/main/communication/api.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/communication/api.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/main/communication/service.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/communication/service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/main/management/api.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/management/api.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/services/main/management/service.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/management/service.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/services/main/prompt/service.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/prompt/service.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/services/main/validation/service.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/validation/service.py" afterDir="false" />
@@ -228,7 +226,7 @@
       <workItem from="1733848752573" duration="7004000" />
       <workItem from="1733903768644" duration="9483000" />
       <workItem from="1733979104827" duration="3997000" />
-      <workItem from="1733983543847" duration="3693000" />
+      <workItem from="1733983543847" duration="5650000" />
     </task>
     <task id="LOCAL-00001" summary="services initialized">
       <option name="closed" value="true" />
@@ -260,7 +258,7 @@
     <option name="LAST_COMMIT_MESSAGE" value="services initialized" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/int_deplora_plan_gen$fastApiProject.coverage" NAME="fastApiProject Coverage Results" MODIFIED="1733987243241" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/int_deplora_plan_gen$fastApiProject.coverage" NAME="fastApiProject Coverage Results" MODIFIED="1733988615157" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
     <SUITE FILE_PATH="coverage/main_py$fastApiProject.coverage" NAME="fastApiProject Coverage Results" MODIFIED="1733766787103" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
     <SUITE FILE_PATH="coverage/main_py$main.coverage" NAME="main Coverage Results" MODIFIED="1733729495626" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/int_deplora_plan_gen$main.coverage" NAME="main Coverage Results" MODIFIED="1729610704889" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
