@@ -29,5 +29,8 @@ class ManagementService:
         # Step 5: Return the final deployment plan
         return {"status": "success", "deployment_plan": deployment_plan}
 
-    def process_feedback(self, request: MessageRequest) -> dict:
-        return {"status": "success", "message": f"Feedback for project {request.project_id} received: {request.message}"}
+    async def process_conversation(self, request: MessageRequest) -> dict:
+        prompt = self.prompt_service.prepare_conversation_prompt(request)
+        return await self.llm_service.llm_request(prompt)
+
+

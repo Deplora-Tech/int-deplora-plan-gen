@@ -137,3 +137,15 @@ class PromptService:
         '''
 
         return prompt
+
+    def prepare_conversation_prompt(self, request: MessageRequest):
+        prompt = f'''
+        You are Deplora AI assistant, a chatbot designed to assist users with deployment-related queries.
+        Based on the conversation, generate a suitable response, and provide any additional information or context as needed.
+        
+        input: {request.message}
+        chat history: {request.chat_history}
+        
+        output:
+        '''
+        return prompt

@@ -4,7 +4,6 @@ from core.logger import logger
 from services.main.workers.llm_worker import LLMService
 
 llm_service = LLMService()
-# 2. Define Intent Classification Function
 async def classify_intent(user_query, chat_history=None):
 
     # Combine chat history with user query if context is available
@@ -13,7 +12,6 @@ async def classify_intent(user_query, chat_history=None):
     else:
         combined_query = user_query
 
-    # OpenAI prompt for intent classification
     prompt = f"""
     Now You are an intent classifier for a chatbot that handles deployment-related queries. the related inputs are given,
     Classify the intent of the given input into one of the following categories:
@@ -23,7 +21,7 @@ async def classify_intent(user_query, chat_history=None):
     Input: 
     {combined_query}
 
-    Output:
+    Output must be in below format:
     Intent: <one of 'Deployment Request' or 'Other'>
     """
 
