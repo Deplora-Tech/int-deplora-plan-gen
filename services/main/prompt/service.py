@@ -1,9 +1,10 @@
 import requests, json
-
 from services.main.communication.models import MessageRequest
 
 
 class PromptService:
+    def __init__(self):
+        pass
     def prepare_prompt(self, request: MessageRequest):
         client_id = "User 1"
         project_id = "Project 1"

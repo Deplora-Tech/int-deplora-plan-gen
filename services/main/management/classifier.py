@@ -4,6 +4,7 @@ from core.logger import logger
 from services.main.workers.llm_worker import LLMService
 
 llm_service = LLMService()
+
 async def classify_intent(user_query, chat_history=None):
 
     # Combine chat history with user query if context is available

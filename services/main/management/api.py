@@ -3,6 +3,7 @@ from services.main.communication.service import CommunicationService
 from services.main.management.classifier import classify_intent
 from services.main.management.service import ManagementService
 from services.main.communication.models import MessageRequest
+
 managementService = ManagementService()
 communicationService = CommunicationService()
 
