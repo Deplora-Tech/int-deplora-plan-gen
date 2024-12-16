@@ -1,8 +1,10 @@
 import requests, json
 
+from services.main.communication.models import MessageRequest
+
 
 class PromptService:
-    def prepare_prompt(self, client_id, project_id, raw_prompt, chat_history):
+    def prepare_prompt(self, request: MessageRequest):
         client_id = "User 1"
         project_id = "Project 1"
         organization = "Org1"
@@ -50,7 +52,7 @@ class PromptService:
         **User Preferences:**
         {json.dumps(preferences, indent=4)}
 
-        **Prompt Context:** {raw_prompt}
+        **Prompt Context:** {request.message}
 
         ### Deliverables:
         - **Deployment Strategy**:

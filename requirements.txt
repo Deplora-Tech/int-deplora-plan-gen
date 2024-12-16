@@ -8,3 +8,4 @@ python-dotenv
 transformers~=4.47.0
 python-dotenv~=1.0.1
 numpy~=2.0.2
+requests~=2.32.3
