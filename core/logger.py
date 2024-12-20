@@ -1,5 +1,7 @@
 # logger.py
 import logging
+from logging.handlers import RotatingFileHandler
+
 import sys
 
 # Set up a logger for the whole application
@@ -10,7 +12,9 @@ formatter = logging.Formatter(
 )
 
 stream_handler = logging.StreamHandler(sys.stdout)
-file_handler = logging.FileHandler("../app.log")
+file_handler = RotatingFileHandler(
+    "app.log", maxBytes=5 * 1024 * 1024, backupCount=3
+) 
 
 stream_handler.setFormatter(formatter)
 file_handler.setFormatter(formatter)
