@@ -73,14 +73,14 @@ class ManagementService:
             f"Generating deployment plan for project {project_id} in organization {organization_id} for user {user_id}",
         )
         
-        logger.info(f"Deployment recommendation: {deployment_recommendation}")
+        logger.info(f"Deployment recommendation: {deployment_recommendation}") 
         logger.info(f"Deployment solution: {deployment_solution}")
         
         parsed_files = self.file_parser.parse(deployment_solution)
 
         logger.info(f"Files to be committed: {len(parsed_files)}")
         
-        print(deployment_solution)
+
         
         for file in parsed_files:
             print(f"File: {file.get('file_name')} Type: {file.get('type')} Path: {file.get('path')}")
