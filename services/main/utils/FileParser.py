@@ -10,6 +10,7 @@ class FileParser:
         r'<deploraFile\s+type="(?P<type>\w+)"\s+filePath="(?P<path>[^"]+)">\n(?P<content>.*?)</deploraFile>',
         re.DOTALL
     )
+    MD_CODE_BLOCK_PATTERN = re.compile(r"^```[\w-]*\n|```$", re.MULTILINE)
 
     def __init__(self):
         """
@@ -33,6 +34,9 @@ class FileParser:
             file_type = match.group("type")
             file_path = match.group("path")
             file_content = match.group("content").strip()
+
+            # Remove Markdown code block indicators
+            file_content = re.sub(self.MD_CODE_BLOCK_PATTERN, "", file_content)
 
             file_name = os.path.basename(file_path)
             file_object = {

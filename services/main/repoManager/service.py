@@ -1,6 +1,7 @@
 import os
 import shutil
 from git import Repo, GitCommandError, InvalidGitRepositoryError, NoSuchPathError
+from typing import List, Dict
 from core.logger import logger
 
 class RepoService:
@@ -57,3 +58,25 @@ class RepoService:
         except Exception as e:
             logger.error(f"An unexpected error occurred: {e}")
             raise
+
+
+    async def create_files_in_repo(self, repo: Repo, file_objects: List[Dict[str, str]]):
+        """
+        Create the parsed files in the given repository.
+
+        Args:
+            repo (Repo): The GitPython Repo object for the repository.
+            file_objects (List[Dict[str, str]]): A list of file objects containing file details.
+        """
+        repo_path = repo.working_dir  # Get the root path of the cloned repository
+        for file_object in file_objects:
+            file_path = os.path.join(repo_path, file_object["path"])
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)  # Ensure the directory exists
+
+            try:
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    f.write(file_object["content"])
+                logger.info(f"Created file: {file_path}")
+            except Exception as e:
+                logger.error(f"Failed to create file {file_path}: {e}")
+                raise

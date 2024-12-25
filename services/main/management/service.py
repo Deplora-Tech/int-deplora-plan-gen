@@ -80,10 +80,9 @@ class ManagementService:
 
         logger.info(f"Files to be committed: {len(parsed_files)}")
         
-
+        await self.repo_service.create_files_in_repo(repo, parsed_files)
         
-        for file in parsed_files:
-            print(f"File: {file.get('file_name')} Type: {file.get('type')} Path: {file.get('path')}")
+        logger.info("Files committed successfully.")
 
     async def process_conversation(self, request: MessageRequest) -> dict:
         prompt = self.prompt_service.prepare_conversation_prompt(request)
