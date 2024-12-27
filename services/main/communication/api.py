@@ -1,4 +1,6 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+
+from core.logger import logger
 from services.main.communication.models import MessageRequest
 from services.main.communication.service import CommunicationService
 from services.main.management.api import handle_message

@@ -1,38 +1,32 @@
 from fastapi import HTTPException
-import requests
-
+from groq import Groq
 
 class LLMService:
+    def __init__(self):
+        # Initialize the Groq client
+        self.client = Groq()
+
     async def llm_request(self, prompt: str):
-        api_url = "https://api.groq.com/openai/v1/chat/completions"
-        api_key = "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"  # Store your API key as an environment variable
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {api_key}",
-        }
-
-        # Payload for the POST request
-        payload = {
-            "model": "llama3-70b-8192",
-            "messages": [{
-                "role": "user",
-                "content": prompt
-            }]
-        }
-
         try:
-            # Make the POST request
-            response = requests.post(api_url, headers=headers, json=payload)
-            response.raise_for_status()
+            # Generate the chat completion using the Groq client
+            chat_completion = self.client.chat.completions.create(
+                messages=[
+                    {"role": "system", "content": "You are Deplora, an intelligent deployment assistant designed to generate, analyze, and optimize deployment plans. Your primary goal is to assist users in creating accurate, efficient, and personalized deployment strategies for software applications. Respond with clear and actionable insights, leveraging your expertise in deployment technologies such as Terraform, Docker, Kubernetes, CI/CD pipelines, and cloud platforms. Ensure responses are structured, professional, and align with industry best practices."},
+                    {"role": "user", "content": prompt},
+                ],
+                model="llama-3.3-70b-versatile",  # Adjust the model as needed
+                temperature=0.5,         # Adjust optional parameters as needed
+                max_tokens=32768,
+                top_p=1,
+                stop=None,
+                stream=False
+            )
 
-            # Extract JSON response
-            response_json = response.json()
-
-            # Extract the 'content' field from the response
-            content = response_json.get("choices", [{}])[0].get("message", {}).get("content", "")
+            # Extract and return the response content
+            content = chat_completion.choices[0].message.content
             if not content:
                 raise HTTPException(status_code=500, detail="Content not found in the response.")
-
+            
             return content
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
