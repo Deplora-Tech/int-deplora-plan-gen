@@ -9,8 +9,8 @@ communicationService = CommunicationService()
 
 async def handle_message(request: MessageRequest):
     # Step 1: Use the classifier to detect the intent
-    # intent = await classify_intent(request.message, request.chat_history)
-    intent = "Deployment Request"
+    intent = await classify_intent(request.message, request.chat_history)
+
     logger.debug(f"Detected intent: {intent}")
     # Step 2: Route the message based on the detected intent
     if intent == "Deployment Request":

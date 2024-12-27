@@ -59,7 +59,6 @@ class RepoService:
             logger.error(f"An unexpected error occurred: {e}")
             raise
 
-
     async def create_files_in_repo(self, repo: Repo, file_objects: List[Dict[str, str]]):
         """
         Create the parsed files in the given repository.
@@ -80,3 +79,22 @@ class RepoService:
             except Exception as e:
                 logger.error(f"Failed to create file {file_path}: {e}")
                 raise
+
+    def get_folder_and_content(self, files: list) -> tuple:
+        """
+        Convert a list of files into a folder structure and include their contents.
+        Each file should have a path attribute like 'folder1/folder2/file.txt'.
+        """
+        structure = {}
+        contents = {}
+        for file in files:
+            path_parts = file.get('path').split('/')  # Split the path into folders
+            current_dir = structure
+            for part in path_parts[:-1]:  # Traverse the path up to the file's folder
+                current_dir = current_dir.setdefault(part, {})
+            current_dir[path_parts[-1]] = 'file'  # Mark the file in the final folder
+
+            # Read file content (assuming the content is available in the 'file' object)
+            contents[file.get('path')] = file.get('content')  # Assuming 'content' attribute contains the file's content
+
+        return structure, contents
