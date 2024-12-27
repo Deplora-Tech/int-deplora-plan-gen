@@ -1,5 +1,6 @@
 from core.logger import logger
 from services.main.communication.models import MessageRequest
+from services.main.promptManager.service import PromptManagerService
 from services.main.validationManager.service import ValidationService
 from services.main.planGenerator.service import PlanGeneratorService
 from services.main.repoManager.service import RepoService
@@ -17,6 +18,7 @@ class ManagementService:
         self.plan_generator_service = PlanGeneratorService()
         self.llm_service = LLMService()
         self.file_parser = FileParser()
+        self.prompt_manager_service = PromptManagerService(self.llm_service)
 
     async def generate_deployment_plan(
             self,
@@ -74,7 +76,7 @@ class ManagementService:
             folder_structure, file_contents = self.repo_service.get_folder_and_content(parsed_files)
             return {
                 "status": "success",
-                "response": deployment_recommendation,
+                "response": deployment_recommendation.DeploymentPlan,
                 "folder_structure": folder_structure,
                 "file_contents": file_contents  # Add file contents in response
             }
@@ -83,8 +85,9 @@ class ManagementService:
             return {"status": "error", "response": "An error occurred. Please try again."}
 
     async def process_conversation(self, request: MessageRequest) -> dict:
-        prompt = self.prompt_service.prepare_conversation_prompt(request)
-        return await self.llm_service.llm_request(prompt)
+        prompt = self.prompt_manager_service.prepare_conversation_prompt(request)
+        res =  await self.llm_service.llm_request(prompt)
+        return {"status": "success", "response": res}
 
     async def retrieve_preferences(
             self,
