@@ -2,13 +2,15 @@ import re
 import os
 from typing import List, Dict
 
+
 class FileParser:
     """
     A parser to identify, extract, and generate file objects from text containing <deploraFile> tags.
     """
+
     FILE_PATTERN = re.compile(
         r'<deploraFile\s+type="(?P<type>\w+)"\s+filePath="(?P<path>[^"]+)">\n(?P<content>.*?)</deploraFile>',
-        re.DOTALL
+        re.DOTALL,
     )
     MD_CODE_BLOCK_PATTERN = re.compile(r"^```[\w-]*\n|```$", re.MULTILINE)
 
@@ -29,6 +31,7 @@ class FileParser:
             List[Dict[str, str]]: A list of file objects containing file details.
         """
         files = []
+        files_content = []
         matches = self.FILE_PATTERN.finditer(text)
         for match in matches:
             file_type = match.group("type")
@@ -43,8 +46,9 @@ class FileParser:
                 "file_name": file_name,
                 "type": file_type,
                 "path": file_path,
-                "content": file_content
+                "content": file_content,
             }
-            
+
             files.append(file_object)
-        return files
+            files_content.append(match.group(0))
+        return files, files_content

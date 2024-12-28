@@ -94,6 +94,7 @@ class ManagementService:
             await communication_service.publisher(user_id, LoraStatus.FAILED.value)
             return {"status": "error", "response": "An error occurred. Please try again."}
 
+
     async def process_conversation(self, request: MessageRequest) -> dict:
         prompt = self.prompt_manager_service.prepare_conversation_prompt(request)
         res =  await self.llm_service.llm_request(prompt)
