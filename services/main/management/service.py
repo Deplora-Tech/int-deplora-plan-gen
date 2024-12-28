@@ -3,7 +3,7 @@ from services.main.communication.models import MessageRequest
 from services.main.communication.service import CommunicationService
 from services.main.enums import LoraStatus
 from services.main.promptManager.service import PromptManagerService
-from services.main.validationManager.service import ValidationService
+from services.main.validationManager.service import ValidatorService
 from services.main.planGenerator.service import PlanGeneratorService
 from services.main.repoManager.service import RepoService
 from services.main.workers.llm_worker import LLMService
@@ -13,7 +13,7 @@ import asyncio
 
 class ManagementService:
     def __init__(self):
-        self.validation_service = ValidationService(
+        self.validation_service = ValidatorService(
             "C:\\Users\\thamb\\Downloads\\validate"
         )
         self.repo_service = RepoService("C:\\Users\\thamb\\Downloads\\files")
