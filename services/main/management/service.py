@@ -1,5 +1,6 @@
 from core.logger import logger
 from services.main.communication.models import MessageRequest
+from services.main.promptManager.service import PromptManagerService
 from services.main.validationManager.service import ValidationService
 from services.main.planGenerator.service import PlanGeneratorService
 from services.main.repoManager.service import RepoService
@@ -11,90 +12,91 @@ import asyncio
 class ManagementService:
     def __init__(self):
         self.validation_service = ValidationService(
-            "C:\\Users\\Asus\\Downloads\\testtt02\\validate"
+            "C:\\Users\\thamb\\Downloads\\validate"
         )
-        self.repo_service = RepoService("C:\\Users\\Asus\\Downloads\\testtt02\\repos")
+        self.repo_service = RepoService("C:\\Users\\thamb\\Downloads\\files")
         self.plan_generator_service = PlanGeneratorService()
         self.llm_service = LLMService()
         self.file_parser = FileParser()
+        self.prompt_manager_service = PromptManagerService(self.llm_service)
 
     async def generate_deployment_plan(
-        self,
-        prompt: str,
-        project_id: str,
-        organization_id: str,
-        user_id: str,
-        chat_history: dict,
-        session_id: str,
+            self,
+            prompt: str,
+            project_id: str,
+            organization_id: str,
+            user_id: str,
+            chat_history: dict,
+            session_id: str,
     ) -> dict:
-        """
-        Generate a deployment plan based on the request
-        1. Initialize the Repo
-        2. Prepare the prompt
-        3. Call Plan Generator Service
-        4. Call Validation Service
-        IF validation pass:
-            5. Call Repo Service to commit new files
-        ELSE:
-            5. Call Prompt serrvice to prepare fixing prompt
-            GOTO 3
-        """
 
-        git_url = "https://github.com/sahiruw/po-server"
-        repo_task = self.repo_service.clone_repo(
-            repo_url=git_url, branch="main", session_id=session_id
-        )
+        try:
+            git_url = "https://github.com/sahiruw/po-server"
+            repo_task = self.repo_service.clone_repo(
+                repo_url=git_url, branch="main", session_id=session_id
+            )
 
-        preferences_task = self.retrieve_preferences(
-            prompt=prompt,
-            project_id=project_id,
-            organization_id=organization_id,
-            user_id=user_id,
-            chat_history=chat_history,
-        )
-
-        project_details_task = self.retrieve_project_details(project_id)
-
-        repo, user_preferences, project_details = await asyncio.gather(
-            repo_task, preferences_task, project_details_task
-        )
-
-        deployment_recommendation, deployment_solution = (
-            await self.plan_generator_service.generate_deployment_plan(
+            preferences_task = self.retrieve_preferences(
                 prompt=prompt,
-                user_preferences=user_preferences,
-                project_details=project_details,
+                project_id=project_id,
+                organization_id=organization_id,
+                user_id=user_id,
                 chat_history=chat_history,
             )
-        )
 
-        logger.info(
-            
-            f"Generating deployment plan for project {project_id} in organization {organization_id} for user {user_id}",
-        )
-        
-        logger.info(f"Deployment recommendation: {deployment_recommendation}") 
-        logger.info(f"Deployment solution: {deployment_solution}")
-        
-        parsed_files, parsed_files_content = self.file_parser.parse(deployment_solution)
+            project_details_task = self.retrieve_project_details(project_id)
 
-        logger.info(f"Files to be committed: {len(parsed_files)}")
-        
-        await self.repo_service.create_files_in_repo(repo, parsed_files)
-        
-        logger.info("Files committed successfully.")
+            repo, user_preferences, project_details = await asyncio.gather(
+                repo_task, preferences_task, project_details_task
+            )
+
+            deployment_recommendation, deployment_solution = (
+                await self.plan_generator_service.generate_deployment_plan(
+                    prompt=prompt,
+                    user_preferences=user_preferences,
+                    project_details=project_details,
+                    chat_history=chat_history,
+                )
+            )
+
+            logger.info(
+                f"Generating deployment plan for project {project_id} in organization {organization_id} for user {user_id}",
+            )
+
+            logger.info(f"Deployment recommendation: {deployment_recommendation}")
+            logger.info(f"Deployment solution: {deployment_solution}")
+
+            parsed_files = self.file_parser.parse(deployment_solution)
+
+            logger.info(f"Files to be committed: {len(parsed_files)}")
+
+            await self.repo_service.create_files_in_repo(repo, parsed_files)
+
+            logger.info("Files committed successfully.")
+            folder_structure, file_contents = self.repo_service.get_folder_and_content(parsed_files)
+            return {
+                "status": "success",
+                "response": deployment_recommendation.DeploymentPlan,
+                "folder_structure": folder_structure,
+                "file_contents": file_contents  # Add file contents in response
+            }
+        except Exception as e:
+            logger.error(f"Error occurred: {e}")
+            return {"status": "error", "response": "An error occurred. Please try again."}
+
 
     async def process_conversation(self, request: MessageRequest) -> dict:
-        prompt = self.prompt_service.prepare_conversation_prompt(request)
-        return await self.llm_service.llm_request(prompt)
+        prompt = self.prompt_manager_service.prepare_conversation_prompt(request)
+        res =  await self.llm_service.llm_request(prompt)
+        return {"status": "success", "response": res}
 
     async def retrieve_preferences(
-        self,
-        prompt: str,
-        project_id: str,
-        organization_id: str,
-        user_id: str,
-        chat_history: dict,
+            self,
+            prompt: str,
+            project_id: str,
+            organization_id: str,
+            user_id: str,
+            chat_history: dict,
     ) -> dict:
         logger.debug("Retrieving user preferences...")
         preferences = {
