@@ -1,5 +1,7 @@
 from core.logger import logger
 from services.main.communication.models import MessageRequest
+from services.main.communication.service import CommunicationService
+from services.main.enums import LoraStatus
 from services.main.promptManager.service import PromptManagerService
 from services.main.validationManager.service import ValidationService
 from services.main.planGenerator.service import PlanGeneratorService
@@ -28,6 +30,7 @@ class ManagementService:
             user_id: str,
             chat_history: dict,
             session_id: str,
+            communication_service: CommunicationService
     ) -> dict:
 
         try:
@@ -35,6 +38,7 @@ class ManagementService:
             repo_task = self.repo_service.clone_repo(
                 repo_url=git_url, branch="main", session_id=session_id
             )
+            await communication_service.publisher(user_id, LoraStatus.RETRIEVING_USER_PREFERENCES.value)
 
             preferences_task = self.retrieve_preferences(
                 prompt=prompt,
@@ -44,11 +48,14 @@ class ManagementService:
                 chat_history=chat_history,
             )
 
+            await communication_service.publisher(user_id, LoraStatus.RETRIEVING_PROJECT_DETAILS.value)
             project_details_task = self.retrieve_project_details(project_id)
 
             repo, user_preferences, project_details = await asyncio.gather(
                 repo_task, preferences_task, project_details_task
             )
+
+            await communication_service.publisher(user_id, LoraStatus.GENERATING_DEPLOYMENT_PLAN.value)
 
             deployment_recommendation, deployment_solution = (
                 await self.plan_generator_service.generate_deployment_plan(
@@ -66,9 +73,11 @@ class ManagementService:
             logger.info(f"Deployment recommendation: {deployment_recommendation}")
             logger.info(f"Deployment solution: {deployment_solution}")
 
+            await communication_service.publisher(user_id, LoraStatus.GENERATED_DEPLOYMENT_PLAN.value)
             parsed_files = self.file_parser.parse(deployment_solution)
 
             logger.info(f"Files to be committed: {len(parsed_files)}")
+            await communication_service.publisher(user_id, LoraStatus.GATHERING_DATA.value)
 
             await self.repo_service.create_files_in_repo(repo, parsed_files)
 
@@ -76,12 +85,13 @@ class ManagementService:
             folder_structure, file_contents = self.repo_service.get_folder_and_content(parsed_files)
             return {
                 "status": "success",
-                "response": deployment_recommendation.DeploymentPlan,
+                "response": deployment_recommendation["Deployment Plan"],
                 "folder_structure": folder_structure,
                 "file_contents": file_contents  # Add file contents in response
             }
         except Exception as e:
             logger.error(f"Error occurred: {e}")
+            await communication_service.publisher(user_id, LoraStatus.FAILED.value)
             return {"status": "error", "response": "An error occurred. Please try again."}
 
     async def process_conversation(self, request: MessageRequest) -> dict:
