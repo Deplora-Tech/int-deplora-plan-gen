@@ -76,7 +76,7 @@ class ManagementService:
         logger.info(f"Deployment recommendation: {deployment_recommendation}") 
         logger.info(f"Deployment solution: {deployment_solution}")
         
-        parsed_files = self.file_parser.parse(deployment_solution)
+        parsed_files, parsed_files_content = self.file_parser.parse(deployment_solution)
 
         logger.info(f"Files to be committed: {len(parsed_files)}")
         
