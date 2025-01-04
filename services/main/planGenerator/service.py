@@ -31,12 +31,13 @@ class PlanGeneratorService:
         )
 
         # { "Deployment Plan": "",  "Reasoning": ""}
-        deployment_recommendation = await self.llm_service.llm_request(classification_prompt)
-        
-        deployment_recommendation = json.loads(deployment_recommendation)
-        
-        # deployment_recommendation = { "Deployment Plan": "Dockerized Deployments (Containerization)", "Reasoning": "Based on your prompt and preferences, this plan is most suitable because it aligns with your specified technology and preference for Docker, offering the benefits of portability and simplicity." }
+        deployment_recommendation = await self.llm_service.llm_request(
+            classification_prompt
+        )
 
+        deployment_recommendation = json.loads(deployment_recommendation)
+
+        # deployment_recommendation = { "Deployment Plan": "Dockerized Deployments (Containerization)", "Reasoning": "Based on your prompt and preferences, this plan is most suitable because it aligns with your specified technology and preference for Docker, offering the benefits of portability and simplicity." }
 
         deployment_strategy = deployment_recommendation["Deployment Plan"]
 
@@ -57,7 +58,7 @@ class PlanGeneratorService:
 
         else:
             return {}  # TODO
-
+        print(generation_prompt)
         deployment_solution = await self.llm_service.llm_request(generation_prompt)
-
+        
         return deployment_recommendation, deployment_solution

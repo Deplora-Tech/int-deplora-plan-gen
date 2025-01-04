@@ -13,10 +13,10 @@ import asyncio
 
 class ManagementService:
     def __init__(self):
-        self.validation_service = ValidatorService(
-            "C:\\Users\\thamb\\Downloads\\validate"
-        )
-        self.repo_service = RepoService("C:\\Users\\thamb\\Downloads\\files")
+        # self.validation_service = ValidatorService(
+        #     "C:\\Users\\thamb\\Downloads\\validate"
+        # )
+        self.repo_service = RepoService("C:\\Users\\Asus\\Downloads\\testtt02\\repos")
         self.plan_generator_service = PlanGeneratorService()
         self.llm_service = LLMService()
         self.file_parser = FileParser()
@@ -74,11 +74,13 @@ class ManagementService:
             logger.info(f"Deployment solution: {deployment_solution}")
 
             await communication_service.publisher(user_id, LoraStatus.GENERATED_DEPLOYMENT_PLAN.value)
-            parsed_files = self.file_parser.parse(deployment_solution)
+            parsed_files, parsed_file_content = self.file_parser.parse(deployment_solution)
+            
+            print("\n\n".join(parsed_file_content))
 
             logger.info(f"Files to be committed: {len(parsed_files)}")
             await communication_service.publisher(user_id, LoraStatus.GATHERING_DATA.value)
-
+            
             await self.repo_service.create_files_in_repo(repo, parsed_files)
 
             logger.info("Files committed successfully.")

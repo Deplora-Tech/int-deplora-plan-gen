@@ -1,4 +1,4 @@
-from services.main.promptManager.prompts import classification_prompt, docker_prompt
+from services.main.promptManager.promptsv001 import classification_prompt, docker_prompt
 from services.main.communication.models import MessageRequest
 
 class PromptManagerService:

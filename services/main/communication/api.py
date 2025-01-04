@@ -7,6 +7,7 @@ from services.main.enums import LoraStatus
 from services.main.management.api import handle_message
 router = APIRouter()
 communication_service = CommunicationService()
+from main import redis
 
 @router.websocket("/ws/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: str):
@@ -25,4 +26,5 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
 async def send_message(request: MessageRequest):
     message = await handle_message(request, communication_service)
     await communication_service.publisher(request.client_id, LoraStatus.COMPLETED.value)
+    redis
     return {"status": "Message sent", "processed_message": message}
