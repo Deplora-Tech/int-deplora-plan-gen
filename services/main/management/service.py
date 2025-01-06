@@ -55,7 +55,7 @@ class ManagementService:
 
             await communication_service.publisher(user_id, LoraStatus.GENERATING_DEPLOYMENT_PLAN.value)
 
-            deployment_recommendation, deployment_solution, parsed_files, parsed_file_content = (
+            deployment_recommendation, deployment_solution, parsed_files = (
                 await self.plan_generator_service.generate_deployment_plan(
                     prompt=prompt,
                     user_preferences=user_preferences,
@@ -64,8 +64,6 @@ class ManagementService:
                 )
             )
             
-            print("\n\n".join(parsed_file_content))
-
             logger.info(f"Files to be committed: {len(parsed_files)}")
             await communication_service.publisher(user_id, LoraStatus.GATHERING_DATA.value)
             

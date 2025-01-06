@@ -37,13 +37,14 @@ class PromptManagerService:
         project_details: dict,
         chat_history: dict,
         prompt: str,
+        terraform_docs: str,
     ) -> str:
         """
         Prepare the prompt for Docker deployment
         """
 
         PROMPT_TO_GENERATE = docker_prompt.format(
-            project_details, user_preferences, prompt, chat_history
+            project_details, user_preferences, prompt, chat_history, terraform_docs
         )
 
         return PROMPT_TO_GENERATE

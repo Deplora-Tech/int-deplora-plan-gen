@@ -8,17 +8,17 @@ import sys
 logger = logging.getLogger()
 sys.stdout.reconfigure(encoding="utf-8")  # Ensure stdout uses UTF-8
 
-formatter = logging.Formatter(
-    fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+# formatter = logging.Formatter(
+#     fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+# )
 
 stream_handler = logging.StreamHandler(sys.stdout)
 file_handler = RotatingFileHandler(
     "app.log", maxBytes=5 * 1024 * 1024, backupCount=3, encoding="utf-8"
 )
 
-stream_handler.setFormatter(formatter)
-file_handler.setFormatter(formatter)
+# stream_handler.setFormatter(formatter)
+# file_handler.setFormatter(formatter)
 
 logger.handlers = [stream_handler, file_handler]
 
