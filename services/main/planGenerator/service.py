@@ -30,12 +30,20 @@ class PlanGeneratorService:
         1. Prepare the prompt
         2. Call Prompt Manager Service
         """
-
-        classification_prompt = (
-            await self.prompt_manager_service.prepare_classification_prompt(
-                user_preferences, project_details, prompt
+        """
+        if chat_history contain a current plan then based on the prompt, generate a suitable response, 
+        and provide any additional information or context as needed. with enhanced plan
+        """
+        if chat_history.get("current_plan"):
+            classification_prompt = self.prompt_manager_service.prepare_client_feedBack_prompt(
+                prompt, chat_history, project_details, user_preferences, chat_history["current_plan"]
             )
-        )
+        else:
+            classification_prompt = (
+                await self.prompt_manager_service.prepare_classification_prompt(
+                    user_preferences, project_details, prompt
+                )
+            )
 
         # { "Deployment Plan": "",  "Reasoning": ""}
         deployment_recommendation = await self.llm_service.llm_request(

@@ -5,18 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2ccd83dd-126f-4e6a-9422-f5cb017750ee" name="Changes" comment="services initialized">
-      <change beforePath="$PROJECT_DIR$/.idea/fastApiProject.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/fastApiProject.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/database.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/database.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/services/main/communication/api.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/communication/api.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/main/communication/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/communication/models.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/services/main/management/api.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/management/api.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/services/main/management/service.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/management/service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/main/planGenerator/service.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/planGenerator/service.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/services/main/promptManager/service.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/promptManager/service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/main/workers/llm_worker.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/workers/llm_worker.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/main/utils/caching/redis_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/utils/caching/redis_service.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -36,7 +32,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="prompt" />
+        <entry key="$PROJECT_DIR$" value="plan-generate" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -226,6 +222,10 @@
     <recent_temporary>
       <list>
         <item itemvalue="Python.main" />
+        <item itemvalue="Python.api.test" />
+        <item itemvalue="HTTP Request.generated-requests | #9" />
+        <item itemvalue="HTTP Request.generated-requests | #8" />
+        <item itemvalue="HTTP Request.generated-requests | #5" />
       </list>
     </recent_temporary>
   </component>
@@ -309,7 +309,7 @@
     <option name="LAST_COMMIT_MESSAGE" value="services initialized" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/int_deplora_plan_gen$fastApiProject.coverage" NAME="fastApiProject Coverage Results" MODIFIED="1736022523414" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/int_deplora_plan_gen$fastApiProject.coverage" NAME="fastApiProject Coverage Results" MODIFIED="1736181830930" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
     <SUITE FILE_PATH="coverage/int_deplora_plan_gen$api_test.coverage" NAME="api.test Coverage Results" MODIFIED="1735313576291" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/main_py$fastApiProject.coverage" NAME="fastApiProject Coverage Results" MODIFIED="1733766787103" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
     <SUITE FILE_PATH="coverage/main_py$main.coverage" NAME="main Coverage Results" MODIFIED="1733729495626" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

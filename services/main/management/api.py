@@ -13,7 +13,7 @@ async def handle_message(request: MessageRequest, communcationService: Communica
     print("chat_history:", chat_history)
     RedisService.store_message(request.session_id, request.client_id, "user", request.message)
 
-    intent = await classify_intent(request.message, chat_history)
+    intent = (await classify_intent(request.message, chat_history)).strip(" ")
     await communcationService.publisher(request.client_id, LoraStatus.INTENT_DETECTED.value)
     logger.debug(f"Detected intent: {intent}")
     # Step 2: Route the message based on the detected intent
@@ -28,12 +28,16 @@ async def handle_message(request: MessageRequest, communcationService: Communica
             communication_service=communcationService
         )
         RedisService.store_message(request.session_id, request.client_id,"You", dep_plan["response"])
+        RedisService.store_current_plan(request.session_id, request.client_id, dep_plan["file_contents"])
         return dep_plan
 
     elif intent == "Other":
+        logger.info("Processing conversation")
         res =  await managementService.process_conversation(request, chat_history)
         RedisService.store_message(request.session_id, request.client_id,"You", res["response"])
         return res
 
-    else:  # Handle unknown intent
+    else:
+        # Handle unknown intent
+        logger.info(f'Unknown intent: {intent}')
         return {"status": "success", "response": "I'm sorry, I didn't understand that. Can you clarify?"}
