@@ -41,9 +41,9 @@ class LLMService:
                     },
                     {"role": "user", "content": prompt},
                 ],
-                model="llama-3.3-70b-versatile",  # Adjust the model as needed
+                model="llama-3.3-70b-specdec",  # Adjust the model as needed
                 temperature=0.5,  # Adjust optional parameters as needed
-                max_tokens=32768,
+                max_tokens=8192,
                 top_p=1,
                 stop=None,
                 stream=False,

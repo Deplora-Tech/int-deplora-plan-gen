@@ -3,91 +3,119 @@ import subprocess
 import json
 import requests
 
+from services.main.promptManager.service import PromptManagerService
+from services.main.workers.llm_worker import LLMService
+
 class ValidatorService:
-    def __init__(self, base_path, jenkins_url, jenkins_user, jenkins_token):
-        self.base_path = base_path
-        self.jenkins_url = jenkins_url
-        self.jenkins_user = jenkins_user
-        self.jenkins_token = jenkins_token
+    # def __init__(self, base_path, jenkins_url, jenkins_user, jenkins_token):
+        # self.base_path = base_path
+        # self.jenkins_url = jenkins_url
+        # self.jenkins_user = jenkins_user
+        # self.jenkins_token = jenkins_token
+    
+    def __init__(self):
+        self.prompt_manager_service = PromptManagerService()
+        self.llm_service = LLMService()
+        
+    
+    async def validate_file(self, file_str: str):
+        """
+        1. Check for hardcodes values
+        2. Check for proper file structure
+        """
+        feedback_of_hardcodes_values = await self.check_for_hardcoded_values(file_str=file_str)
+        
+        pass
+    
+    async def check_for_hardcoded_values(self, file_str: str):
+        """
+        Check for hardcoded values in the file
+        """
+        
+        prompt = self.prompt_manager_service.prepare_validate_for_hardcoded_values_prompt(file_str)
+        response = await self.llm_service.llm_request(prompt)
+        
+        return response
+        
 
-    def validate_terraform(self):
-        terraform_path = os.path.join(self.base_path, "inputs", "terraform")
-        try:
-            result = subprocess.run([
-                "terraform", "validate"
-            ], cwd=terraform_path, capture_output=True, text=True)
+#     def validate_terraform(self):
+#         terraform_path = os.path.join(self.base_path, "inputs", "terraform")
+#         try:
+#             result = subprocess.run([
+#                 "terraform", "validate"
+#             ], cwd=terraform_path, capture_output=True, text=True)
 
-            if result.returncode == 0:
-                return {"status": "valid", "message": "Terraform files are valid."}
-            else:
-                return {"status": "invalid", "message": result.stderr}
-        except FileNotFoundError:
-            return {"status": "error", "message": "Terraform CLI not found."}
+#             if result.returncode == 0:
+#                 return {"status": "valid", "message": "Terraform files are valid."}
+#             else:
+#                 return {"status": "invalid", "message": result.stderr}
+#         except FileNotFoundError:
+#             return {"status": "error", "message": "Terraform CLI not found."}
 
-    def validate_docker_compose(self):
-        docker_compose_file = os.path.join(self.base_path, "inputs", "docker-compose.yml")
-        try:
-            result = subprocess.run([
-                "docker-compose", "config"
-            ], cwd=os.path.dirname(docker_compose_file), capture_output=True, text=True)
+#     def validate_docker_compose(self):
+#         docker_compose_file = os.path.join(self.base_path, "inputs", "docker-compose.yml")
+#         try:
+#             result = subprocess.run([
+#                 "docker-compose", "config"
+#             ], cwd=os.path.dirname(docker_compose_file), capture_output=True, text=True)
 
-            if result.returncode == 0:
-                return {"status": "valid", "message": "docker-compose.yml is valid."}
-            else:
-                return {"status": "invalid", "message": result.stderr}
-        except FileNotFoundError:
-            return {"status": "error", "message": "docker-compose CLI not found."}
+#             if result.returncode == 0:
+#                 return {"status": "valid", "message": "docker-compose.yml is valid."}
+#             else:
+#                 return {"status": "invalid", "message": result.stderr}
+#         except FileNotFoundError:
+#             return {"status": "error", "message": "docker-compose CLI not found."}
 
-    def validate_dockerfile(self):
-        dockerfile_path = os.path.join(self.base_path, "inputs", "Dockerfile")
-        try:
-            result = subprocess.run([
-                "docker", "build", "-t", "test-image", "-f", dockerfile_path, "."
-            ], cwd=os.path.dirname(dockerfile_path), capture_output=True, text=True)
+#     def validate_dockerfile(self):
+#         dockerfile_path = os.path.join(self.base_path, "inputs", "Dockerfile")
+#         try:
+#             result = subprocess.run([
+#                 "docker", "build", "-t", "test-image", "-f", dockerfile_path, "."
+#             ], cwd=os.path.dirname(dockerfile_path), capture_output=True, text=True)
 
-            if result.returncode == 0:
-                return {"status": "valid", "message": "Dockerfile is valid."}
-            else:
-                return {"status": "invalid", "message": result.stderr}
-        except FileNotFoundError:
-            return {"status": "error", "message": "Docker CLI not found."}
+#             if result.returncode == 0:
+#                 return {"status": "valid", "message": "Dockerfile is valid."}
+#             else:
+#                 return {"status": "invalid", "message": result.stderr}
+#         except FileNotFoundError:
+#             return {"status": "error", "message": "Docker CLI not found."}
 
-    def validate_jenkinsfile(self):
-        jenkinsfile_path = os.path.join(self.base_path, "inputs", "Jenkinsfile")
-        if not os.path.exists(jenkinsfile_path):
-            return {"status": "invalid", "message": "Jenkinsfile not found."}
+#     def validate_jenkinsfile(self):
+#         jenkinsfile_path = os.path.join(self.base_path, "inputs", "Jenkinsfile")
+#         if not os.path.exists(jenkinsfile_path):
+#             return {"status": "invalid", "message": "Jenkinsfile not found."}
 
-        with open(jenkinsfile_path, "r") as file:
-            jenkinsfile_content = file.read()
+#         with open(jenkinsfile_path, "r") as file:
+#             jenkinsfile_content = file.read()
 
-        url = f"{self.jenkins_url}/pipeline-model-converter/validate"
-        auth = (self.jenkins_user, self.jenkins_token)
+#         url = f"{self.jenkins_url}/pipeline-model-converter/validate"
+#         auth = (self.jenkins_user, self.jenkins_token)
 
-        try:
-            response = requests.post(url, auth=auth, data={"jenkinsfile": jenkinsfile_content})
-            if response.status_code == 200:
-                return {"status": "valid", "message": "Jenkinsfile is valid."}
-            else:
-                return {"status": "invalid", "message": response.text}
-        except requests.RequestException as e:
-            return {"status": "error", "message": str(e)}
+#         try:
+#             response = requests.post(url, auth=auth, data={"jenkinsfile": jenkinsfile_content})
+#             if response.status_code == 200:
+#                 return {"status": "valid", "message": "Jenkinsfile is valid."}
+#             else:
+#                 return {"status": "invalid", "message": response.text}
+#         except requests.RequestException as e:
+#             return {"status": "error", "message": str(e)}
 
-    def validate_all(self):
-        results = {
-            "terraform": self.validate_terraform(),
-            "docker_compose": self.validate_docker_compose(),
-            "dockerfile": self.validate_dockerfile(),
-            "jenkinsfile": self.validate_jenkinsfile()
-        }
-        return results
+#     def validate_all(self):
+#         results = {
+#             "terraform": self.validate_terraform(),
+#             "docker_compose": self.validate_docker_compose(),
+#             "dockerfile": self.validate_dockerfile(),
+#             "jenkinsfile": self.validate_jenkinsfile()
+#         }
+#         return results
 
-if __name__ == "__main__":
-    base_path = os.path.dirname(os.path.abspath(__file__))
-    jenkins_url = "http://localhost:8080"
-    jenkins_user = "your_username"
-    jenkins_token = "your_api_token"
+# if __name__ == "__main__":
+#     base_path = os.path.dirname(os.path.abspath(__file__))
+#     jenkins_url = "http://localhost:8080"
+#     jenkins_user = "your_username"
+#     jenkins_token = "your_api_token"
 
-    validator = ValidatorService(base_path, jenkins_url, jenkins_user, jenkins_token)
-    results = validator.validate_all()
+#     validator = ValidatorService(base_path, jenkins_url, jenkins_user, jenkins_token)
+#     results = validator.validate_all()
 
-    print(json.dumps(results, indent=4))
+#     print(json.dumps(results, indent=4))

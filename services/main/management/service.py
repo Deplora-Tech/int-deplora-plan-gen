@@ -3,11 +3,10 @@ from services.main.communication.models import MessageRequest
 from services.main.communication.service import CommunicationService
 from services.main.enums import LoraStatus
 from services.main.promptManager.service import PromptManagerService
-from services.main.validationManager.service import ValidatorService
 from services.main.planGenerator.service import PlanGeneratorService
 from services.main.repoManager.service import RepoService
 from services.main.workers.llm_worker import LLMService
-from services.main.utils.FileParser import FileParser
+
 import asyncio
 
 
@@ -19,8 +18,7 @@ class ManagementService:
         self.repo_service = RepoService("C:\\Users\\Asus\\Downloads\\testtt02\\repos")
         self.plan_generator_service = PlanGeneratorService()
         self.llm_service = LLMService()
-        self.file_parser = FileParser()
-        self.prompt_manager_service = PromptManagerService(self.llm_service)
+        self.prompt_manager_service = PromptManagerService()
 
     async def generate_deployment_plan(
             self,
@@ -57,7 +55,7 @@ class ManagementService:
 
             await communication_service.publisher(user_id, LoraStatus.GENERATING_DEPLOYMENT_PLAN.value)
 
-            deployment_recommendation, deployment_solution = (
+            deployment_recommendation, deployment_solution, parsed_files, parsed_file_content = (
                 await self.plan_generator_service.generate_deployment_plan(
                     prompt=prompt,
                     user_preferences=user_preferences,
@@ -65,16 +63,6 @@ class ManagementService:
                     chat_history=chat_history,
                 )
             )
-
-            logger.info(
-                f"Generating deployment plan for project {project_id} in organization {organization_id} for user {user_id}",
-            )
-
-            logger.info(f"Deployment recommendation: {deployment_recommendation}")
-            logger.info(f"Deployment solution: {deployment_solution}")
-
-            await communication_service.publisher(user_id, LoraStatus.GENERATED_DEPLOYMENT_PLAN.value)
-            parsed_files, parsed_file_content = self.file_parser.parse(deployment_solution)
             
             print("\n\n".join(parsed_file_content))
 
