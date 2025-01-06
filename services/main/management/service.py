@@ -3,27 +3,22 @@ from services.main.communication.models import MessageRequest
 from services.main.communication.service import CommunicationService
 from services.main.enums import LoraStatus
 from services.main.promptManager.service import PromptManagerService
-from services.main.validationManager.service import ValidatorService
 from services.main.planGenerator.service import PlanGeneratorService
 from services.main.repoManager.service import RepoService
 from services.main.workers.llm_worker import LLMService
-from services.main.utils.FileParser import FileParser
+
 import asyncio
 
 
 class ManagementService:
     def __init__(self):
-        self.validation_service = ValidatorService(
-            "C:\\Users\\thamb\\Downloads\\validate",
-            "test",
-            "test",
-            "test"
-        )
-        self.repo_service = RepoService("C:\\Users\\thamb\\Downloads\\files")
+        # self.validation_service = ValidatorService(
+        #     "C:\\Users\\thamb\\Downloads\\validate"
+        # )
+        self.repo_service = RepoService("C:\\Users\\Asus\\Downloads\\testtt02\\repos")
         self.plan_generator_service = PlanGeneratorService()
         self.llm_service = LLMService()
-        self.file_parser = FileParser()
-        self.prompt_manager_service = PromptManagerService(self.llm_service)
+        self.prompt_manager_service = PromptManagerService()
 
     async def generate_deployment_plan(
             self,
@@ -60,7 +55,7 @@ class ManagementService:
 
             await communication_service.publisher(user_id, LoraStatus.GENERATING_DEPLOYMENT_PLAN.value)
 
-            deployment_recommendation, deployment_solution = (
+            deployment_recommendation, deployment_solution, parsed_files, parsed_file_content = (
                 await self.plan_generator_service.generate_deployment_plan(
                     prompt=prompt,
                     user_preferences=user_preferences,
@@ -68,20 +63,12 @@ class ManagementService:
                     chat_history=chat_history,
                 )
             )
-
-            logger.info(
-                f"Generating deployment plan for project {project_id} in organization {organization_id} for user {user_id}",
-            )
-
-            logger.info(f"Deployment recommendation: {deployment_recommendation}")
-            logger.info(f"Deployment solution: {deployment_solution}")
-
-            await communication_service.publisher(user_id, LoraStatus.GENERATED_DEPLOYMENT_PLAN.value)
-            parsed_files = self.file_parser.parse(deployment_solution)
+            
+            print("\n\n".join(parsed_file_content))
 
             logger.info(f"Files to be committed: {len(parsed_files)}")
             await communication_service.publisher(user_id, LoraStatus.GATHERING_DATA.value)
-
+            
             await self.repo_service.create_files_in_repo(repo, parsed_files)
 
             logger.info("Files committed successfully.")
@@ -112,86 +99,7 @@ class ManagementService:
             chat_history: dict,
     ) -> dict:
         logger.debug("Retrieving user preferences...")
-        preferences = {
-            "positive_preferences": [
-                ["MonitoringTool", "Stackdriver", 0.649, "Low"],
-                [
-                    "CloudStorageService",
-                    "Cloud Storage bucket",
-                    0.6446666666666666,
-                    "Low",
-                ],
-                ["MonitoringService", "CloudWatch", 0.64, "Low"],
-                ["ContainerOrchestrationService", "ECS", 0.64, "Low"],
-                ["ScalabilityFeature", "autoscaling", 0.64, "Low"],
-                ["CloudService", "Compute Engine", 0.64, "Low"],
-                ["StorageService", "S3 bucket", 0.63055, "Low"],
-                ["AccessControl", "IAM role", 0.63, "Low"],
-                ["ScalingFeature", "autoscaling", 0.63, "Low"],
-                ["StoragePolicy", "lifecycle policies", 0.63, "Low"],
-                ["NetworkingConfiguration", "Route tables", 0.62, "Low"],
-                ["Application", "application", 0.619, "Low"],
-                ["InMemoryDataStore", "Memorystore", 0.6133333333333333, "Low"],
-                ["ServerlessCompute", "Cloud Functions", 0.6, "Low"],
-                ["ServerlessComputeService", "Cloud Functions", 0.6, "Low"],
-                ["AccessControlPolicy", "bucket policy", 0.6, "Low"],
-                ["IdentityAccessManagement", "IAM policies", 0.6, "Low"],
-                ["DatabaseManagementSystem", "RDS Postgres database", 0.6, "Low"],
-                ["SecurityFeature", "encryption policies", 0.6, "Low"],
-                ["SecurityPolicy", "strong password policies", 0.6, "Low"],
-                ["DisasterRecoveryFeature", "automated backups", 0.6, "Low"],
-                ["PerformanceMetric", "end-to-end latency", 0.6, "Low"],
-                ["ContentDeliveryNetwork", "Cloud CDN", 0.6, "Low"],
-                ["SecurityProtocol", "two-step verification", 0.6, "Low"],
-                ["ErrorHandlingMechanism", "error handling", 0.6, "Low"],
-                ["ComputeResource", "worker nodes", 0.6, "Low"],
-                ["LoggingMechanism", "execution logs", 0.6, "Low"],
-                ["TracingConfiguration", "segment sampling", 0.6, "Low"],
-                ["CacheConfiguration", "cache settings", 0.6, "Low"],
-                ["CacheManagement", "cache invalidation", 0.6, "Low"],
-                ["VirtualPrivateCloud", "VPCs", 0.6, "Low"],
-                ["Protocol", "HTTP/2", 0.6, "Low"],
-                ["LogData", "function logs", 0.6, "Low"],
-                ["MessageQueue", "Pub/Sub", 0.6, "Low"],
-                ["EventDrivenArchitecture", "EventBridge", 0.6, "Low"],
-                ["SecurityConfiguration", "security groups", 0.6, "Low"],
-                ["ContainerPlatform", "GKE", 0.6, "Low"],
-                ["UserGroup", "stakeholders", 0.6, "Low"],
-                ["Permission", "public read access", 0.6, "Low"],
-                ["DataWarehouse", "BigQuery", 0.6, "Low"],
-                ["NotificationSystem", "alerts", 0.6, "Low"],
-                ["PerformanceOptimization", "caching policies", 0.6, "Low"],
-                ["ContainerOrchestrationPlatform", "GKE cluster", 0.6, "Low"],
-                ["SecurityService", "Cloud Armor", 0.6, "Low"],
-                ["BigDataFramework", "Hadoop", 0.6, "Low"],
-                ["MonitoringFeature", "Cluster monitoring", 0.6, "Low"],
-                ["PerformanceIndicator", "performance metrics", 0.6, "Low"],
-                ["VisualizationTool", "Dashboards", 0.6, "Low"],
-                ["BusinessIntelligenceTool", "Data Studio", 0.6, "Low"],
-                ["CostMetric", "storage costs", 0.6, "Low"],
-                ["AccessLevel", "Viewer permissions", 0.6, "Low"],
-                ["APIManagementService", "API Gateway", 0.6, "Low"],
-                ["TracingService", "X-Ray", 0.6, "Low"],
-                ["OriginServer", "origin server", 0.6, "Low"],
-                ["Encryption", "encryption keys", 0.6, "Low"],
-                ["CompliancePolicy", "Company policies", 0.6, "Low"],
-                ["ResourceAllocation", "allocated memory", 0.6, "Low"],
-                ["BackupFeature", "Object Versioning", 0.6, "Low"],
-                ["QueryOptimizationTechnique", "caching", 0.6, "Low"],
-                ["MonitoringData", "logs", 0.6, "Low"],
-                ["DataVisualization", "custom charts", 0.6, "Low"],
-                ["WorkflowAutomationTool", "state machine", 0.6, "Low"],
-                ["DataProcessing", "ETL processing", 0.6, "Low"],
-            ],
-            "negative_preferences": [
-                ["ServerlessFunction", "Lambda function", 0.4, "Low"],
-                ["DataClassification", "sensitive data", 0.4, "Low"],
-                ["ErrorCondition", "Node failures", 0.4, "Low"],
-                ["SecurityRisk", "vulnerabilities", 0.4, "Low"],
-                ["ContentType", "frequently updated content", 0.4, "Low"],
-                ["AssetClassification", "high-risk assets", 0.4, "Low"],
-            ],
-        }
+        preferences = {'positive_preferences': [['CloudProvider', 'Azure', 0.81809013001114, 'High'], ['ObjectStorageService', 'S3', 0.6786340000000001, 'Low'], ['ComputeService', 'Lambda', 0.6722666666666667, 'Low'], ['IdentityAndAccessManagementService', 'IAM', 0.6571, 'Low'], ['DatabaseService', 'RDS', 0.649, 'Low'], ['ContainerOrchestrationPlatform', 'ECS', 0.64, 'Low'], ['OtherService', 'VPC', 0.64, 'Low'], ['MessageQueueService', 'Pub/Sub', 0.63, 'Low'], ['NoSQLDatabaseService', 'Firestore', 0.63, 'Low'], ['ContentDeliveryNetwork', 'CloudFront', 0.626, 'Low'], ['MonitoringService', 'CloudWatch', 0.61, 'Low']], 'negative_preferences': []}
 
         # await asyncio.sleep(2)
         return preferences
