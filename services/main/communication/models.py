@@ -7,7 +7,6 @@ class MessageRequest(BaseModel):
     project_id: str
     organization_id: str
     session_id: str
-    chat_history: dict
 
 class PromptRequest(BaseModel):
     messageRequest: MessageRequest
