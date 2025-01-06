@@ -15,9 +15,9 @@ class PlanGeneratorService:
         self.prompt_manager_service = PromptManagerService()
         self.file_parser = FileParser()
         self.validator_service = ValidatorService()
-        
+
         self.MAX_VALIDATION_ITERATIONS = 1
-        
+
     async def generate_deployment_plan(
         self,
         prompt: str,
@@ -39,7 +39,7 @@ class PlanGeneratorService:
 
         # { "Deployment Plan": "",  "Reasoning": ""}
         deployment_recommendation = await self.llm_service.llm_request(
-            classification_prompt
+            prompt=classification_prompt
         )
 
         deployment_recommendation = json.loads(deployment_recommendation)
@@ -49,16 +49,23 @@ class PlanGeneratorService:
         deployment_strategy = deployment_recommendation["Deployment Plan"]
 
         logger.info(f"Deployment strategy: {deployment_strategy}")
-        
+
         # Identifying the response based on the deployment strategy
-        
-        resourcing_prompt = self.prompt_manager_service.prepare_identify_resources_prompt(
-            deployment_strategy, user_preferences, project_details, chat_history, prompt
+
+        resourcing_prompt = (
+            self.prompt_manager_service.prepare_identify_resources_prompt(
+                deployment_strategy,
+                user_preferences,
+                project_details,
+                chat_history,
+                prompt,
+            )
         )
-        identified_resources = await self.llm_service.llm_request(resourcing_prompt)
-        
+        identified_resources = await self.llm_service.llm_request(
+            prompt=resourcing_prompt
+        )
+
         logger.info(f"Identified resources: {identified_resources}")
-        
 
         if deployment_strategy == DeploymentOptions.KUBERNETES_DEPLOYMENT.value:
             generation_prompt = ""
@@ -76,44 +83,62 @@ class PlanGeneratorService:
         else:
             return {}  # TODO
 
-        deployment_solution = await self.llm_service.llm_request(generation_prompt)
+        deployment_solution = await self.llm_service.llm_request(
+            prompt=generation_prompt, platform="deepseek"
+        )
 
         logger.info(f"Deployment recommendation: {deployment_recommendation}")
         logger.info(f"Deployment solution: {deployment_solution}")
-        
+
         parsed_files, parsed_file_content = self.file_parser.parse(deployment_solution)
-        
+
         print("Parsed files: ")
         print("\n\n".join(parsed_file_content))
-        
+
         parsed_files_dict = {}
         for file in parsed_files:
             parsed_files_dict[file["path"]] = file
-        
-        validation_feedback = await self.validator_service.check_for_hardcoded_values(parsed_file_content)
-        
+
+        validation_feedback = await self.validator_service.check_for_hardcoded_values(
+            parsed_file_content
+        )
+
         logger.info("Received validation feedback: ")
-        
+
         for i in range(self.MAX_VALIDATION_ITERATIONS):
             if not "no issues identified" in validation_feedback.lower():
                 logger.info("Failed validation. Fixing identified issues.")
-                validation_issues_fixing_prompt = self.prompt_manager_service.prepare_fix_identified_validation_issues_prompt(parsed_file_content, validation_feedback)
-                deployment_solution =  await self.llm_service.llm_request(validation_issues_fixing_prompt)
-                parsed_files, parsed_file_content = self.file_parser.parse(deployment_solution)
-                
+                validation_issues_fixing_prompt = self.prompt_manager_service.prepare_fix_identified_validation_issues_prompt(
+                    parsed_file_content, validation_feedback
+                )
+                deployment_solution = await self.llm_service.llm_request(
+                    prompt=validation_issues_fixing_prompt, platform="deepseek"
+                )
+                parsed_files, parsed_file_content = self.file_parser.parse(
+                    deployment_solution
+                )
+
                 for file in parsed_files:
                     parsed_files_dict[file["path"]] = file
-                
-                validation_feedback = await self.validator_service.check_for_hardcoded_values(parsed_file_content)
-            
+
+                validation_feedback = (
+                    await self.validator_service.check_for_hardcoded_values(
+                        parsed_file_content
+                    )
+                )
+
             else:
                 logger.info("Validation successful.")
                 break
-        
+
         else:
             logger.error("Validation failed after maximum iterations.")
-        
+
         parsed_files = list(parsed_files_dict.values())
-        
-        return deployment_recommendation, deployment_solution, parsed_files, parsed_file_content
-        
+
+        return (
+            deployment_recommendation,
+            deployment_solution,
+            parsed_files,
+            parsed_file_content,
+        )

@@ -64,7 +64,7 @@ class LLMService:
         try:
             # Generate the chat completion using the Groq client
             message = self.deepseek.chat.completions.create(
-                model="deepseek-chat",
+                model="deepseek-coder",
                 messages=[
                     {
                         "role": "system",
