@@ -14,7 +14,10 @@ import asyncio
 class ManagementService:
     def __init__(self):
         self.validation_service = ValidatorService(
-            "C:\\Users\\thamb\\Downloads\\validate"
+            "C:\\Users\\thamb\\Downloads\\validate",
+            "test",
+            "test",
+            "test"
         )
         self.repo_service = RepoService("C:\\Users\\thamb\\Downloads\\files")
         self.plan_generator_service = PlanGeneratorService()
@@ -95,8 +98,8 @@ class ManagementService:
             return {"status": "error", "response": "An error occurred. Please try again."}
 
 
-    async def process_conversation(self, request: MessageRequest) -> dict:
-        prompt = self.prompt_manager_service.prepare_conversation_prompt(request)
+    async def process_conversation(self, request: MessageRequest, chat_history: str) -> dict:
+        prompt = self.prompt_manager_service.prepare_conversation_prompt(request, chat_history)
         res =  await self.llm_service.llm_request(prompt)
         return {"status": "success", "response": res}
 

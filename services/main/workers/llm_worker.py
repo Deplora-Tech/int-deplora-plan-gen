@@ -1,10 +1,12 @@
 from fastapi import HTTPException
 from groq import Groq
-
+import os
+from dotenv import load_dotenv
+load_dotenv()
 class LLMService:
     def __init__(self):
         # Initialize the Groq client
-        self.client = Groq()
+        self.client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
     async def llm_request(self, prompt: str):
         try:

@@ -5,6 +5,8 @@ from services.main.communication.models import MessageRequest
 from services.main.communication.service import CommunicationService
 from services.main.enums import LoraStatus
 from services.main.management.api import handle_message
+from services.main.utils.caching.redis_service import RedisService
+
 router = APIRouter()
 communication_service = CommunicationService()
 
@@ -23,6 +25,11 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
 
 @router.post("/send-message")
 async def send_message(request: MessageRequest):
-    message = await handle_message(request, communication_service)
-    await communication_service.publisher(request.client_id, LoraStatus.COMPLETED.value)
-    return {"status": "Message sent", "processed_message": message}
+    try:
+        message = await handle_message(request, communication_service)
+        await communication_service.publisher(request.client_id, LoraStatus.COMPLETED.value)
+
+        return {"status": "Message sent", "processed_message": message}
+
+    except Exception as e:
+        return {"status": "Error", "message": str(e)}
