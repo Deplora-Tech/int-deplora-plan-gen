@@ -30,6 +30,7 @@ class LLMService:
                 status_code=500, detail="Invalid platform specified."
             )
 
+
     async def llm_request_groq(self, prompt: str):
         try:
             # Generate the chat completion using the Groq client
