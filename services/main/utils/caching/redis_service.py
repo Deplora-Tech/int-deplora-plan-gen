@@ -31,15 +31,15 @@ class RedisService:
 
         try:
             chat_key = f"chat_history:{session_id}:{client_id}"
-            raw_history = redis.lrange(chat_key, 0, -1)
-            chat_history = [json.loads(msg) for msg in raw_history]
+            raw_history = redis.lrange(chat_key, -2, -1)
+            last_two_messages = [json.loads(msg) for msg in raw_history] if raw_history else []
 
             plan_key = f"current_plan:{session_id}:{client_id}"
             plan_data = redis.get(plan_key)
             current_plan = json.loads(plan_data) if plan_data else None
 
             return {
-                "chat_history": chat_history,
+                "chat_history": last_two_messages,
                 "current_plan": current_plan
             }
         except Exception as e:
