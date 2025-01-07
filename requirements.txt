@@ -9,15 +9,10 @@ transformers~=4.47.0
 python-dotenv~=1.0.1
 numpy~=2.0.2
 requests~=2.32.3
-<<<<<<< HEAD
-gitpython
-groq
 markdownify
 playwright
 anthropic
 openai
-=======
 gitpython~=3.1.43
 groq~=0.13.1
-aioredis~=2.0.1
->>>>>>> ca4793c04b9f5d315b8dfeb173e4d78386556275
+redis
