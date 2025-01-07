@@ -80,7 +80,7 @@ class ManagementService:
         except Exception as e:
             logger.error(f"Error occurred: {e}")
             await communication_service.publisher(user_id, LoraStatus.FAILED.value)
-            return {"status": "error", "response": "An error occurred. Please try again."}
+            raise e
 
 
     async def process_conversation(self, request: MessageRequest, chat_history: str) -> dict:
