@@ -5,11 +5,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2ccd83dd-126f-4e6a-9422-f5cb017750ee" name="Changes" comment="services initialized">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/main/planGenerator/TerraformDocScraper.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api.test.py" beforeDir="false" afterPath="$PROJECT_DIR$/api.test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/logger.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/logger.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/main/communication/api.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/communication/api.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/main/management/service.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/management/service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/main/planGenerator/TerraformRegistryFetcher.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/services/main/planGenerator/service.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/planGenerator/service.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/services/main/promptManager/promptsv001.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/promptManager/promptsv001.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/services/main/promptManager/service.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/promptManager/service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/main/utils/caching/redis_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/utils/caching/redis_service.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -78,7 +84,7 @@
     "Python.api.test.executor": "Run",
     "Python.main.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "#10 on enhancing-prompt",
+    "git-widget-placeholder": "#10 on Merging enhancing-prompt",
     "ignore.virus.scanning.warn.message": "true",
     "last_opened_file_path": "C:/Users/thamb/OneDrive/Documents/GitHub/int-deplora-plan-gen/schemas",
     "node.js.detected.package.eslint": "true",
@@ -275,7 +281,7 @@
       <workItem from="1736018419849" duration="1320000" />
       <workItem from="1736020044164" duration="3896000" />
       <workItem from="1736153073067" duration="549000" />
-      <workItem from="1736240973023" duration="11374000" />
+      <workItem from="1736240973023" duration="11921000" />
     </task>
     <task id="LOCAL-00001" summary="services initialized">
       <option name="closed" value="true" />
