@@ -15,7 +15,7 @@ class ManagementService:
         # self.validation_service = ValidatorService(
         #     "C:\\Users\\thamb\\Downloads\\validate"
         # )
-        self.repo_service = RepoService("C:\\Users\\Asus\\Downloads\\testtt02\\repos")
+        self.repo_service = RepoService("C:\\Users\\thamb\\Downloads\\repos")
         self.plan_generator_service = PlanGeneratorService()
         self.llm_service = LLMService()
         self.prompt_manager_service = PromptManagerService()

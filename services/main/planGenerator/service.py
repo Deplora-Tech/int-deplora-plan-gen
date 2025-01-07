@@ -4,11 +4,8 @@ from services.main.workers.llm_worker import LLMService
 from services.main.promptManager.service import PromptManagerService
 from services.main.enums import DeploymentOptions
 from services.main.planGenerator.FileParser import FileParser
-
-from services.main.planGenerator.TerraformDocScraper import TerraformDocScraper
 from services.main.validationManager.service import ValidatorService
 from core.logger import logger
-import asyncio
 
 
 class PlanGeneratorService:
@@ -18,10 +15,8 @@ class PlanGeneratorService:
         self.prompt_manager_service = PromptManagerService()
         self.file_parser = FileParser()
         self.validator_service = ValidatorService()
-        self.terraform_doc_scraper = TerraformDocScraper()
 
         self.MAX_VALIDATION_ITERATIONS = 1
-        self.PLAN_GENERATION_PLATFORM = "deepseek"
 
     async def generate_deployment_plan(
         self,
@@ -35,19 +30,22 @@ class PlanGeneratorService:
         1. Prepare the prompt
         2. Call Prompt Manager Service
         """
-
-        # Initialize the browser asynchronously
-        initialize_browser_task = asyncio.create_task(
-            self.terraform_doc_scraper.initialize_browser()
-        )
-
-        # Get deployment recommendation in the form of a JSON
-        # { "Deployment Plan": "",  "Reasoning": ""}
-        classification_prompt = (
-            await self.prompt_manager_service.prepare_classification_prompt(
-                user_preferences, project_details, prompt
+        """
+        if chat_history contain a current plan then based on the prompt, generate a suitable response, 
+        and provide any additional information or context as needed. with enhanced plan
+        """
+        if chat_history.get("current_plan"):
+            classification_prompt = self.prompt_manager_service.prepare_client_feedBack_prompt(
+                prompt, chat_history, project_details, user_preferences, chat_history["current_plan"]
             )
-        )
+        else:
+            classification_prompt = (
+                await self.prompt_manager_service.prepare_classification_prompt(
+                    user_preferences, project_details, prompt
+                )
+            )
+
+        # { "Deployment Plan": "",  "Reasoning": ""}
         deployment_recommendation = await self.llm_service.llm_request(
             prompt=classification_prompt
         )

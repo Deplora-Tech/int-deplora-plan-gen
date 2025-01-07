@@ -1,7 +1,7 @@
 from services.main.promptManager.promptsv001 import (
     classification_prompt,
     docker_prompt,
-    identify_resources_prompt,
+    identify_resources_prompt, feedback_prompt,
 )
 from services.main.promptManager.promptsv001 import (
     validate_for_hardcoded_values_prompt,
@@ -85,3 +85,24 @@ class PromptManagerService:
         )
 
         return prompt
+
+    async def prepare_client_feedback_prompt(
+            self,
+            prompt: str,
+            chat_history: dict,
+            project_details: dict,
+            user_preferences: dict,
+            current_plan: dict
+    ) -> str:
+        """
+        Prepare the client feedback prompt for the user.
+        """
+
+        return feedback_prompt.format(
+            project_details,
+            user_preferences,
+            prompt,
+            chat_history,
+            current_plan
+        )
+
