@@ -50,14 +50,12 @@ class SessionDataHandler:
 
 
 class TFDocsCache:
-    @staticmethod
     def store_docs(resource: str, doc: str):
         try:
             redis_session.set(resource, doc, ex=86400)
         except Exception as e:
             logger.debug(f"Error storing docs: {e}")
-            
-    @staticmethod
+
     def get_docs(resource: str):
         try:
             return redis_session.get(resource)

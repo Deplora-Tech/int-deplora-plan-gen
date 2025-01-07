@@ -1,7 +1,7 @@
 from playwright.async_api import async_playwright
 import markdownify
 from core.logger import logger
-from main.utils.caching.redis_service import TFDocsCache
+from services.main.utils.caching.redis_service import TFDocsCache
 
 class TerraformDocScraper :
     """
@@ -24,6 +24,8 @@ class TerraformDocScraper :
         Fetch the Terraform resource definition from the Terraform Registry.
         """
         logger.info(f"Fetching definition for {resource_name}.")
+        
+        resource_name = resource_name.replace("aws_", "")
         
         # Check if the definition is already cached
         cached_definition = TFDocsCache.get_docs(resource_name)

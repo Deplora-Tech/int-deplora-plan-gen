@@ -36,66 +36,73 @@ class PlanGeneratorService:
         2. Call Prompt Manager Service
         """
 
-        # Initialize the browser asynchronously
-        initialize_browser_task = asyncio.create_task(
-            self.terraform_doc_scraper.initialize_browser()
-        )
-
-        # Get deployment recommendation in the form of a JSON
-        # { "Deployment Plan": "",  "Reasoning": ""}
-        classification_prompt = (
-            await self.prompt_manager_service.prepare_classification_prompt(
-                user_preferences, project_details, prompt
+        try:
+            # Initialize the browser asynchronously
+            initialize_browser_task = asyncio.create_task(
+                self.terraform_doc_scraper.initialize_browser()
             )
-        )
-        deployment_recommendation = await self.llm_service.llm_request(
-            prompt=classification_prompt
-        )
-        deployment_recommendation = json.loads(deployment_recommendation)
-        deployment_strategy = deployment_recommendation["Deployment Plan"]
-        logger.info(f"Deployment strategy: {deployment_strategy}")
 
-        # Wait for the browser to initialize
-        await initialize_browser_task
+            # Get deployment recommendation in the form of a JSON
+            # { "Deployment Plan": "",  "Reasoning": ""}
+            classification_prompt = (
+                await self.prompt_manager_service.prepare_classification_prompt(
+                    user_preferences, project_details, prompt
+                )
+            )
+            deployment_recommendation = await self.llm_service.llm_request(
+                prompt=classification_prompt
+            )
+            deployment_recommendation = json.loads(deployment_recommendation)
+            deployment_strategy = deployment_recommendation["Deployment Plan"]
+            logger.info(f"Deployment strategy: {deployment_strategy}")
 
-        # Identify resources
-        identified_resources, terraform_docs = await self._identify_resources(
-            deployment_strategy,
-            user_preferences,
-            project_details,
-            chat_history,
-            prompt,
-        )
-        logger.info(f"Identified resources: {identified_resources}")
+            # Wait for the browser to initialize
+            await initialize_browser_task
 
-        # logger.info(f"Terraform docs: {terraform_docs}")
+            # Identify resources
+            identified_resources, terraform_docs = await self._identify_resources(
+                deployment_strategy,
+                user_preferences,
+                project_details,
+                chat_history,
+                prompt,
+            )
+            logger.info(f"Identified resources: {identified_resources}")
 
-        # Generate initial deployment solution
-        generation_prompt = self._get_strategy_prompt(
-            deployment_strategy,
-            user_preferences,
-            project_details,
-            chat_history,
-            prompt,
-            terraform_docs,
-        )
-        deployment_solution = await self.llm_service.llm_request(
-            prompt=generation_prompt, platform=self.PLAN_GENERATION_PLATFORM
-        )
-        logger.info(f"Deployment recommendation: {deployment_recommendation}")
-        logger.info(f"Deployment solution: {deployment_solution}")
+            # logger.info(f"Terraform docs: {terraform_docs}")
 
-        parsed_files, parsed_file_content = self.file_parser.parse(deployment_solution)
+            # Generate initial deployment solution
+            generation_prompt = self._get_strategy_prompt(
+                deployment_strategy,
+                user_preferences,
+                project_details,
+                chat_history,
+                prompt,
+                terraform_docs,
+            )
+            deployment_solution = await self.llm_service.llm_request(
+                prompt=generation_prompt, platform=self.PLAN_GENERATION_PLATFORM
+            )
+            logger.info(f"Deployment recommendation: {deployment_recommendation}")
+            logger.info(f"Deployment solution: {deployment_solution}")
 
-        print("Parsed files: ")
-        print("\n\n".join(parsed_file_content))
+            parsed_files, parsed_file_content = self.file_parser.parse(deployment_solution)
 
-        # Validate and fix files
-        parsed_files = await self._validate_and_fix_files(
-            parsed_files, parsed_file_content
-        )
+            print("Parsed files: ")
+            print("\n\n".join(parsed_file_content))
 
-        return (deployment_recommendation, deployment_solution, parsed_files)
+            # Validate and fix files
+            parsed_files = await self._validate_and_fix_files(
+                parsed_files, parsed_file_content
+            )
+
+            return (deployment_recommendation, deployment_solution, parsed_files)
+        
+        except Exception as e:
+            logger.error(f"Error occurred: {e}")
+            raise e
+            
+    
 
     def _get_strategy_prompt(
         self, strategy, preferences, details, history, prompt, terraform_docs

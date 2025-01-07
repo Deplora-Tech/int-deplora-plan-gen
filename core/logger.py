@@ -8,9 +8,11 @@ import sys
 logger = logging.getLogger()
 sys.stdout.reconfigure(encoding="utf-8")  # Ensure stdout uses UTF-8
 
-# formatter = logging.Formatter(
-#     fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-# )
+# Create a more detailed formatter
+formatter = logging.Formatter(
+    fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s - [%(pathname)s:%(lineno)d]",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 
 stream_handler = logging.StreamHandler(sys.stdout)
 file_handler = RotatingFileHandler(

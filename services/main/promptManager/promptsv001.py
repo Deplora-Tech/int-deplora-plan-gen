@@ -194,7 +194,7 @@ docker_prompt = """You are Deplora—an expert AI assistant and senior software 
 
 ---
 
-Here are some definitions of the terraform resources that might be helpful. Only create the resources that are necessary for the deployment.
+Here are some definitions of the terraform resources that might be helpful. Only create the resources that are necessary for the deployment. Make sure all the necessary resources for each resource is created and all the necessary attributes are defined for each resource.
 {}
 """
 

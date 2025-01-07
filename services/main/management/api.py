@@ -36,4 +36,5 @@ async def handle_message(request: MessageRequest, communcationService: Communica
         return res
 
     else:  # Handle unknown intent
+        logger.debug("Unknown intent")
         return {"status": "success", "response": "I'm sorry, I didn't understand that. Can you clarify?"}
