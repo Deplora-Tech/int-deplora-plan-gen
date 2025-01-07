@@ -12,7 +12,7 @@ async def main():
             client_id="123",
             project_id="123",
             organization_id="123",
-            session_id="12345",
+            session_id="1234",
             chat_history={},
         )
         , CommunicationService()
