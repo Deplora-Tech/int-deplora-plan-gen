@@ -9,7 +9,7 @@ from services.main.utils.caching.redis_service import RedisService
 
 router = APIRouter()
 communication_service = CommunicationService()
-from main import redis
+
 
 @router.websocket("/ws/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: str):
