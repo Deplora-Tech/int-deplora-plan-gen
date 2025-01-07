@@ -5,14 +5,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2ccd83dd-126f-4e6a-9422-f5cb017750ee" name="Changes" comment="services initialized">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/main/planGenerator/TerraformDocScraper.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api.test.py" beforeDir="false" afterPath="$PROJECT_DIR$/api.test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/logger.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/logger.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/services/main/communication/api.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/communication/api.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/main/management/api.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/management/api.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/services/main/management/service.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/management/service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/main/planGenerator/TerraformRegistryFetcher.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/services/main/planGenerator/service.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/planGenerator/service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/main/promptManager/promptsv001.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/promptManager/promptsv001.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/services/main/promptManager/service.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/promptManager/service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/main/utils/caching/redis_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/main/utils/caching/redis_service.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -32,7 +35,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="plan-generate" />
+        <entry key="$PROJECT_DIR$" value="master" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -67,32 +70,32 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;FastAPI.fastApiProject.executor&quot;: &quot;Run&quot;,
-    &quot;HTTP Request.generated-requests | #1.executor&quot;: &quot;Run&quot;,
-    &quot;HTTP Request.generated-requests | #10.executor&quot;: &quot;Run&quot;,
-    &quot;HTTP Request.generated-requests | #2.executor&quot;: &quot;Run&quot;,
-    &quot;HTTP Request.generated-requests | #3.executor&quot;: &quot;Run&quot;,
-    &quot;HTTP Request.generated-requests | #4.executor&quot;: &quot;Run&quot;,
-    &quot;HTTP Request.generated-requests | #5.executor&quot;: &quot;Run&quot;,
-    &quot;HTTP Request.generated-requests | #8.executor&quot;: &quot;Run&quot;,
-    &quot;HTTP Request.generated-requests | #9.executor&quot;: &quot;Run&quot;,
-    &quot;Python.api.test.executor&quot;: &quot;Run&quot;,
-    &quot;Python.main.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/thamb/OneDrive/Documents/GitHub/int-deplora-plan-gen/schemas&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "FastAPI.fastApiProject.executor": "Run",
+    "HTTP Request.generated-requests | #1.executor": "Run",
+    "HTTP Request.generated-requests | #10.executor": "Run",
+    "HTTP Request.generated-requests | #2.executor": "Run",
+    "HTTP Request.generated-requests | #3.executor": "Run",
+    "HTTP Request.generated-requests | #4.executor": "Run",
+    "HTTP Request.generated-requests | #5.executor": "Run",
+    "HTTP Request.generated-requests | #8.executor": "Run",
+    "HTTP Request.generated-requests | #9.executor": "Run",
+    "Python.api.test.executor": "Run",
+    "Python.main.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "#10 on Merging enhancing-prompt",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "C:/Users/thamb/OneDrive/Documents/GitHub/int-deplora-plan-gen/schemas",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\thamb\OneDrive\Documents\GitHub\int-deplora-plan-gen\schemas" />
@@ -278,6 +281,7 @@
       <workItem from="1736018419849" duration="1320000" />
       <workItem from="1736020044164" duration="3896000" />
       <workItem from="1736153073067" duration="549000" />
+      <workItem from="1736240973023" duration="11921000" />
     </task>
     <task id="LOCAL-00001" summary="services initialized">
       <option name="closed" value="true" />
@@ -309,7 +313,7 @@
     <option name="LAST_COMMIT_MESSAGE" value="services initialized" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/int_deplora_plan_gen$fastApiProject.coverage" NAME="fastApiProject Coverage Results" MODIFIED="1736181830930" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/int_deplora_plan_gen$fastApiProject.coverage" NAME="fastApiProject Coverage Results" MODIFIED="1736245385150" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
     <SUITE FILE_PATH="coverage/int_deplora_plan_gen$api_test.coverage" NAME="api.test Coverage Results" MODIFIED="1735313576291" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/main_py$fastApiProject.coverage" NAME="fastApiProject Coverage Results" MODIFIED="1733766787103" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
     <SUITE FILE_PATH="coverage/main_py$main.coverage" NAME="main Coverage Results" MODIFIED="1733729495626" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
