@@ -70,10 +70,14 @@ class PlanGeneratorService:
 
         # logger.info(f"Terraform docs: {terraform_docs}")
 
-
         # Generate initial deployment solution
         generation_prompt = self._get_strategy_prompt(
-            deployment_strategy, user_preferences, project_details, chat_history, prompt, terraform_docs
+            deployment_strategy,
+            user_preferences,
+            project_details,
+            chat_history,
+            prompt,
+            terraform_docs,
         )
         deployment_solution = await self.llm_service.llm_request(
             prompt=generation_prompt, platform=self.PLAN_GENERATION_PLATFORM
@@ -93,7 +97,9 @@ class PlanGeneratorService:
 
         return (deployment_recommendation, deployment_solution, parsed_files)
 
-    def _get_strategy_prompt(self, strategy, preferences, details, history, prompt, terraform_docs):
+    def _get_strategy_prompt(
+        self, strategy, preferences, details, history, prompt, terraform_docs
+    ):
 
         if strategy == DeploymentOptions.DOCKERIZED_DEPLOYMENT.value:
             return self.prompt_manager_service.prepare_docker_prompt(
@@ -131,9 +137,7 @@ class PlanGeneratorService:
         return list(parsed_files_map.values())
 
     async def _fetch_resource_with_doc(self, resource):
-        doc = await self.terraform_doc_scraper.fetch_definition(
-            resource.replace("aws_", "")
-        )
+        doc = await self.terraform_doc_scraper.fetch_definition(resource)
         return {"resourceName": resource, "doc": doc}
 
     async def _identify_resources(
@@ -162,7 +166,7 @@ class PlanGeneratorService:
                 for resource in identified_resources
             )
         )
-        
+
         terraform_docs = [doc for doc in terraform_docs if doc["doc"] is not None]
 
         return identified_resources, json.dumps(terraform_docs, indent=4)

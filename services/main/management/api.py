@@ -4,14 +4,14 @@ from services.main.enums import LoraStatus
 from services.main.management.classifier import classify_intent
 from services.main.management.service import ManagementService
 from services.main.communication.models import MessageRequest
-from services.main.utils.caching.redis_service import RedisService
+from services.main.utils.caching.redis_service import SessionDataHandler
 managementService = ManagementService()
 
 async def handle_message(request: MessageRequest, communcationService: CommunicationService):
     # Step 1: Use the classifier to detect the intent
-    chat_history = RedisService.get_chat_history(request.session_id, request.client_id)
+    chat_history = SessionDataHandler.get_chat_history(request.session_id, request.client_id)
     print("chat_history:", chat_history)
-    RedisService.store_message(request.session_id, request.client_id, "user", request.message)
+    SessionDataHandler.store_message(request.session_id, request.client_id, "user", request.message)
 
     intent = await classify_intent(request.message, chat_history)
     await communcationService.publisher(request.client_id, LoraStatus.INTENT_DETECTED.value)
@@ -27,12 +27,12 @@ async def handle_message(request: MessageRequest, communcationService: Communica
             session_id=request.session_id,
             communication_service=communcationService
         )
-        RedisService.store_message(request.session_id, request.client_id,"You", dep_plan["response"])
+        SessionDataHandler.store_message(request.session_id, request.client_id,"You", dep_plan["response"])
         return dep_plan
 
     elif intent == "Other":
         res =  await managementService.process_conversation(request, chat_history)
-        RedisService.store_message(request.session_id, request.client_id,"You", res["response"])
+        SessionDataHandler.store_message(request.session_id, request.client_id,"You", res["response"])
         return res
 
     else:  # Handle unknown intent

@@ -2,7 +2,8 @@ import redis
 from dotenv import load_dotenv
 load_dotenv()
 
-redis = redis.Redis(host='localhost', port=6379, decode_responses=True, )
+redis_session = redis.Redis(host='localhost', port=6379, decode_responses=True,db=0 )
+redis_tfcache = redis.Redis(host='localhost', port=6379, decode_responses=True,db=1 )
 
 # redis = redis.Redis(
 #     host=os.environ.get("REDIS_HOST"),

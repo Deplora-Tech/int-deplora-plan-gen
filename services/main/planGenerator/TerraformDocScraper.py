@@ -1,6 +1,7 @@
 from playwright.async_api import async_playwright
 import markdownify
 from core.logger import logger
+from main.utils.caching.redis_service import TFDocsCache
 
 class TerraformDocScraper :
     """
@@ -23,6 +24,14 @@ class TerraformDocScraper :
         Fetch the Terraform resource definition from the Terraform Registry.
         """
         logger.info(f"Fetching definition for {resource_name}.")
+        
+        # Check if the definition is already cached
+        cached_definition = TFDocsCache.get_docs(resource_name)
+        if cached_definition:
+            logger.info(f"Definition found in cache for {resource_name}.")
+            return cached_definition
+        
+        # Define the URL for the resource
         base_url = "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/"
         resource_url = f"{base_url}{resource_name}"
 
@@ -62,6 +71,10 @@ class TerraformDocScraper :
         else:
             logger.info(f"Definition found for {resource_name}.")
 
+        # Cache the definition
+        TFDocsCache.store_docs(resource_name, content)
+        
+        
         return content
 
     def close_browser(self):

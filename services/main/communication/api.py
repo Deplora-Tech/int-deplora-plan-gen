@@ -5,7 +5,7 @@ from services.main.communication.models import MessageRequest
 from services.main.communication.service import CommunicationService
 from services.main.enums import LoraStatus
 from services.main.management.api import handle_message
-from services.main.utils.caching.redis_service import RedisService
+from services.main.utils.caching.redis_service import SessionDataHandler
 
 router = APIRouter()
 communication_service = CommunicationService()
