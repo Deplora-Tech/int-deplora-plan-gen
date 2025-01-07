@@ -1,7 +1,4 @@
 import json
-from typing import Dict, Any, Tuple, List
-
-from anthropic.types import TextBlock, ToolUseBlock
 
 from services.main.workers.llm_worker import LLMService
 from services.main.promptManager.service import PromptManagerService
@@ -27,8 +24,7 @@ class PlanGeneratorService:
         user_preferences: dict,
         project_details: dict,
         chat_history: dict,
-    ) -> dict[Any, Any] | tuple[Any, Any, list[str], dict[str, str]]:
-        logger.info("Generating deployment plan.")
+    ) -> dict:
         """
         Generate a deployment plan based on the request
         1. Prepare the prompt
@@ -38,9 +34,9 @@ class PlanGeneratorService:
         if chat_history contain a current plan then based on the prompt, generate a suitable response, 
         and provide any additional information or context as needed. with enhanced plan
         """
-        if chat_history["current_plan"]:
-            classification_prompt = await self.prompt_manager_service.prepare_client_feedback_prompt(
-                prompt, chat_history["chat_history"], project_details, user_preferences, chat_history["current_plan"]
+        if chat_history.get("current_plan"):
+            classification_prompt = self.prompt_manager_service.prepare_client_feedBack_prompt(
+                prompt, chat_history, project_details, user_preferences, chat_history["current_plan"]
             )
         else:
             classification_prompt = (
@@ -49,18 +45,20 @@ class PlanGeneratorService:
                 )
             )
 
-        logger.info(f"Classification prompt: {classification_prompt}")
-
+        # { "Deployment Plan": "",  "Reasoning": ""}
         deployment_recommendation = await self.llm_service.llm_request(
             prompt=classification_prompt
         )
-        logger.info(f"Deployment recommendation: {json.loads(deployment_recommendation)}")
 
         deployment_recommendation = json.loads(deployment_recommendation)
+
+        # deployment_recommendation = { "Deployment Plan": "Dockerized Deployments (Containerization)", "Reasoning": "Based on your prompt and preferences, this plan is most suitable because it aligns with your specified technology and preference for Docker, offering the benefits of portability and simplicity." }
 
         deployment_strategy = deployment_recommendation["Deployment Plan"]
 
         logger.info(f"Deployment strategy: {deployment_strategy}")
+
+        # Identifying the response based on the deployment strategy
 
         resourcing_prompt = (
             self.prompt_manager_service.prepare_identify_resources_prompt(
@@ -109,7 +107,9 @@ class PlanGeneratorService:
         for file in parsed_files:
             parsed_files_dict[file["path"]] = file
 
-        validation_feedback = await self.validator_service.check_for_hardcoded_values(parsed_file_content)
+        validation_feedback = await self.validator_service.check_for_hardcoded_values(
+            parsed_file_content
+        )
 
         logger.info("Received validation feedback: ")
 
@@ -141,11 +141,12 @@ class PlanGeneratorService:
 
         else:
             logger.error("Validation failed after maximum iterations.")
-            parsed_files = list(parsed_files_dict.values())
 
-            return (
-                deployment_recommendation,
-                deployment_solution,
-                parsed_files,
-                parsed_file_content,
-            )
+        parsed_files = list(parsed_files_dict.values())
+
+        return (
+            deployment_recommendation,
+            deployment_solution,
+            parsed_files,
+            parsed_file_content,
+        )

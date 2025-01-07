@@ -2,6 +2,7 @@ import os
 from fastapi import FastAPI
 from services.main.communication.api import router as communication_router
 from fastapi.middleware.cors import CORSMiddleware
+
 # Initialize FastAPI application with lifespan event handlers
 app = FastAPI()
 app.include_router(communication_router, prefix="/api/v1/communication", tags=["Communication"])

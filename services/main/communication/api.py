@@ -9,6 +9,7 @@ from services.main.management.api import handle_message
 router = APIRouter()
 communication_service = CommunicationService()
 
+
 @router.websocket("/ws/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: str):
     await communication_service.connect(websocket, client_id)
