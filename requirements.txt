@@ -15,4 +15,7 @@ anthropic
 openai
 gitpython~=3.1.43
 groq~=0.13.1
+pydot
+diagrams
 redis
+
