@@ -16,7 +16,7 @@ async def classify_intent(user_query, chat_history=None):
     prompt = f"""
     Now You are an intent classifier for a chatbot that handles deployment-related queries. the related inputs are given,
     Classify the intent of the given input into one of the following categories:
-    1. Deployment Request: When the user is requesting or asking to create a deployment plan for the project.
+    1. Deployment Related: When the user is requesting or asking to create a deployment plan for the project or asking about deployment related questions.
     2. Other: For unrelated or ambiguous queries.
 
     Input: 

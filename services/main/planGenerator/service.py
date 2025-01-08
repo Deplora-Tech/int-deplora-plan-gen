@@ -86,7 +86,9 @@ class PlanGeneratorService:
             logger.info(f"Deployment recommendation: {deployment_recommendation}")
             logger.info(f"Deployment solution: {deployment_solution}")
 
-            parsed_files, parsed_file_content = self.file_parser.parse(deployment_solution)
+            parsed_files, parsed_file_content = self.file_parser.parse(
+                deployment_solution
+            )
 
             print("Parsed files: ")
             print("\n\n".join(parsed_file_content))
@@ -97,21 +99,27 @@ class PlanGeneratorService:
             )
 
             return (deployment_recommendation, deployment_solution, parsed_files)
-        
+
         except Exception as e:
             logger.error(f"Error occurred: {e}")
             raise e
-            
-    
 
     def _get_strategy_prompt(
         self, strategy, preferences, details, history, prompt, terraform_docs
     ):
+        refine = False
+        if history["current_plan"]:
+            refine = True
 
         if strategy == DeploymentOptions.DOCKERIZED_DEPLOYMENT.value:
-            return self.prompt_manager_service.prepare_docker_prompt(
-                preferences, details, history, prompt, terraform_docs
-            )
+            if refine:
+                return self.prompt_manager_service.prepare_docker_refine_prompt(
+                    preferences, details, history, prompt, terraform_docs, history["current_plan"]
+                )
+            else:
+                return self.prompt_manager_service.prepare_docker_prompt(
+                    preferences, details, history, prompt, terraform_docs
+                )
         elif strategy == DeploymentOptions.KUBERNETES_DEPLOYMENT.value:
             # TODO: Add Kubernetes-specific logic
             return ""
@@ -169,11 +177,10 @@ class PlanGeneratorService:
             logger.info(f"Identified resources response: {response}")
             identified_resources = json.loads(response)["resources"]
             logger.info(f"Identified resources: {identified_resources}")
-            
+
         except Exception as e:
             logger.error(f"Error identifying resources: {e}")
             identified_resources = []
-        
 
         terraform_docs = await asyncio.gather(
             *(

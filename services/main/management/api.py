@@ -17,7 +17,7 @@ async def handle_message(request: MessageRequest, communcationService: Communica
     await communcationService.publisher(request.client_id, LoraStatus.INTENT_DETECTED.value)
     logger.debug(f"Detected intent: {intent}")
     # Step 2: Route the message based on the detected intent
-    if intent == "Deployment Request":
+    if "Deployment" in intent:
         dep_plan =  await managementService.generate_deployment_plan(
             prompt=request.message,
             project_id=request.project_id,
@@ -30,7 +30,7 @@ async def handle_message(request: MessageRequest, communcationService: Communica
         SessionDataHandler.store_message(request.session_id, request.client_id,"You", dep_plan["response"])
         return dep_plan
 
-    elif intent == "Other":
+    elif "Other" in intent:
         res =  await managementService.process_conversation(request, chat_history)
         SessionDataHandler.store_message(request.session_id, request.client_id,"You", res["response"])
         return res

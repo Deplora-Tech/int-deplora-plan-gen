@@ -10,7 +10,8 @@ class LLMService:
         # Initialize the Groq client
         load_dotenv()
         self.client = Groq(
-            api_key=os.environ.get("GROQ_API_KEY"),
+            # api_key=os.environ.get("GROQ_API_KEY"),
+            api_key="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"
         )
         self.claude = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
         self.deepseek = OpenAI(

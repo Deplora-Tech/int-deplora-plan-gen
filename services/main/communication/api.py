@@ -27,10 +27,14 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
 @router.post("/send-message")
 async def send_message(request: MessageRequest):
     try:
+        print("Request:", request)
         message = await handle_message(request, communication_service)
         await communication_service.publisher(request.client_id, LoraStatus.COMPLETED.value)
+        
+        print("Message:", message)
 
         return {"status": "Message sent", "processed_message": message}
 
     except Exception as e:
-        return {"status": "Error", "message": str(e)}
+        print("Error", e)
+        return {"status": "Error", "processed_message": {"response": "An error occurred. Please try again."}}

@@ -2,6 +2,7 @@ from playwright.async_api import async_playwright
 import markdownify
 from core.logger import logger
 from services.main.utils.caching.redis_service import TFDocsCache
+import asyncio
 
 class TerraformDocScraper :
     """
@@ -15,8 +16,9 @@ class TerraformDocScraper :
         return cls._instance
 
     async def initialize_browser(self):
-        self.playwright = await async_playwright().start()
-        self.browser = await self.playwright.chromium.launch(headless=True)
+        # asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+        # self.playwright = await async_playwright().start()
+        # self.browser = await self.playwright.chromium.launch(headless=True)
         logger.info("Browser initialized.")
 
     async def fetch_definition(self, resource_name: str) -> str:
@@ -32,6 +34,8 @@ class TerraformDocScraper :
         if cached_definition:
             logger.info(f"Definition found in cache for {resource_name}.")
             return cached_definition
+        
+        return None # REMOVE
         
         # Define the URL for the resource
         base_url = "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/"
