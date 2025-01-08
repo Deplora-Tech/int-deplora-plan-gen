@@ -155,17 +155,24 @@ class PlanGeneratorService:
         chat_history,
         prompt,
     ):
-        resourcing_prompt = (
-            self.prompt_manager_service.prepare_identify_resources_prompt(
-                deployment_strategy,
-                user_preferences,
-                project_details,
-                chat_history,
-                prompt,
+        try:
+            resourcing_prompt = (
+                self.prompt_manager_service.prepare_identify_resources_prompt(
+                    deployment_strategy,
+                    user_preferences,
+                    project_details,
+                    chat_history,
+                    prompt,
+                )
             )
-        )
-        response = await self.llm_service.llm_request(prompt=resourcing_prompt)
-        identified_resources = json.loads(response)["resources"]
+            response = await self.llm_service.llm_request(prompt=resourcing_prompt)
+            identified_resources = json.loads(response)["resources"]
+            logger.info(f"Identified resources: {identified_resources}")
+            
+        except Exception as e:
+            logger.error(f"Error identifying resources: {e}")
+            identified_resources = []
+        
 
         terraform_docs = await asyncio.gather(
             *(
