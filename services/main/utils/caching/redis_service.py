@@ -4,7 +4,7 @@ import os
 import json
 
 class SessionDataHandler:
-    SESSION_TIMEOUT = int(os.getenv("SESSION_TIMEOUT", 36000))
+    SESSION_TIMEOUT = int(os.getenv("SESSION_TIMEOUT", 3600))
 
     @staticmethod
     def store_message(session_id: str, client_id: str, role: str, message: str):

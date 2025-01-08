@@ -19,7 +19,7 @@ class LLMService:
             base_url="https://api.deepseek.com",
         )
     
-    async def llm_request(self, prompt: str, platform: str = "groq"):
+    async def llm_request(self, prompt: str, platform: str = "deepseek"):
         if platform == "groq":
             return await self.llm_request_groq(prompt)
         elif platform == "deepseek":
@@ -43,7 +43,7 @@ class LLMService:
                     },
                     {"role": "user", "content": prompt},
                 ],
-                model="llama-3.3-70b-versatile",  # Adjust the model as needed
+                model="llama-3.3-70b-specdec",  # Adjust the model as needed
                 temperature=0.5,  # Adjust optional parameters as needed
                 max_tokens=8192,
                 top_p=1,

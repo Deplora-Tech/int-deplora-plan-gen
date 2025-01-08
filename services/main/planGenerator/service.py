@@ -52,7 +52,12 @@ class PlanGeneratorService:
             deployment_recommendation = await self.llm_service.llm_request(
                 prompt=classification_prompt
             )
-            deployment_recommendation = json.loads(deployment_recommendation)
+            print(deployment_recommendation, "dddddddddddddddddddddddddddddddddddddddddddddddddddddd")
+            deployment_recommendation = "{".join(deployment_recommendation.split("{")[1:])
+            deployment_recommendation = "}".join(deployment_recommendation.split("}")[:-1])
+
+            deployment_recommendation = json.loads(f"{{{deployment_recommendation}}}")
+
             deployment_strategy = deployment_recommendation["Deployment Plan"]
             logger.info(f"Deployment strategy: {deployment_strategy}")
 
@@ -94,9 +99,9 @@ class PlanGeneratorService:
             print("\n\n".join(parsed_file_content))
 
             # Validate and fix files
-            parsed_files = await self._validate_and_fix_files(
-                parsed_files, parsed_file_content
-            )
+            # parsed_files = await self._validate_and_fix_files(
+            #     parsed_files, parsed_file_content
+            # )
 
             return (deployment_recommendation, deployment_solution, parsed_files)
 
@@ -108,22 +113,23 @@ class PlanGeneratorService:
         self, strategy, preferences, details, history, prompt, terraform_docs
     ):
         refine = False
+        print("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh", history)
         if history["current_plan"]:
             refine = True
 
-        if strategy == DeploymentOptions.DOCKERIZED_DEPLOYMENT.value:
+        if DeploymentOptions.DOCKERIZED_DEPLOYMENT.value in strategy:
             if refine:
                 return self.prompt_manager_service.prepare_docker_refine_prompt(
-                    preferences, details, history, prompt, terraform_docs, history["current_plan"]
+                    preferences, details, history, prompt, history["current_plan"]
                 )
             else:
                 return self.prompt_manager_service.prepare_docker_prompt(
                     preferences, details, history, prompt, terraform_docs
                 )
-        elif strategy == DeploymentOptions.KUBERNETES_DEPLOYMENT.value:
+        elif DeploymentOptions.KUBERNETES_DEPLOYMENT.value in strategy:
             # TODO: Add Kubernetes-specific logic
             return ""
-        elif strategy == DeploymentOptions.VM_DEPLOYMENT.value:
+        elif DeploymentOptions.VM_DEPLOYMENT.value in strategy:
             # TODO: Add VM-specific logic
             return ""
         else:

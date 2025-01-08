@@ -28,6 +28,7 @@ async def handle_message(request: MessageRequest, communcationService: Communica
             communication_service=communcationService
         )
         SessionDataHandler.store_message(request.session_id, request.client_id,"You", dep_plan["response"])
+        SessionDataHandler.store_current_plan(request.session_id, request.client_id, dep_plan["file_contents"])
         return dep_plan
 
     elif "Other" in intent:

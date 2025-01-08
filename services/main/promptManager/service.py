@@ -45,7 +45,7 @@ class PromptManagerService:
         """
 
         PROMPT_TO_GENERATE = docker_refine_prompt.format(
-            project_details, user_preferences, prompt, chat_history, files
+            files, project_details, user_preferences, prompt, chat_history
         )
 
         return PROMPT_TO_GENERATE
