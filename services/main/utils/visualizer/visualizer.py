@@ -335,6 +335,7 @@ resource_icon_map = {
     "aws_iam_role": IdentityAndAccessManagementIamRole,
     "aws_iam_temporary_security_credential": IdentityAndAccessManagementIamTemporarySecurityCredential,
     "aws_iam": IdentityAndAccessManagementIam,
+    "aws_iam_role_policy_attachment": IdentityAndAccessManagementIamRole,
     "aws_inspector_agent": InspectorAgent,
     "aws_inspector": Inspector,
     "aws_kms": KeyManagementService,
@@ -343,7 +344,7 @@ resource_icon_map = {
     "aws_resource_access_manager": ResourceAccessManager,
     "aws_secrets_manager": SecretsManager,
     "aws_security_hub_finding": SecurityHubFinding,
-    "aws_security_hub": SecurityHub,
+    "aws_security_group.lb_sg": SecurityHub,
     "aws_security_identity_compliance": SecurityIdentityAndCompliance,
     "aws_shield_advanced": ShieldAdvanced,
     "aws_shield": Shield,
@@ -515,9 +516,9 @@ resource_icon_map = {
     "aws_nat_gateway": NATGateway,
     "aws_network_firewall": NetworkFirewall,
     "aws_networking_content_delivery": NetworkingAndContentDelivery,
-    "aws_private_subnet": PrivateSubnet,
+    "aws_subnet.private": PrivateSubnet,
     "aws_privatelink": Privatelink,
-    "aws_public_subnet": PublicSubnet,
+    "aws_subnet.public": PublicSubnet,
     "aws_route53_hosted_zone": Route53HostedZone,
     "aws_route53": Route53,
     "aws_route_table": RouteTable,
@@ -606,7 +607,7 @@ resource_icon_map = {
     "aws_redshift": Redshift,
 }
 
-default_icon = General  # Default icon for unknown resources
+default_icon = General
 
 
 def parse_dot_to_diagram(dot_data, output_file="terraform_graph"):
@@ -614,25 +615,43 @@ def parse_dot_to_diagram(dot_data, output_file="terraform_graph"):
     Parse DOT data and render it as a diagram using diagrams library.
     """
 
-    # Parse the DOT graph
     dot_graph = pydot.graph_from_dot_data(dot_data)[0]
 
-    # Render the graph using diagrams
     graph_attributes = {
-        "bgcolor": "#000021",  # Background color
-        "rankdir": "RL",  # Rank direction
+        "bgcolor": "#000021",
+        "rankdir": "RL",
+        "nodesep": "2.0",
+        "ranksep": "2.5",
+        "fontsize": "10",
     }
-    with Diagram(output_file, show=False, graph_attr=graph_attributes) as diag:
+
+    node_attributes = {
+        "shape": "box",  # Use a box shape for better label fitting
+        "fontsize": "20",  # Adjust font size for readability
+        "width": "0.0",  # Dynamic width based on label
+        "height": "0.0",  # Dynamic height based on label
+        "fixedsize": "false",  # Allow node size to adapt to label
+        "style": "rounded",  # Optional: rounded corners
+        "fontcolor": "white",  # Font color for better contrast,   
+        "labelloc": "b",  # Place label at the bottom of the node
+    }
+
+    with Diagram(
+        output_file, show=False, graph_attr=graph_attributes, node_attr=node_attributes
+    ) as diag:
         created_nodes = {}
 
         # Create nodes
         for node in dot_graph.get_nodes():
             node_name = node.get_name().strip('"')
             label = node.get_label().strip('"') if node.get_label() else node_name
-            resource_type = node_name.split(".")[0]  # Extract the resource type
-            node_icon = resource_icon_map.get(
-                resource_type, default_icon
-            )  # Use default_icon if no mapping exists
+            resource_type0 = node_name
+            resource_type1 = node_name.split(".")[0]
+            node_icon = (
+                resource_icon_map.get(resource_type0)
+                or resource_icon_map.get(resource_type1)
+                or default_icon
+            )
             created_nodes[node_name] = node_icon(label)
 
         # Create edges
@@ -643,13 +662,12 @@ def parse_dot_to_diagram(dot_data, output_file="terraform_graph"):
                 created_nodes[src] >> created_nodes[dest]
 
 
-# DOT data representing the Terraform graph
 terraform_dot_data = """
 digraph G {
   rankdir = "RL";
   node [shape = rect, fontname = "sans-serif"];
   "aws_ecr_repository.repo" [label="aws_ecr_repository.repo"];
-  "aws_ecs_cluster.cluster" [label="aws_ecs_cluster.cluster"];
+  "aws_eks_cluster.cluster" [label="aws_eks_cluster.cluster"];
   "aws_ecs_service.service" [label="aws_ecs_service.service"];
   "aws_ecs_task_definition.task" [label="aws_ecs_task_definition.task"];
   "aws_iam_role.ecs_task_execution_role" [label="aws_iam_role.ecs_task_execution_role"];
@@ -661,7 +679,7 @@ digraph G {
   "aws_subnet.private" [label="aws_subnet.private"];
   "aws_subnet.public" [label="aws_subnet.public"];
   "aws_vpc.main" [label="aws_vpc.main"];
-  "aws_ecs_service.service" -> "aws_ecs_cluster.cluster";
+  "aws_ecs_service.service" -> "aws_eks_cluster.cluster";
   "aws_ecs_service.service" -> "aws_ecs_task_definition.task";
   "aws_ecs_service.service" -> "aws_lb_target_group.tg";
   "aws_ecs_service.service" -> "aws_security_group.lb_sg";
