@@ -7,7 +7,8 @@ from services.main.planGenerator.service import PlanGeneratorService
 from services.main.repoManager.service import RepoService
 from services.main.workers.llm_worker import LLMService
 
-import asyncio
+import asyncio, os
+from dotenv import load_dotenv
 
 
 class ManagementService:
@@ -15,7 +16,8 @@ class ManagementService:
         # self.validation_service = ValidatorService(
         #     "C:\\Users\\thamb\\Downloads\\validate"
         # )
-        self.repo_service = RepoService("C:\\Users\\Asus\\Downloads\\testtt02\\repos")
+        load_dotenv()
+        self.repo_service = RepoService(os.getenv("REPO_PATH"))
         self.plan_generator_service = PlanGeneratorService()
         self.llm_service = LLMService()
         self.prompt_manager_service = PromptManagerService()
