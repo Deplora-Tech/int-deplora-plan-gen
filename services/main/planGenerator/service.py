@@ -166,6 +166,7 @@ class PlanGeneratorService:
                 )
             )
             response = await self.llm_service.llm_request(prompt=resourcing_prompt)
+            logger.info(f"Identified resources response: {response}")
             identified_resources = json.loads(response)["resources"]
             logger.info(f"Identified resources: {identified_resources}")
             
