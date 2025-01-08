@@ -10,3 +10,4 @@ __pycache__
 ./config.py
 venv/*
 app.log
+*.png
