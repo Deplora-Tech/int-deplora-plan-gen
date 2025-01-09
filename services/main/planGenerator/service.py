@@ -52,11 +52,8 @@ class PlanGeneratorService:
             deployment_recommendation = await self.llm_service.llm_request(
                 prompt=classification_prompt
             )
-            print(deployment_recommendation, "dddddddddddddddddddddddddddddddddddddddddddddddddddddd")
-            deployment_recommendation = "{".join(deployment_recommendation.split("{")[1:])
-            deployment_recommendation = "}".join(deployment_recommendation.split("}")[:-1])
 
-            deployment_recommendation = json.loads(f"{{{deployment_recommendation}}}")
+            deployment_recommendation = self.file_parser.parse_json(deployment_recommendation)
 
             deployment_strategy = deployment_recommendation["Deployment Plan"]
             logger.info(f"Deployment strategy: {deployment_strategy}")
@@ -181,7 +178,7 @@ class PlanGeneratorService:
             )
             response = await self.llm_service.llm_request(prompt=resourcing_prompt)
             logger.info(f"Identified resources response: {response}")
-            identified_resources = json.loads(response)["resources"]
+            identified_resources = self.file_parser.parse_json(response)["resources"]
             logger.info(f"Identified resources: {identified_resources}")
 
         except Exception as e:
