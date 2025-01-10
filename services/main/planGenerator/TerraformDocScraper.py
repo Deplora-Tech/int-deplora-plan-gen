@@ -53,7 +53,7 @@ class TerraformDocScraper:
         """
         logger.info(f"Fetching definition for {resource_name}.")
         
-        browser = webdriver.Chrome(options=self.browser_options)
+        
 
         ignored_errors = [NoSuchElementException, ElementNotInteractableException]
 
@@ -70,7 +70,7 @@ class TerraformDocScraper:
         resource_url = f"{base_url}{resource_name}"
 
         try:
-
+            browser = webdriver.Chrome(options=self.browser_options)
             # Navigate to the resource URL
             browser.get(resource_url)
 

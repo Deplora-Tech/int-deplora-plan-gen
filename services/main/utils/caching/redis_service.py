@@ -14,6 +14,7 @@ class SessionDataHandler:
             structured_message = json.dumps({"role": role, "message": message})
             redis_session.rpush(redis_key, structured_message)
             redis_session.expire(redis_key, SessionDataHandler.SESSION_TIMEOUT)
+            logger.debug(f"Message stored in redis: {redis_key} - {structured_message}")
         except Exception as e:
             logger.debug(f"Error storing message: {e}")
 
@@ -32,6 +33,7 @@ class SessionDataHandler:
 
         try:
             chat_key = f"chat_history:{session_id}:{client_id}"
+            logger.debug(f"Retrieving chat history from redis: {chat_key}")
             raw_history = redis_session.lrange(chat_key, 0, -1)
             chat_history = [json.loads(msg) for msg in raw_history]
 
