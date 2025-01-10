@@ -1,16 +1,22 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
-from selenium.common.exceptions import NoSuchElementException, WebDriverException
-from webdriver_manager.chrome import ChromeDriverManager
 import markdownify
+from selenium.common.exceptions import WebDriverException
 from core.logger import logger
 from services.main.utils.caching.redis_service import TFDocsCache
+from selenium.common.exceptions import (
+    NoSuchElementException,
+    ElementNotInteractableException,
+)
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 
 class TerraformDocScraper:
     """
     Singleton class that manages a single Selenium browser instance and scrapes content.
     """
+
     _instance = None
 
     def __new__(cls):
@@ -22,24 +28,34 @@ class TerraformDocScraper:
         """
         Initialize the Selenium browser instance using WebDriverManager.
         """
-        options = Options()
-        options.add_argument('--headless=new')
-        # options.add_argument('--disable-gpu')
-        # options.add_argument('--no-sandbox')
 
         try:
-            self.browser = webdriver.Chrome(service=ChromeDriverManager().install(), options=options)
+            options = webdriver.ChromeOptions()
+            options.add_argument("--headless")
+            options.add_argument("--disable-gpu")
+            options.add_argument("--no-sandbox")
+
+            # self.browser = webdriver.Chrome(options=options)
+            self.browser_options = options
             logger.info("Browser initialized.")
         except WebDriverException as e:
             logger.error("Failed to initialize the browser.")
             logger.error(str(e))
-            self.browser = None
+            self.browser_options = None
+        except Exception as e:
+            logger.error("An error occurred while initializing the browser.")
+            logger.error(str(e))
+            self.browser_options = None
 
-    async def fetch_definition(self, resource_name: str) -> str:
+    def fetch_definition(self, resource_name: str) -> str:
         """
         Fetch the Terraform resource definition from the Terraform Registry.
         """
         logger.info(f"Fetching definition for {resource_name}.")
+        
+        browser = webdriver.Chrome(options=self.browser_options)
+
+        ignored_errors = [NoSuchElementException, ElementNotInteractableException]
 
         resource_name = resource_name.replace("aws_", "")
 
@@ -54,28 +70,34 @@ class TerraformDocScraper:
         resource_url = f"{base_url}{resource_name}"
 
         try:
+
             # Navigate to the resource URL
-            self.browser.get(resource_url)
+            browser.get(resource_url)
 
-            # Wait for the content to load (implicit wait can be set globally)
-            self.browser.implicitly_wait(10)
+            wait = WebDriverWait(
+                browser,
+                timeout=10,
+                poll_frequency=0.2,
+                ignored_exceptions=ignored_errors,
+            )
+            element = wait.until(
+                EC.visibility_of_element_located((By.ID, "provider-docs-content"))
+            )
+            html = element.get_attribute("innerHTML")
+            content = markdownify.markdownify(html, heading_style="ATX")
 
-            # Extract the content inside the element with the id "provider-docs-content"
-            try:
-                element = self.browser.find_element(By.ID, "provider-docs-content")
-                html = element.get_attribute("innerHTML")
-                content = markdownify.markdownify(html, heading_style="ATX")
-
-                if "This documentation page doesn't exist" in content:
-                    content = None
-
-            except NoSuchElementException:
+            if "This documentation page doesn't exist" in content:
                 content = None
 
         except Exception as e:
-            logger.error(f"An error occurred while fetching the definition for {resource_name}.")
+            logger.error(
+                f"An error occurred while fetching the definition for {resource_name}."
+            )
             logger.error(str(e))
             content = None
+        
+        finally:
+            browser.quit()
 
         if content is None:
             logger.error(f"Definition not found for {resource_name}.")
@@ -86,11 +108,3 @@ class TerraformDocScraper:
         TFDocsCache.store_docs(resource_name, content)
 
         return content
-
-    def close_browser(self):
-        """
-        Close the browser instance.
-        """
-        if self.browser:
-            self.browser.quit()
-            logger.info("Browser closed.")

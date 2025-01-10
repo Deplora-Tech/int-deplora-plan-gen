@@ -9,6 +9,7 @@ from services.main.planGenerator.TerraformDocScraper import TerraformDocScraper
 from services.main.validationManager.service import ValidatorService
 from core.logger import logger
 import asyncio
+import concurrent.futures
 
 
 class PlanGeneratorService:
@@ -53,7 +54,9 @@ class PlanGeneratorService:
                 prompt=classification_prompt
             )
 
-            deployment_recommendation = self.file_parser.parse_json(deployment_recommendation)
+            deployment_recommendation = self.file_parser.parse_json(
+                deployment_recommendation
+            )
 
             deployment_strategy = deployment_recommendation["Deployment Plan"]
             logger.info(f"Deployment strategy: {deployment_strategy}")
@@ -70,7 +73,7 @@ class PlanGeneratorService:
                 prompt,
             )
             logger.info(f"Identified resources: {identified_resources}")
-
+                                
             # logger.info(f"Terraform docs: {terraform_docs}")
 
             # Generate initial deployment solution
@@ -155,8 +158,13 @@ class PlanGeneratorService:
         return list(parsed_files_map.values())
 
     async def _fetch_resource_with_doc(self, resource):
-        doc = await self.terraform_doc_scraper.fetch_definition(resource)
-        return {"resourceName": resource, "doc": doc}
+        loop = asyncio.get_running_loop()
+        # run_in_executor will run the sync function in a pool of threads
+        content = await loop.run_in_executor(
+            None, self.terraform_doc_scraper.fetch_definition, resource
+        )
+        
+        return {"resourceName": resource, "doc": content}
 
     async def _identify_resources(
         self,
@@ -185,13 +193,12 @@ class PlanGeneratorService:
             logger.error(f"Error identifying resources: {e}")
             identified_resources = []
 
-        terraform_docs = await asyncio.gather(
-            *(
-                self._fetch_resource_with_doc(resource)
-                for resource in identified_resources
-            )
-        )
+
+        tasks = [
+            self._fetch_resource_with_doc(resource) for resource in identified_resources
+        ]
+        terraform_docs = await asyncio.gather(*tasks)
 
         terraform_docs = [doc for doc in terraform_docs if doc["doc"] is not None]
-
+        
         return identified_resources, json.dumps(terraform_docs, indent=4)
