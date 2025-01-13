@@ -8,6 +8,7 @@ from services.main.repoManager.service import RepoService
 from services.main.workers.llm_worker import LLMService
 
 import asyncio, os
+import traceback
 from dotenv import load_dotenv
 
 
@@ -80,7 +81,7 @@ class ManagementService:
                 "file_contents": file_contents  # Add file contents in response
             }
         except Exception as e:
-            logger.error(f"Error occurred: {e}")
+            logger.error(f"Error occurred: {traceback.print_exc()}")
             await communication_service.publisher(user_id, LoraStatus.FAILED.value)
             raise e
 

@@ -10,6 +10,7 @@ from services.main.validationManager.service import ValidatorService
 from core.logger import logger
 import asyncio
 import concurrent.futures
+import traceback
 
 
 class PlanGeneratorService:
@@ -106,7 +107,7 @@ class PlanGeneratorService:
             return (deployment_recommendation, deployment_solution, parsed_files)
 
         except Exception as e:
-            logger.error(f"Error occurred: {e}")
+            logger.error(f"Error occurred: {traceback.print_exc()}")
             raise e
 
     def _get_strategy_prompt(
@@ -190,7 +191,7 @@ class PlanGeneratorService:
             logger.info(f"Identified resources: {identified_resources}")
 
         except Exception as e:
-            logger.error(f"Error identifying resources: {e}")
+            logger.error(f"Error identifying resources: {traceback.format_exc()}")
             identified_resources = []
 
 

@@ -57,7 +57,7 @@ class TerraformDocScraper:
 
         ignored_errors = [NoSuchElementException, ElementNotInteractableException]
 
-        resource_name = resource_name.replace("aws_", "")
+        resource_name = resource_name.replace("aws_", "").replace("azurerm_", "").replace("google_", "")
 
         # Check if the definition is already cached
         cached_definition = TFDocsCache.get_docs(resource_name)

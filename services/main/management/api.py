@@ -9,7 +9,7 @@ managementService = ManagementService()
 
 async def handle_message(request: MessageRequest, communcationService: CommunicationService):
     # Step 1: Use the classifier to detect the intent
-    chat_history = SessionDataHandler.get_chat_history(request.session_id, request.client_id)
+    chat_history = SessionDataHandler.get_chat_history(request.session_id)
     print("chat_history:", chat_history)
     SessionDataHandler.store_message(request.session_id, request.client_id, "user", request.message)
 

@@ -1,67 +1,102 @@
-from services.main.utils.caching.redis import redis_session
+from services.main.utils.caching.redis import redis_session, redis_tfcache
 from core.logger import logger
 import os
 import json
 
+
 class SessionDataHandler:
-    SESSION_TIMEOUT = int(os.getenv("SESSION_TIMEOUT", 3600))
+    SESSION_TIMEOUT = int(os.getenv("SESSION_TIMEOUT", 3600*24*365))
 
     @staticmethod
     def store_message(session_id: str, client_id: str, role: str, message: str):
-
         try:
-            redis_key = f"chat_history:{session_id}:{client_id}"
-            structured_message = json.dumps({"role": role, "message": message})
-            redis_session.rpush(redis_key, structured_message)
+            redis_key = session_id
+            # Fetch the existing session or initialize a new one
+            session_data = redis_session.get(redis_key)
+            session_object = (
+                json.loads(session_data) if session_data else {"client_id": client_id}
+            )
+
+            # Update chat history
+            chat_history = session_object.get("chat_history", [])
+            chat_history.append({"role": role, "message": message})
+
+            session_object["chat_history"] = chat_history
+
+            redis_session.set(redis_key, json.dumps(session_object))
             redis_session.expire(redis_key, SessionDataHandler.SESSION_TIMEOUT)
-            logger.debug(f"Message stored in redis: {redis_key} - {structured_message}")
+            logger.debug(f"Message stored in session: {redis_key} - {role}: {message}")
         except Exception as e:
-            logger.debug(f"Error storing message: {e}")
+            logger.error(f"Error storing message: {e}")
 
     @staticmethod
     def store_current_plan(session_id: str, client_id: str, plan_data: dict):
-
         try:
-            redis_key = f"current_plan:{session_id}:{client_id}"
-            redis_session.set(redis_key, json.dumps(plan_data))
+            redis_key = session_id
+            # Fetch the existing session or initialize a new one
+            session_data = redis_session.get(redis_key)
+            session_object = json.loads(session_data) if session_data else {}
+
+            session_object["current_plan"] = plan_data
+
+            redis_session.set(redis_key, json.dumps(session_object))
             redis_session.expire(redis_key, SessionDataHandler.SESSION_TIMEOUT)
+            logger.debug(
+                f"Current plan stored for client_id: {client_id} in session: {redis_key}"
+            )
         except Exception as e:
-            logger.debug(f"Error storing current plan: {e}")
+            logger.error(f"Error storing current plan: {e}")
 
     @staticmethod
-    def get_chat_history(session_id: str, client_id: str):
-
+    def get_session_data(session_id: str):
         try:
-            chat_key = f"chat_history:{session_id}:{client_id}"
-            logger.debug(f"Retrieving chat history from redis: {chat_key}")
-            raw_history = redis_session.lrange(chat_key, 0, -1)
-            chat_history = [json.loads(msg) for msg in raw_history]
-
-            plan_key = f"current_plan:{session_id}:{client_id}"
-            plan_data = redis_session.get(plan_key)
-            current_plan = json.loads(plan_data) if plan_data else None
-
+            redis_key = session_id
+            logger.debug(f"Retrieving session data: {redis_key}")
+            session_data = redis_session.get(redis_key)
+            if session_data:
+                return json.loads(session_data)
+            return {}
+        except Exception as e:
+            logger.error(f"Error retrieving session data: {e}")
+            return {}
+        
+    @staticmethod
+    def get_chat_history(session_id: str):
+        try:
+            session_data = SessionDataHandler.get_session_data(session_id)
+        
             return {
-                "chat_history": chat_history,
-                "current_plan": current_plan
+                "chat_history": session_data.get("chat_history", []),
+                "current_plan": session_data.get("current_plan", None)
             }
         except Exception as e:
-            logger.debug(f"Error retrieving chat history or current plan: {e}")
-            return {"chat_history": [], "current_plan": None}
+            logger.error(f"Error retrieving chat history: {e}")
+            return {
+                "chat_history": None,
+                "current_plan": None
+            }
 
+    @staticmethod
+    def get_client_data(session_id: str, client_id: str):
+        try:
+            session_data = SessionDataHandler.get_session_data(session_id)
+            return session_data.get(client_id, {})
+        except Exception as e:
+            logger.error(f"Error retrieving client data: {e}")
+            return {}
 
 
 class TFDocsCache:
     def store_docs(resource: str, doc: str):
         try:
             if doc:
-                redis_session.set(resource, doc, ex=86400)
+                redis_tfcache.set(resource, doc, ex=86400)
         except Exception as e:
             logger.debug(f"Error storing docs: {e}")
 
     def get_docs(resource: str):
         try:
-            return redis_session.get(resource)
+            return redis_tfcache.get(resource)
         except Exception as e:
             logger.debug(f"Error retrieving docs: {e}")
             return None
