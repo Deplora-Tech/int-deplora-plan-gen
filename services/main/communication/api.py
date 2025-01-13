@@ -29,8 +29,17 @@ async def send_message(request: MessageRequest):
     try:
         message = await handle_message(request, communication_service)
         await communication_service.publisher(request.client_id, LoraStatus.COMPLETED.value)
+        
+        print("Message:", message)
 
         return {"status": "Message sent", "processed_message": message}
 
     except Exception as e:
-        return {"status": "Error", "message": str(e)}
+        print("Error", e)
+        return {"status": "Error", "processed_message": {"response": "An error occurred. Please try again."}}
+
+
+@router.get("/get_chat_history/{session_id}")
+async def get_chat_history(session_id: str):
+    chat_history = SessionDataHandler.get_chat_history(session_id)
+    return chat_history

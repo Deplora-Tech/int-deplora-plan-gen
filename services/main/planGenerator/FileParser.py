@@ -1,5 +1,5 @@
 import re
-import os
+import os, json
 from typing import List, Dict
 
 
@@ -52,3 +52,19 @@ class FileParser:
             files.append(file_object)
             files_content.append(match.group(0))
         return files, files_content
+    
+    
+    def parse_json(self, text:str) -> Dict:
+        """
+        Parse the input text and extract json details.
+
+        Args:
+            text (str): The input text containing json.
+
+        Returns:
+            Dict: A json object containing json details.
+        """
+        
+        text = "{".join(text.split("{")[1:])
+        text = "}".join(text.split("}")[:-1])
+        return json.loads(f"{{{text}}}")

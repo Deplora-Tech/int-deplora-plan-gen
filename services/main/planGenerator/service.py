@@ -9,6 +9,8 @@ from services.main.planGenerator.TerraformDocScraper import TerraformDocScraper
 from services.main.validationManager.service import ValidatorService
 from core.logger import logger
 import asyncio
+import concurrent.futures
+import traceback
 
 
 class PlanGeneratorService:
@@ -52,7 +54,11 @@ class PlanGeneratorService:
             deployment_recommendation = await self.llm_service.llm_request(
                 prompt=classification_prompt
             )
-            deployment_recommendation = json.loads(deployment_recommendation)
+
+            deployment_recommendation = self.file_parser.parse_json(
+                deployment_recommendation
+            )
+
             deployment_strategy = deployment_recommendation["Deployment Plan"]
             logger.info(f"Deployment strategy: {deployment_strategy}")
 
@@ -68,7 +74,7 @@ class PlanGeneratorService:
                 prompt,
             )
             logger.info(f"Identified resources: {identified_resources}")
-
+                                
             # logger.info(f"Terraform docs: {terraform_docs}")
 
             # Generate initial deployment solution
@@ -86,36 +92,45 @@ class PlanGeneratorService:
             logger.info(f"Deployment recommendation: {deployment_recommendation}")
             logger.info(f"Deployment solution: {deployment_solution}")
 
-            parsed_files, parsed_file_content = self.file_parser.parse(deployment_solution)
+            parsed_files, parsed_file_content = self.file_parser.parse(
+                deployment_solution
+            )
 
             print("Parsed files: ")
             print("\n\n".join(parsed_file_content))
 
             # Validate and fix files
-            parsed_files = await self._validate_and_fix_files(
-                parsed_files, parsed_file_content
-            )
+            # parsed_files = await self._validate_and_fix_files(
+            #     parsed_files, parsed_file_content
+            # )
 
             return (deployment_recommendation, deployment_solution, parsed_files)
-        
+
         except Exception as e:
-            logger.error(f"Error occurred: {e}")
+            logger.error(f"Error occurred: {traceback.print_exc()}")
             raise e
-            
-    
 
     def _get_strategy_prompt(
         self, strategy, preferences, details, history, prompt, terraform_docs
     ):
+        refine = False
+        print("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh", history)
+        if history["current_plan"]:
+            refine = True
 
-        if strategy == DeploymentOptions.DOCKERIZED_DEPLOYMENT.value:
-            return self.prompt_manager_service.prepare_docker_prompt(
-                preferences, details, history, prompt, terraform_docs
-            )
-        elif strategy == DeploymentOptions.KUBERNETES_DEPLOYMENT.value:
+        if DeploymentOptions.DOCKERIZED_DEPLOYMENT.value in strategy:
+            if refine:
+                return self.prompt_manager_service.prepare_docker_refine_prompt(
+                    preferences, details, history, prompt, history["current_plan"]
+                )
+            else:
+                return self.prompt_manager_service.prepare_docker_prompt(
+                    preferences, details, history, prompt, terraform_docs
+                )
+        elif DeploymentOptions.KUBERNETES_DEPLOYMENT.value in strategy:
             # TODO: Add Kubernetes-specific logic
             return ""
-        elif strategy == DeploymentOptions.VM_DEPLOYMENT.value:
+        elif DeploymentOptions.VM_DEPLOYMENT.value in strategy:
             # TODO: Add VM-specific logic
             return ""
         else:
@@ -144,8 +159,13 @@ class PlanGeneratorService:
         return list(parsed_files_map.values())
 
     async def _fetch_resource_with_doc(self, resource):
-        doc = await self.terraform_doc_scraper.fetch_definition(resource)
-        return {"resourceName": resource, "doc": doc}
+        loop = asyncio.get_running_loop()
+        # run_in_executor will run the sync function in a pool of threads
+        content = await loop.run_in_executor(
+            None, self.terraform_doc_scraper.fetch_definition, resource
+        )
+        
+        return {"resourceName": resource, "doc": content}
 
     async def _identify_resources(
         self,
@@ -167,21 +187,19 @@ class PlanGeneratorService:
             )
             response = await self.llm_service.llm_request(prompt=resourcing_prompt)
             logger.info(f"Identified resources response: {response}")
-            identified_resources = json.loads(response)["resources"]
+            identified_resources = self.file_parser.parse_json(response)["resources"]
             logger.info(f"Identified resources: {identified_resources}")
-            
-        except Exception as e:
-            logger.error(f"Error identifying resources: {e}")
-            identified_resources = []
-        
 
-        terraform_docs = await asyncio.gather(
-            *(
-                self._fetch_resource_with_doc(resource)
-                for resource in identified_resources
-            )
-        )
+        except Exception as e:
+            logger.error(f"Error identifying resources: {traceback.format_exc()}")
+            identified_resources = []
+
+
+        tasks = [
+            self._fetch_resource_with_doc(resource) for resource in identified_resources
+        ]
+        terraform_docs = await asyncio.gather(*tasks)
 
         terraform_docs = [doc for doc in terraform_docs if doc["doc"] is not None]
-
+        
         return identified_resources, json.dumps(terraform_docs, indent=4)
