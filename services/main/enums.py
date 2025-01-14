@@ -1,5 +1,6 @@
 from enum import Enum, auto
 
+
 class PlanValidationType(Enum):
     TERRAFORM = auto()
     JENKINS = auto()
@@ -9,7 +10,8 @@ class DeploymentOptions(Enum):
     DOCKERIZED_DEPLOYMENT = "Dockerized Deployments (Containerization)"
     KUBERNETES_DEPLOYMENT = "Kubernetes-Orchestrated Deployment"
     VM_DEPLOYMENT = "MI/VM Image-Based Deployment"
-    
+
+
 class LoraStatus(Enum):
     STARTING = "STARTING"
     INTENT_DETECTED = "INTENT_DETECTED"
@@ -20,3 +22,28 @@ class LoraStatus(Enum):
     GATHERING_DATA = "GATHERING_DATA"
     FAILED = "FAILED"
     COMPLETED = "COMPLETED"
+
+
+class LoraStatus(Enum):
+    STARTING = "STARTING"
+    INTENT_DETECTED = "INTENT_DETECTED"
+    RETRIEVING_USER_PREFERENCES = "RETRIEVING_USER_PREFERENCES"
+    RETRIEVING_PROJECT_DETAILS = "RETRIEVING_PROJECT_DETAILS"
+    GENERATING_PLAN = "GENERATING_PLAN"
+    GENERATED_PLAN = "GENERATED_PLAN"
+    FAILED = "FAILED"
+    COMPLETED = "COMPLETED"
+
+
+class GraphStatus(Enum):
+    INITIALIZE = "INITIALIZE"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+
+
+class AnotherStatus(Enum):
+    INITIALIZE = "INITIALIZE"
+    PROCESSING = "PROCESSING"
+    WAITING_FOR_INPUT = "WAITING_FOR_INPUT"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"

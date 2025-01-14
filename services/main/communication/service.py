@@ -5,6 +5,7 @@ import asyncio  # For simulating typing indicators or delays
 
 from core.logger import logger
 
+
 class CommunicationService:
     def __init__(self):
         # Dictionary to map client IDs to WebSocket connections
@@ -20,13 +21,17 @@ class CommunicationService:
         if client_id in self.active_connections:
             del self.active_connections[client_id]
 
-    async def publisher(self, client_id: str, message): ## publisher for use anywhere in the application
+    async def publisher(
+        self, client_id: str, status: str, data: dict
+    ):  ## publisher for use anywhere in the application
         websocket = self.active_connections.get(client_id)
-        logger.debug(f"message: {message}, clientId: {client_id}, websocket: {websocket}")
+        logger.debug(f"status: {status}, clientId: {client_id}, websocket: {websocket}")
         if websocket:
             try:
-                if isinstance(message, dict):
-                    message = json.dumps(message)
+                if isinstance(data, dict):
+                    data = json.dumps(data)
+
+                message = json.dumps({"status": status, "data": data or {}})
 
                 await websocket.send_text(message)
             except Exception as e:
