@@ -114,7 +114,7 @@ class PlanGeneratorService:
         self, strategy, preferences, details, history, prompt, terraform_docs
     ):
         refine = False
-        print("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh", history)
+        
         if history["current_plan"]:
             refine = True
 

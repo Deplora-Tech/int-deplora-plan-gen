@@ -6,6 +6,8 @@ from services.main.communication.service import CommunicationService
 from services.main.enums import LoraStatus
 from services.main.management.api import handle_message
 from services.main.utils.caching.redis_service import SessionDataHandler
+from services.main.excecutor.service import excecute_pipeline
+
 
 router = APIRouter()
 communication_service = CommunicationService()
@@ -43,3 +45,8 @@ async def send_message(request: MessageRequest):
 async def get_chat_history(session_id: str):
     chat_history = SessionDataHandler.get_chat_history(session_id)
     return chat_history
+
+
+@router.get("/excecute/{session_id}")
+async def execute(session_id: str):
+    excecute_pipeline(session_id)

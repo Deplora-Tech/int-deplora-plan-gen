@@ -5,7 +5,7 @@ import json
 
 
 class SessionDataHandler:
-    SESSION_TIMEOUT = int(os.getenv("SESSION_TIMEOUT", 3600*24*365))
+    SESSION_TIMEOUT = int(os.getenv("SESSION_TIMEOUT", 3600 * 24 * 365))
 
     @staticmethod
     def store_message(session_id: str, client_id: str, role: str, message: str):
@@ -59,22 +59,19 @@ class SessionDataHandler:
         except Exception as e:
             logger.error(f"Error retrieving session data: {e}")
             return {}
-        
+
     @staticmethod
     def get_chat_history(session_id: str):
         try:
             session_data = SessionDataHandler.get_session_data(session_id)
-        
+
             return {
                 "chat_history": session_data.get("chat_history", []),
-                "current_plan": session_data.get("current_plan", None)
+                "current_plan": session_data.get("current_plan", None),
             }
         except Exception as e:
             logger.error(f"Error retrieving chat history: {e}")
-            return {
-                "chat_history": None,
-                "current_plan": None
-            }
+            return {"chat_history": None, "current_plan": None}
 
     @staticmethod
     def get_client_data(session_id: str, client_id: str):
@@ -84,6 +81,25 @@ class SessionDataHandler:
         except Exception as e:
             logger.error(f"Error retrieving client data: {e}")
             return {}
+        
+    
+    @staticmethod
+    def update_session_data(session_id: str, key: str, value: str):
+        try:
+            redis_key = session_id
+            # Fetch the existing session or initialize a new one
+            session_data = redis_session.get(redis_key)
+            session_object = json.loads(session_data) if session_data else {}
+
+            session_object[key] = value
+
+            redis_session.set(redis_key, json.dumps(session_object))
+            redis_session.expire(redis_key, SessionDataHandler.SESSION_TIMEOUT)
+            logger.debug(
+                f"Repo path stored for session_id: {session_id}"
+            )
+        except Exception as e:
+            logger.error(f"Error storing repo path: {e}")
 
 
 class TFDocsCache:
