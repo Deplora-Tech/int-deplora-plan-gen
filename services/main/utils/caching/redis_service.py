@@ -84,22 +84,26 @@ class SessionDataHandler:
         
     
     @staticmethod
-    def update_session_data(session_id: str, key: str, value: str):
+    def update_session_data(session_id: str, data: dict):
         try:
             redis_key = session_id
             # Fetch the existing session or initialize a new one
             session_data = redis_session.get(redis_key)
             session_object = json.loads(session_data) if session_data else {}
 
-            session_object[key] = value
+            # Update the session data with multiple key-value pairs
+            session_object.update(data)
+            
 
+            # Store the updated session data back to Redis
             redis_session.set(redis_key, json.dumps(session_object))
             redis_session.expire(redis_key, SessionDataHandler.SESSION_TIMEOUT)
-            logger.debug(
-                f"Repo path stored for session_id: {session_id}"
-            )
+
+            logger.debug(f"Session data updated for session_id: {session_id}")
+
         except Exception as e:
-            logger.error(f"Error storing repo path: {e}")
+            logger.error(f"Error updating session data: {e}")
+
 
 
 class TFDocsCache:

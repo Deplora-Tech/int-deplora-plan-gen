@@ -12,6 +12,7 @@ async def handle_message(request: MessageRequest, communcationService: Communica
     chat_history = SessionDataHandler.get_chat_history(request.session_id)
     print("chat_history:", chat_history)
     SessionDataHandler.store_message(request.session_id, request.client_id, "user", request.message)
+    SessionDataHandler.update_session_data(request.session_id, request)
 
     intent = await classify_intent(request.message, chat_history)
     await communcationService.publisher(request.client_id, LoraStatus.INTENT_DETECTED.value)

@@ -49,4 +49,6 @@ async def get_chat_history(session_id: str):
 
 @router.get("/excecute/{session_id}")
 async def execute(session_id: str):
-    excecute_pipeline(session_id)
+    k = await excecute_pipeline(session_id)
+    return k
+    print("Pipeline executed")

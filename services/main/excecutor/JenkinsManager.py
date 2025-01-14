@@ -9,6 +9,7 @@ class JenkinsManager:
         self.jenkins_url = os.getenv("JENKINS_URL")
         self.username = os.getenv("JENKINS_USERNAME")
         self.api_token = os.getenv("JENKINS_API_TOKEN")
+        
 
     def create_folder(self, folder_name):
         url = f"{self.jenkins_url}/createItem?name={folder_name}"
@@ -33,6 +34,8 @@ class JenkinsManager:
             print(f"Failed to create folder '{folder_name}': {response.text}")
 
     def create_local_pipeline(self, folder_name, pipeline_name, local_directory_path):
+        jenkinsfile_content = open(f"{local_directory_path}/Jenkinsfile", "r").read()
+        
         url = f"{self.jenkins_url}/job/{folder_name}/createItem?name={pipeline_name}"
         headers = {"Content-Type": "application/xml"}
         pipeline_config = f"""
@@ -42,30 +45,7 @@ class JenkinsManager:
             <properties/>
             <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.92">
                 <script>
-                    pipeline {{
-                        agent any
-
-                        stages {{
-                            stage('Build') {{
-                                steps {{
-                                    dir('{local_directory_path}'){{
-                                        script {{
-                                            sh 'docker build -t react-app-repo:${{BUILD_NUMBER}} .'
-                                        }}
-                                    }}
-                                }}
-                            }}
-                            stage('Test') {{
-                                steps {{
-                                    dir('{local_directory_path}'){{
-                                        script {{
-                                            sh 'docker build -t react-app-repo:${{BUILD_NUMBER}} .'
-                                        }}
-                                    }}
-                                }}
-                            }}
-                        }}
-                    }}
+                    {jenkinsfile_content}
                 </script>
                 <sandbox>true</sandbox>
             </definition>
