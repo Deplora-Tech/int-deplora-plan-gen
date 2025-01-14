@@ -18,4 +18,4 @@ groq~=0.13.1
 pydot
 diagrams
 redis
-
+motor
