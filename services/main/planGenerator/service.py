@@ -159,13 +159,16 @@ class PlanGeneratorService:
         return list(parsed_files_map.values())
 
     async def _fetch_resource_with_doc(self, resource):
-        loop = asyncio.get_running_loop()
-        # run_in_executor will run the sync function in a pool of threads
-        content = await loop.run_in_executor(
-            None, self.terraform_doc_scraper.fetch_definition, resource
-        )
-        
-        return {"resourceName": resource, "doc": content}
+        """
+        Fetch the Terraform resource documentation using TerraformDocScraper.
+        """
+        try:
+            # Await the async fetch_definition method directly
+            content = await self.terraform_doc_scraper.fetch_definition(resource)
+            return {"resourceName": resource, "doc": content}
+        except Exception as e:
+            logger.error(f"Error fetching resource doc for {resource}: {traceback.format_exc()}")
+            return {"resourceName": resource, "doc": None}
 
     async def _identify_resources(
         self,
@@ -175,6 +178,9 @@ class PlanGeneratorService:
         chat_history,
         prompt,
     ):
+        """
+        Identify resources and fetch their Terraform documentation.
+        """
         try:
             resourcing_prompt = (
                 self.prompt_manager_service.prepare_identify_resources_prompt(
@@ -185,6 +191,7 @@ class PlanGeneratorService:
                     prompt,
                 )
             )
+            # Send prompt to LLM service to identify resources
             response = await self.llm_service.llm_request(prompt=resourcing_prompt)
             logger.info(f"Identified resources response: {response}")
             identified_resources = self.file_parser.parse_json(response)["resources"]
@@ -194,12 +201,15 @@ class PlanGeneratorService:
             logger.error(f"Error identifying resources: {traceback.format_exc()}")
             identified_resources = []
 
-
+        # Create a list of tasks to fetch documentation for each resource
         tasks = [
             self._fetch_resource_with_doc(resource) for resource in identified_resources
         ]
+        # Wait for all tasks to complete
         terraform_docs = await asyncio.gather(*tasks)
 
+        # Filter out resources without documentation
         terraform_docs = [doc for doc in terraform_docs if doc["doc"] is not None]
-        
+
         return identified_resources, json.dumps(terraform_docs, indent=4)
+
