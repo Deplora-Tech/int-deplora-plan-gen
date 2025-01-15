@@ -19,3 +19,4 @@ pydot
 diagrams
 redis
 motor
+gitingest
