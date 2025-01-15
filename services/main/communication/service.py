@@ -22,7 +22,7 @@ class CommunicationService:
             del self.active_connections[client_id]
 
     async def publisher(
-        self, client_id: str, status: str, data: dict
+        self, client_id: str, status: str, data: dict = {}
     ):  ## publisher for use anywhere in the application
         websocket = self.active_connections.get(client_id)
         logger.debug(f"status: {status}, clientId: {client_id}, websocket: {websocket}")

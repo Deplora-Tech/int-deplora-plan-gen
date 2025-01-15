@@ -56,7 +56,7 @@ class ManagementService:
                 repo_task, preferences_task, project_details_task
             )
 
-            await communication_service.publisher(user_id, LoraStatus.GENERATING_DEPLOYMENT_PLAN.value)
+            await communication_service.publisher(user_id, LoraStatus.GENERATING_PLAN.value)
 
             deployment_recommendation, deployment_solution, parsed_files = (
                 await self.plan_generator_service.generate_deployment_plan(
