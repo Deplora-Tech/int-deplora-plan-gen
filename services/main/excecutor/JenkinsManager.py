@@ -9,7 +9,6 @@ class JenkinsManager:
         self.jenkins_url = os.getenv("JENKINS_URL")
         self.username = os.getenv("JENKINS_USERNAME")
         self.api_token = os.getenv("JENKINS_API_TOKEN")
-        
 
     def create_folder(self, folder_name):
         url = f"{self.jenkins_url}/createItem?name={folder_name}"
@@ -35,7 +34,7 @@ class JenkinsManager:
 
     def create_local_pipeline(self, folder_name, pipeline_name, local_directory_path):
         jenkinsfile_content = open(f"{local_directory_path}/Jenkinsfile", "r").read()
-        
+
         url = f"{self.jenkins_url}/job/{folder_name}/createItem?name={pipeline_name}"
         headers = {"Content-Type": "application/xml"}
         pipeline_config = f"""
@@ -90,28 +89,48 @@ class JenkinsManager:
 
         if response.status_code == 201:
             print(f"Build triggered successfully for pipeline '{pipeline_name}'.")
-            return response.headers.get("location")
+
+            return self.monitor_build_status(folder_name, pipeline_name, "lastBuild")
         else:
             print(
                 f"Failed to trigger build for pipeline '{pipeline_name}': {response.text}"
             )
             return None
 
-    def monitor_build_status(self, folder_name, pipeline_name):
-        queue_url = f"{self.jenkins_url}/job/{folder_name}/job/{pipeline_name}/lastBuild/api/json"
+    def monitor_build_status(self, folder_name, pipeline_name, build_id):
+        queue_url = f"{self.jenkins_url}/job/{folder_name}/job/{pipeline_name}/{build_id}/api/json"
 
         response = requests.get(queue_url, auth=(self.username, self.api_token))
         if response.status_code == 200:
             build_info = response.json()
-            print(build_info)
-            if build_info.get("building"):
-                print(f"Build #{build_info['number']} is in progress...")
-            else:
-                print(
-                    f"Build #{build_info['number']} completed with status: {build_info['result']}."
-                )
+            result = {
+                "id": build_info.get("id"),
+                "estimatedDuration": build_info.get("estimatedDuration"),
+                "timestamp": build_info.get("timestamp"),
+                "url": build_info.get("url"),
+                "duration": build_info.get("duration"),
+                "building": build_info.get("building"),
+            }
+
+            return result
         else:
-            print(f"Waiting for the build to start...")
+            raise Exception(f"Failed to monitor build status: {response.text}")
+
+    def get_stages_info(self, folder_name, pipeline_name, build_id):
+        stages_url = f"{self.jenkins_url}/job/{folder_name}/job/{pipeline_name}/{build_id}/wfapi/describe"
+        response = requests.get(stages_url, auth=(self.username, self.api_token))
+        if response.status_code == 200:
+            stages_info = response.json()["stages"]
+            stages_info = [
+                {
+                    "name": stage["name"],
+                    "status": stage["status"],
+                    "durationMillis": stage["durationMillis"],
+                    "id": stage["id"],
+                }
+                for stage in stages_info
+            ]
+            return stages_info
 
     def fetch_console_output(self, build_url):
         console_url = f"{build_url}/consoleFull"
