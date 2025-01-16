@@ -17,6 +17,7 @@ from services.main.excecutor.service import excecute_pipeline
 import requests
 import os
 from services.main.enums import GraphStatus
+from dotenv import load_dotenv
 
 router = APIRouter()
 communication_service = CommunicationService()
@@ -51,6 +52,11 @@ async def send_message(request: MessageRequest):
 
     except Exception as e:
         print("Error", e)
+        await communication_service.publisher(
+            request.client_id,
+            LoraStatus.FAILED.value,
+        )
+
         return {
             "status": "Error",
             "processed_message": {"response": "An error occurred. Please try again."},
@@ -69,14 +75,6 @@ async def execute(session_id: str):
     return k
 
 
-@router.post("/generate-graph/{session_id}")
-async def generate_graph(session_id: str, file_contents: dict):
-    res = await requests.post(
-        os.environ.get("GRAPH_GENERATOR_URL"),
-        json={"id": session_id, "files": file_contents},
-    )
-
-
 @router.post("/upload-image/{session_id}")
 async def upload_image(session_id: str, file: UploadFile = File(...)):
     try:
@@ -85,14 +83,15 @@ async def upload_image(session_id: str, file: UploadFile = File(...)):
         encoded_image = base64.b64encode(file_content).decode("utf-8")
 
         await communication_service.publisher(
-            session_id,
+            "1",
             GraphStatus.COMPLETED.value,
             {
                 "filename": file.filename,
-                "content_type": file.content_type,
-                "image_data": encoded_image,  # Base64 encoded image
+                "content_type": "image/png",
+                "image_data": encoded_image,
             },
         )
+
         return {"message": "Image received successfully for session_id: " + session_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")

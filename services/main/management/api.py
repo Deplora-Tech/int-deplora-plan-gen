@@ -5,6 +5,9 @@ from services.main.management.classifier import classify_intent
 from services.main.management.service import ManagementService
 from services.main.communication.models import MessageRequest
 from services.main.utils.caching.redis_service import SessionDataHandler
+from dotenv import load_dotenv
+import requests
+import os
 managementService = ManagementService()
 
 async def handle_message(request: MessageRequest, communcationService: CommunicationService):
@@ -30,6 +33,12 @@ async def handle_message(request: MessageRequest, communcationService: Communica
         )
         SessionDataHandler.store_message(request.session_id, request.client_id,"You", dep_plan["response"])
         SessionDataHandler.store_current_plan(request.session_id, request.client_id, dep_plan["file_contents"])
+        load_dotenv()
+        requests.post(
+            os.environ.get("GRAPH_GENERATOR_URL"),
+            json={"id": request.session_id, "files": dep_plan["file_contents"]},
+        )
+
         return dep_plan
 
     elif "Other" in intent:
