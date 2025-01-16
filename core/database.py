@@ -9,22 +9,33 @@
 # SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 # Base = declarative_base()
 
+#
+# from motor.motor_asyncio import AsyncIOMotorClient
+# from core.config import settings
+#
+# class Database:
+#     client: AsyncIOMotorClient = None
+#     db = None
+#
+# db = Database()
+#
+# async def connect_to_mongo():
+#     db.client = AsyncIOMotorClient(settings.MONGO_URI)
+#     db.db = db.client[settings.MONGO_DB_NAME]
+#     print(f"Connected to MongoDB database: {settings.MONGO_DB_NAME}")
+#
+# async def close_mongo_connection():
+#     if db.client:
+#         db.client.close()
+#         print("Disconnected from MongoDB")
 
-from motor.motor_asyncio import AsyncIOMotorClient
+
+from pymongo import MongoClient
 from core.config import settings
 
-class Database:
-    client: AsyncIOMotorClient = None
-    db = None
+client = MongoClient(settings.ATLAS_MONGO_URI)
+database = client[settings.MONGO_DB_NAME]
 
-db = Database()
 
-async def connect_to_mongo():
-    db.client = AsyncIOMotorClient(settings.MONGO_URI)
-    db.db = db.client[settings.MONGO_DB_NAME]
-    print(f"Connected to MongoDB database: {settings.MONGO_DB_NAME}")
 
-async def close_mongo_connection():
-    if db.client:
-        db.client.close()
-        print("Disconnected from MongoDB")
+

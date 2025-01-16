@@ -3,7 +3,6 @@ from fastapi import FastAPI
 from services.main.communication.api import router as communication_router
 from services.main.analyzer.api import router as analyzer_router
 from fastapi.middleware.cors import CORSMiddleware
-from core.database import connect_to_mongo, close_mongo_connection
 
 # Initialize FastAPI application with lifespan event handlers
 app = FastAPI()
@@ -21,15 +20,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# MongoDB's connection on startup
-@app.on_event("startup")
-async def startup_event():
-    await connect_to_mongo()
-
-# MongoDB's disconnection on shutdown
-@app.on_event("shutdown")
-async def shutdown_event():
-    await close_mongo_connection()
 
 # Root endpoint
 @app.get("/")

@@ -1,73 +1,89 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks
-from git import Repo
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
 from pydantic import BaseModel
-from uuid import uuid4
-from core.database import db
+from core.database import database as db
 from services.main.analyzer.service import AnalyzerService
-import os
+from core.config import settings
+import logging
+import nest_asyncio
 
+nest_asyncio.apply()
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
-# Pydantic model for the client request
 class AnalyzeRequest(BaseModel):
     repo_url: str
     client_id: str
-    repo_id: str
+    project_id: str
 
-# Background task for running the analyzer
-from core.config import settings
-
-async def run_analyzer_task(session_id: str, client_id: str, repo_id: str, repo_url: str):
+async def run_analyzer_task(client_id: str, project_id: str, repo_url: str):
     analyzer_service = AnalyzerService()
-
-    # Fetch paths from environment variables
     described_template_path = settings.DESCRIBED_TEMPLATE_PATH
     empty_template_path = settings.INIT_TEMPLATE_PATH
 
-    # Clone the repository and proceed as before
-    repo_path = f"/tmp/{repo_id}"
     try:
-        if not os.path.exists(repo_path):
-            # ask Sahiru about this
-            Repo.clone_from(repo_url, repo_path)
-            print(f"Repository cloned to: {repo_path}")
-
-        # Run the analyzer process
+        logger.info(f"Starting analysis for repo_url: {repo_url}, project_id: {project_id}")
+        # Process the repository
         generated_template = await analyzer_service.process_files_and_update_template(
-            repo_path=repo_path,
+            repo_path=repo_url,
             described_template_path=described_template_path,
             empty_template_path=empty_template_path,
         )
 
-        # Store result in MongoDB
+        # Store the result in MongoDB
         db_entry = {
-            "session_id": session_id,
             "client_id": client_id,
-            "repo_id": repo_id,
+            "project_id": project_id,
+            "repo_url": repo_url,
             "generated_template": generated_template,
         }
-        await db.db["analysis_results"].insert_one(db_entry)
-        print(f"Analysis result stored in database for session_id: {session_id}")
+        await db.db.analysis_results.insert_one(db_entry)
+        logger.info(f"Analysis completed and stored for client_id={client_id}, project_id={project_id}")
 
     except Exception as e:
-        print(f"Error during analysis: {e}")
+        # Log the error instead of raising HTTPException
+        logger.error(f"Error during analysis for project_id={project_id}, client_id={client_id}: {e}")
 
-# API endpoint to start the analysis
+
+async def get_generated_template(project_id: str) -> dict:
+    """
+    Retrieve the generated template for a specific project ID.
+
+    :param project_id: The project ID to search for in the database.
+    :return: The document containing the generated template.
+    :raises ValueError: If no document is found for the given project ID.
+    """
+    try:
+        # Query the database for the specific project_id
+        result = await db.db.analysis_results.find_one({"project_id": project_id})
+
+        if not result:
+            raise ValueError(f"No generated template found for project_id={project_id}")
+
+        # Serialize the ObjectId to a string for compatibility
+        result["_id"] = str(result["_id"])
+        return result
+
+    except Exception as e:
+        # Log the error and re-raise for handling
+        logging.error(f"Error fetching generated template for project_id={project_id}: {e}")
+        raise
+
+
+    
+# ======================== API endpoints for the analyzer service ======================== #
+
 @router.post("/analyze")
 async def analyze_repository(request: AnalyzeRequest, background_tasks: BackgroundTasks):
-    # Create a unique session ID
-    session_id = str(uuid4())
-
-    # Simulate repository path (you can replace this with actual cloning logic)
-    repo_path = f"/tmp/{request.repo_id}"  # Example path to the cloned repository
-
-    # Add the analysis task to the background
-    background_tasks.add_task(
-        run_analyzer_task,
-        session_id=session_id,
-        client_id=request.client_id,
-        repo_id=request.repo_id,
-        repo_path=repo_path,
-    )
-
-    return {"message": "Analysis started", "session_id": session_id}
+    try:
+        # Add the task to background processing
+        background_tasks.add_task(
+            run_analyzer_task,
+            client_id=request.client_id,
+            project_id=request.project_id,
+            repo_url=request.repo_url,
+        )
+        logger.info(f"Analysis task queued for client_id={request.client_id}, project_id={request.project_id}")
+        return {"message": "Analysis task started successfully"}
+    except Exception as e:
+        logger.error(f"Failed to queue analysis task: {e}")
+        raise HTTPException(status_code=500, detail="Failed to queue analysis task")

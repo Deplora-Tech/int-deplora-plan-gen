@@ -7,7 +7,7 @@ from gitingest import ingest
 class AnalyzerService:
     def __init__(self):
         self.llm_service = LLMService()
-        self.prompt_manager = PromptManagerService(self.llm_service)
+        self.prompt_manager = PromptManagerService()
 
     async def identify_deployment_files(self, repo_path: str, template_path: str) -> list:
         """
