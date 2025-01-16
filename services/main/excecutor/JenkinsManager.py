@@ -1,5 +1,5 @@
 import requests
-import os
+import os, time
 from dotenv import load_dotenv
 
 
@@ -65,6 +65,9 @@ class JenkinsManager:
             )
         elif response.status_code == 400 and "already exists" in response.text:
             print(f"Pipeline '{pipeline_name}' already exists inside '{folder_name}'.")
+            self.delete_pipeline(folder_name, pipeline_name)
+            self.create_local_pipeline(folder_name, pipeline_name, local_directory_path)
+            
         else:
             print(f"Failed to create pipeline '{pipeline_name}': {response.text}")
 
@@ -89,7 +92,7 @@ class JenkinsManager:
 
         if response.status_code == 201:
             print(f"Build triggered successfully for pipeline '{pipeline_name}'.")
-
+            time.sleep(10)
             return self.monitor_build_status(folder_name, pipeline_name, "lastBuild")
         else:
             print(
@@ -114,7 +117,7 @@ class JenkinsManager:
 
             return result
         else:
-            raise Exception(f"Failed to monitor build status: {response.text}")
+            raise Exception(f"Failed to monitor build status:")
 
     def get_stages_info(self, folder_name, pipeline_name, build_id):
         stages_url = f"{self.jenkins_url}/job/{folder_name}/job/{pipeline_name}/{build_id}/wfapi/describe"
@@ -143,23 +146,13 @@ class JenkinsManager:
         except KeyboardInterrupt:
             print("Console output fetching stopped.")
 
-
-# Example usage
-if __name__ == "__main__":
-    jenkins = JenkinsManager(
-        jenkins_url="http://localhost:8080/",
-        username="Deplora",
-        api_token="11834370adb99ae6692384941001094ff6",
-    )
-
-    folder_name = "OrganizationT"
-    pipeline_name = "Project2"
-    local_directory_path = "/mnt/c/Users/Asus/Downloads/testtt02/repos/123/po-server"
-
-    jenkins.create_folder(folder_name)
-    jenkins.delete_pipeline(folder_name, pipeline_name)
-    jenkins.create_local_pipeline(folder_name, pipeline_name, local_directory_path)
-    build_url = jenkins.trigger_pipeline_build(folder_name, pipeline_name)
-
-    while True:
-        jenkins.monitor_build_status(folder_name, pipeline_name)
+    def list_jenkins_builds(self, folder_name, pipeline_name,):
+        url = f"{self.jenkins_url}/job/{folder_name}/job/{pipeline_name}/api/json"
+        response = requests.get(url, auth=(self.username, self.api_token))
+        if response.status_code == 200:
+            builds = response.json()
+            return builds
+        else:
+            print(f"Failed to list builds: {response.text}")
+            return None       
+ 

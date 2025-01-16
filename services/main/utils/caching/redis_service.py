@@ -110,7 +110,7 @@ class TFDocsCache:
     def store_docs(resource: str, doc: str):
         try:
             if doc:
-                redis_tfcache.set(resource, doc, ex=86400)
+                redis_tfcache.set(resource, doc, ex=3600 * 24 * 365)
         except Exception as e:
             logger.debug(f"Error storing docs: {e}")
 
