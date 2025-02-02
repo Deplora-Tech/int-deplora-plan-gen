@@ -11,7 +11,7 @@ communication_service = CommunicationService("PipelineService")
 async def excecute_pipeline(session_id: str):
     try:
         chat_history = SessionDataHandler.get_session_data(session_id)
-        logger.info(f"Path: {chat_history["repo_path"]}")
+        logger.info(f"Path: {chat_history['repo_path']}")
         jenkins.create_folder(chat_history["organization_id"])
         jenkins.create_local_pipeline(    chat_history["organization_id"], chat_history["session_id"], chat_history["repo_path"])
         

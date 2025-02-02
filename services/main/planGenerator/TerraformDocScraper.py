@@ -43,7 +43,7 @@ class TerraformDocScraper:
 
         # Define the URL for the resource
         base_url = "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/"
-        resource_url = f"{base_url}{resource_name.replace("aws_", "").replace("azurerm_", "").replace("google_", "")}"
+        resource_url = f"{base_url}{resource_name.replace('aws_', '').replace('azurerm_', '').replace('google_', '')}"
 
         content = None
 
