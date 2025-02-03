@@ -3,7 +3,7 @@ from groq import Groq
 import anthropic, os
 from dotenv import load_dotenv
 from openai import OpenAI
-
+from core.logger import logger
 
 class LLMService:
     def __init__(self):
@@ -63,6 +63,7 @@ class LLMService:
 
     async def llm_request_deepseek(self, prompt: str):
         try:
+            logger.info(f"Requesting completion from Deepseek with prompt: {prompt[:50]}...")
             # Generate the chat completion using the Groq client
             message = self.deepseek.chat.completions.create(
                 model="deepseek-coder",
@@ -75,6 +76,7 @@ class LLMService:
                 ],
                 stream=False,
             )
+            logger.info(f"Received completion from Deepseek.")
 
             # Extract and return the response content
             content = message.choices[0].message.content

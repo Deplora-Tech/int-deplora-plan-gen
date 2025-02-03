@@ -23,7 +23,7 @@ class PlanGeneratorService:
         self.terraform_doc_scraper = TerraformDocScraper()
 
         self.MAX_VALIDATION_ITERATIONS = 1
-        self.PLAN_GENERATION_PLATFORM = "deepseek"
+        self.PLAN_GENERATION_PLATFORM = "groq"
 
     async def generate_deployment_plan(
         self,
@@ -78,6 +78,7 @@ class PlanGeneratorService:
             # logger.info(f"Terraform docs: {terraform_docs}")
 
             # Generate initial deployment solution
+            terraform_docs = ""
             generation_prompt = self._get_strategy_prompt(
                 deployment_strategy,
                 user_preferences,

@@ -37,28 +37,29 @@ async def pipeline_websocket_endpoint(websocket: WebSocket, session_id: str):
         pipeline_communication_service.disconnect(session_id)
 
 
-@router.websocket("/ws/{client_id}")
-async def websocket_endpoint(websocket: WebSocket, client_id: str):
-    await communication_service.connect(websocket, client_id)
+@router.websocket("/ws/{session_id}")
+async def websocket_endpoint(websocket: WebSocket, session_id: str):
+    await communication_service.connect(websocket, session_id)
     try:
         await communication_service.publisher(
-            client_id, "Connected", "You are now connected."
+            session_id, "Connected", "You are now connected."
         )
         while True:
             message = await websocket.receive_text()
             response = f"Received: {message}"
-            await communication_service.publisher(client_id, "Response", response)
+            await communication_service.publisher(session_id, "Response", response)
 
     except WebSocketDisconnect:
-        communication_service.disconnect(client_id)
+        communication_service.disconnect(session_id)
 
 
 @router.post("/send-message")
 async def send_message(request: MessageRequest):
     try:
+        logger.info(f"Received message: {request.message}")
         message = await handle_message(request, communication_service)
         await communication_service.publisher(
-            request.client_id,
+            request.session_id,
             LoraStatus.COMPLETED.value,
         )
 
@@ -67,7 +68,7 @@ async def send_message(request: MessageRequest):
     except Exception as e:
         print("Error", e)
         await communication_service.publisher(
-            request.client_id,
+            request.session_id,
             LoraStatus.FAILED.value,
         )
 
