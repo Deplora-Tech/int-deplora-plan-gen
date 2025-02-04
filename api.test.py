@@ -19,7 +19,7 @@ async def main():
     #     , CommunicationService()
     # )
     llm = llm_worker.LLMService()
-    response = await llm.llm_request("Deploy this to aws")
+    response = await llm.llm_request("Deploy this to aws", platform="gemini")
     print(response)
 
 if __name__ == "__main__":

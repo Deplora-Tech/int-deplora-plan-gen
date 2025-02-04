@@ -3,10 +3,21 @@ from groq import Groq
 import anthropic, os
 from dotenv import load_dotenv
 from openai import OpenAI
+from google import genai
 from core.logger import logger
 
 class LLMService:
+    
+    
     def __init__(self):
+        self.DEFAULT_PLATFORM = "gemini"
+        self.DEFAULT_MODELS = {
+            "groq": "llama-3.3-70b-specdec",
+            "deepseek": "deepseek-coder",
+            "claude": "deepseek-3-5-sonnet-20241022",
+            "gemini": "gemini-2.0-flash-exp",
+        }
+        
         # Initialize the Groq client
         load_dotenv()
         self.client = Groq(
@@ -17,21 +28,39 @@ class LLMService:
             api_key=os.environ.get("DEEPSEEK_API_KEY"),
             base_url="https://api.deepseek.com",
         )
+        self.gemini = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
     
-    async def llm_request(self, prompt: str, platform: str = "deepseek"):
+    async def llm_request(self, prompt: str, platform: str = None, model: str = None):
+        
+        # Set default platform if not provided
+        if platform is None:
+            # if modeel provided
+            if model is not None:
+                raise HTTPException(
+                    status_code=500, detail="Model provided without platform."
+                )
+            
+            platform = self.DEFAULT_PLATFORM
+        
+        if model is None:
+            model = self.DEFAULT_MODELS.get(platform)
+
+
         if platform == "groq":
-            return await self.llm_request_groq(prompt)
+            return await self.llm_request_groq(prompt, model)
         elif platform == "deepseek":
-            return await self.llm_request_deepseek(prompt)
+            return await self.llm_request_deepseek(prompt, model)
         elif platform == "claude":
-            return await self.llm_request_claude(prompt)
+            return await self.llm_request_claude(prompt, model)
+        elif platform == "gemini":
+            return await self.llm_request_gemini(prompt, model)
         else:
             raise HTTPException(
                 status_code=500, detail="Invalid platform specified."
             )
 
 
-    async def llm_request_groq(self, prompt: str):
+    async def llm_request_groq(self, prompt: str, model: str):
         try:
             # Generate the chat completion using the Groq client
             chat_completion = self.client.chat.completions.create(
@@ -42,7 +71,7 @@ class LLMService:
                     },
                     {"role": "user", "content": prompt},
                 ],
-                model="llama-3.3-70b-specdec",  # Adjust the model as needed
+                model=model,  # Adjust the model as needed
                 temperature=0.5,  # Adjust optional parameters as needed
                 max_tokens=8192,
                 top_p=1,
@@ -61,12 +90,12 @@ class LLMService:
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
-    async def llm_request_deepseek(self, prompt: str):
+    async def llm_request_deepseek(self, prompt: str, model: str):
         try:
             logger.info(f"Requesting completion from Deepseek with prompt: {prompt[:50]}...")
             # Generate the chat completion using the Groq client
             message = self.deepseek.chat.completions.create(
-                model="deepseek-coder",
+                model=model,
                 messages=[
                     {
                         "role": "system",
@@ -90,11 +119,11 @@ class LLMService:
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
-    async def llm_request_claude(self, prompt: str):
+    async def llm_request_claude(self, prompt: str, model: str):
         try:
             # Generate the chat completion using the Groq client
             message = self.claude.messages.create(
-                model="deepseek-3-5-sonnet-20241022",
+                model=model,
                 max_tokens=1024,
                 messages=[
                     {
@@ -112,6 +141,27 @@ class LLMService:
                     status_code=500, detail="Content not found in the response."
                 )
 
+            return content
+
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    
+    async def llm_request_gemini(self, prompt: str, model: str):
+        try:
+            print(model)
+            # Generate the chat completion using the Groq client
+            message = self.gemini.models.generate_content(
+                            model=model, contents=prompt
+                        )
+            # print(message)
+            # Extract and return the response content
+            content = message.text
+            if not content:
+                raise HTTPException(
+                    status_code=500, detail="Content not found in the response."
+                )
+            # print(content)
             return content
 
         except Exception as e:

@@ -23,7 +23,7 @@ class PlanGeneratorService:
         self.terraform_doc_scraper = TerraformDocScraper()
 
         self.MAX_VALIDATION_ITERATIONS = 1
-        self.PLAN_GENERATION_PLATFORM = "groq"
+        self.PLAN_GENERATION_PLATFORM = "gemini"
 
     async def generate_deployment_plan(
         self,
