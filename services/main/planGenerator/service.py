@@ -97,9 +97,6 @@ class PlanGeneratorService:
                 deployment_solution
             )
 
-            print("Parsed files: ")
-            print("\n\n".join(parsed_file_content))
-
             # Validate and fix files
             # parsed_files = await self._validate_and_fix_files(
             #     parsed_files, parsed_file_content

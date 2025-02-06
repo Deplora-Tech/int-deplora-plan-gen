@@ -15,7 +15,7 @@ class LLMService:
             "groq": "llama-3.3-70b-specdec",
             "deepseek": "deepseek-coder",
             "claude": "deepseek-3-5-sonnet-20241022",
-            "gemini": "gemini-2.0-flash-exp",
+            "gemini": "gemini-2.0-flash",
         }
         
         # Initialize the Groq client
