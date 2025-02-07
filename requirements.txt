@@ -14,3 +14,5 @@ python-multipart
 anthropic
 motor
 gitingest
+pydantic_settings
+nest_asyncio
