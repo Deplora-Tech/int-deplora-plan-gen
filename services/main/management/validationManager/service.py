@@ -3,40 +3,46 @@ import subprocess
 import json
 import requests
 
-from services.main.promptManager.service import PromptManagerService
+from services.main.utils.prompts.service import PromptManagerService
 from services.main.workers.llm_worker import LLMService
+
 
 class ValidatorService:
     # def __init__(self, base_path, jenkins_url, jenkins_user, jenkins_token):
-        # self.base_path = base_path
-        # self.jenkins_url = jenkins_url
-        # self.jenkins_user = jenkins_user
-        # self.jenkins_token = jenkins_token
-    
+    # self.base_path = base_path
+    # self.jenkins_url = jenkins_url
+    # self.jenkins_user = jenkins_user
+    # self.jenkins_token = jenkins_token
+
     def __init__(self):
         self.prompt_manager_service = PromptManagerService()
         self.llm_service = LLMService()
-        
-    
+
     async def validate_file(self, file_str: str):
         """
         1. Check for hardcodes values
         2. Check for proper file structure
         """
-        feedback_of_hardcodes_values = await self.check_for_hardcoded_values(file_str=file_str)
-        
+        feedback_of_hardcodes_values = await self.check_for_hardcoded_values(
+            file_str=file_str
+        )
+
         pass
-    
+
     async def check_for_hardcoded_values(self, file_str: str):
         """
         Check for hardcoded values in the file
         """
-        
-        prompt = self.prompt_manager_service.prepare_validate_for_hardcoded_values_prompt(file_str)
+
+        prompt = (
+            self.prompt_manager_service.prepare_validate_for_hardcoded_values_prompt(
+                file_str
+            )
+        )
         response = await self.llm_service.llm_request(prompt)
-        
+
         return response
-        
+
 
 #     def validate_terraform(self):
 #         terraform_path = os.path.join(self.base_path, "inputs", "terraform")

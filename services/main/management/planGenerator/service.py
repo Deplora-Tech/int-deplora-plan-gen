@@ -1,12 +1,14 @@
 import json
 
 from services.main.workers.llm_worker import LLMService
-from services.main.promptManager.service import PromptManagerService
+from services.main.utils.prompts.service import PromptManagerService
 from services.main.enums import DeploymentOptions
-from services.main.planGenerator.FileParser import FileParser
+from services.main.management.planGenerator.FileParser import FileParser
 
-from services.main.planGenerator.TerraformDocScraper import TerraformDocScraper
-from services.main.validationManager.service import ValidatorService
+from services.main.management.planGenerator.TerraformDocScraper import (
+    TerraformDocScraper,
+)
+from services.main.management.validationManager.service import ValidatorService
 from core.logger import logger
 import asyncio
 import concurrent.futures
@@ -74,7 +76,7 @@ class PlanGeneratorService:
                 prompt,
             )
             logger.info(f"Identified resources: {identified_resources}")
-                                
+
             # logger.info(f"Terraform docs: {terraform_docs}")
 
             # Generate initial deployment solution
@@ -112,7 +114,7 @@ class PlanGeneratorService:
         self, strategy, preferences, details, history, prompt, terraform_docs
     ):
         refine = False
-        
+
         if history["current_plan"]:
             refine = True
 
@@ -165,7 +167,9 @@ class PlanGeneratorService:
             content = await self.terraform_doc_scraper.fetch_definition(resource)
             return {"resourceName": resource, "doc": content}
         except Exception as e:
-            logger.error(f"Error fetching resource doc for {resource}: {traceback.format_exc()}")
+            logger.error(
+                f"Error fetching resource doc for {resource}: {traceback.format_exc()}"
+            )
             return {"resourceName": resource, "doc": None}
 
     async def _identify_resources(
@@ -210,4 +214,3 @@ class PlanGeneratorService:
         terraform_docs = [doc for doc in terraform_docs if doc["doc"] is not None]
 
         return identified_resources, json.dumps(terraform_docs, indent=4)
-

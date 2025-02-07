@@ -1,10 +1,10 @@
-from services.main.promptManager.promptsv001 import (
+from services.main.utils.prompts.promptsv001 import (
     classification_prompt,
     docker_prompt,
     docker_refine_prompt,
     identify_resources_prompt,
 )
-from services.main.promptManager.promptsv001 import (
+from services.main.utils.prompts.promptsv001 import (
     validate_for_hardcoded_values_prompt,
     fix_identified_validation_issues_prompt,
 )
@@ -31,7 +31,7 @@ class PromptManagerService:
         )
 
         return PROMPT_TO_IDENTIFY_DEPLOYMENT_OPTION
-    
+
     def prepare_docker_refine_prompt(
         self,
         user_preferences: dict,
@@ -49,8 +49,7 @@ class PromptManagerService:
         )
 
         return PROMPT_TO_GENERATE
-    
-    
+
     def prepare_docker_prompt(
         self,
         user_preferences: dict,
@@ -69,9 +68,8 @@ class PromptManagerService:
 
         return PROMPT_TO_GENERATE
 
-
     def prepare_conversation_prompt(self, request: MessageRequest, chat_history: str):
-        prompt = f'''
+        prompt = f"""
         You are Deplora AI assistant, a chatbot designed to assist users with deployment-related queries.
         Based on the conversation, generate a suitable response, and provide any additional information or context as needed.
 
@@ -79,7 +77,7 @@ class PromptManagerService:
          chat history: {chat_history}
 
          output:
-         '''
+         """
         return prompt
 
     def prepare_validate_for_hardcoded_values_prompt(self, file_str: str):

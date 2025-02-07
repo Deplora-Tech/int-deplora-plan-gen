@@ -1,15 +1,18 @@
 import os
 import json
-from services.main.promptManager.service import PromptManagerService
+from services.main.utils.prompts.service import PromptManagerService
 from services.main.workers.llm_worker import LLMService
 from gitingest import ingest
+
 
 class AnalyzerService:
     def __init__(self):
         self.llm_service = LLMService()
         self.prompt_manager = PromptManagerService()
 
-    async def identify_deployment_files(self, repo_path: str, template_path: str) -> list:
+    async def identify_deployment_files(
+        self, repo_path: str, template_path: str
+    ) -> list:
         """
         Identifies files in the repository that may contain deployment-related information.
 
@@ -18,7 +21,7 @@ class AnalyzerService:
         :return: List of files that may contain deployment-related information.
         """
         # Load the JSON template from the provided path
-        with open(template_path, 'r', encoding='utf-8') as file:
+        with open(template_path, "r", encoding="utf-8") as file:
             template_content = file.read()
 
         # Use GitIngest to analyze the repository structure
@@ -44,7 +47,6 @@ class AnalyzerService:
         # Send the prompt to the LLM and get the response
         response = await self.llm_service.llm_request(prompt)
 
-
         try:
             # Parse the response as JSON
             identified_files = json.loads(response.strip())
@@ -57,7 +59,13 @@ class AnalyzerService:
 
         return identified_files
 
-    async def fill_json_template(self, file_name: str,  file_content: str, described_template: dict, current_template: dict) -> dict:
+    async def fill_json_template(
+        self,
+        file_name: str,
+        file_content: str,
+        described_template: dict,
+        current_template: dict,
+    ) -> dict:
         """
         Fills the current JSON template using the provided file content and described template.
 
@@ -128,7 +136,9 @@ class AnalyzerService:
 
         return modified_template
 
-    async def compare_single_valued_field(self, field_name: str, value1, value2, field_description: str) -> str:
+    async def compare_single_valued_field(
+        self, field_name: str, value1, value2, field_description: str
+    ) -> str:
         """
         Compares two values for a single-valued field using the field description to decide the most relevant value.
 
@@ -163,7 +173,6 @@ class AnalyzerService:
         response = await self.llm_service.llm_request(prompt)
         return response.strip()
 
-
     def parse_repo_contents(self, repo_contents: str) -> dict:
         """
         Parses the repository content into a dictionary of file paths and their contents.
@@ -172,13 +181,20 @@ class AnalyzerService:
         :return: A dictionary with normalized file paths as keys and file contents as values.
         """
         files = {}
-        sections = repo_contents.split("================================================")
+        sections = repo_contents.split(
+            "================================================"
+        )
 
         for i in range(1, len(sections), 2):
             file_header = sections[i].strip()
             if file_header.startswith("File:"):
                 # Normalize the file path (remove leading slashes and backslashes)
-                file_path = file_header.split("File:")[-1].strip().lstrip("/").replace("\\", "/")
+                file_path = (
+                    file_header.split("File:")[-1]
+                    .strip()
+                    .lstrip("/")
+                    .replace("\\", "/")
+                )
                 file_content = sections[i + 1].strip()
                 files[file_path] = file_content
 
@@ -206,7 +222,9 @@ class AnalyzerService:
 
         return None
 
-    async def merge_templates(self, base_template: dict, updated_template: dict, described_template: dict) -> dict:
+    async def merge_templates(
+        self, base_template: dict, updated_template: dict, described_template: dict
+    ) -> dict:
         """
         Merges an updated template into a base template, preserving existing details and appending to multi-valued fields.
 
@@ -233,7 +251,9 @@ class AnalyzerService:
                         base_template[key] = existing_items
                     else:
                         # Handle lists of primitive values
-                        base_template[key] = list(set(base_template.get(key, []) + value))
+                        base_template[key] = list(
+                            set(base_template.get(key, []) + value)
+                        )
                 else:
                     # If base is not a list, replace it with the new value
                     base_template[key] = value
@@ -245,7 +265,9 @@ class AnalyzerService:
                 existing_value = base_template.get(key)
                 if existing_value:
                     # Compare existing value with the new value using LLM
-                    field_description = described_template.get(key, "No description available.")
+                    field_description = described_template.get(
+                        key, "No description available."
+                    )
                     best_value = await self.compare_single_valued_field(
                         field_name=key,
                         value1=existing_value,
@@ -258,7 +280,9 @@ class AnalyzerService:
                     base_template[key] = value
         return base_template
 
-    async def optimize_template(self, current_template: dict, described_template: dict) -> dict:
+    async def optimize_template(
+        self, current_template: dict, described_template: dict
+    ) -> dict:
         """
         Optimizes the JSON template by:
         1. Removing file name references (e.g., "|readme.md|") from single-valued fields.
@@ -274,7 +298,9 @@ class AnalyzerService:
             for key, value in template.items():
                 if isinstance(value, dict):
                     # Recursively clean nested dictionaries
-                    template[key] = clean_single_valued_fields(value, described.get(key, {}))
+                    template[key] = clean_single_valued_fields(
+                        value, described.get(key, {})
+                    )
                 elif isinstance(value, str):
                     # Remove file name references for single-valued fields
                     template[key] = value.split("|")[0].strip()
@@ -282,11 +308,14 @@ class AnalyzerService:
                     # Handle lists by recursively cleaning nested dictionaries in lists
                     if all(isinstance(item, dict) for item in value):
                         template[key] = [
-                            clean_single_valued_fields(item, described.get(key, {})) for item in value
+                            clean_single_valued_fields(item, described.get(key, {}))
+                            for item in value
                         ]
             return template
 
-        cleaned_template = clean_single_valued_fields(current_template, described_template)
+        cleaned_template = clean_single_valued_fields(
+            current_template, described_template
+        )
 
         # Step 2: Use LLM to refine the template further
         described_template_json = json.dumps(described_template, indent=4)
@@ -333,10 +362,9 @@ class AnalyzerService:
 
         return optimized_template
 
-
-
-    async def process_files_and_update_template(self, repo_path: str, described_template_path: str,
-                                                empty_template_path: str) -> dict:
+    async def process_files_and_update_template(
+        self, repo_path: str, described_template_path: str, empty_template_path: str
+    ) -> dict:
         """
         Processes files identified from the repository and updates the JSON template file by file.
         Resolves conflicts for single-valued fields using the LLM.
@@ -347,10 +375,10 @@ class AnalyzerService:
         :return: The final filled JSON template.
         """
         # Load the described template and empty template
-        with open(described_template_path, 'r', encoding='utf-8') as f:
+        with open(described_template_path, "r", encoding="utf-8") as f:
             described_template = json.load(f)
 
-        with open(empty_template_path, 'r', encoding='utf-8') as f:
+        with open(empty_template_path, "r", encoding="utf-8") as f:
             current_template = json.load(f)
 
         # Identify deployment-related files
@@ -382,26 +410,18 @@ class AnalyzerService:
                 file_name=file_name,
                 file_content=file_content,
                 described_template=described_template,
-                current_template=current_template
+                current_template=current_template,
             )
 
             # print(f"Updated template after processing {file_name}: {json.dumps(updated_template, indent=4)}")
             # Merge the updated template into the current template
-            current_template = await self.merge_templates(current_template, updated_template, described_template)
+            current_template = await self.merge_templates(
+                current_template, updated_template, described_template
+            )
             # print(f"Updated template after processing {file_name}: {json.dumps(current_template, indent=4)}")
 
-        current_template = await self.optimize_template(current_template, described_template)
+        current_template = await self.optimize_template(
+            current_template, described_template
+        )
 
         return current_template
-
-
-
-
-
-
-
-
-
-
-
-
