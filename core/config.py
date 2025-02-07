@@ -13,9 +13,11 @@ class Settings(BaseSettings):
     DEEPSEEK_API_KEY: str
     REPO_PATH: str
     JENKINS_URL: str
-    JENKINS_USER: str
+    JENKINS_USERNAME: str
     JENKINS_API_TOKEN: str
     ATLAS_MONGO_URI: str
+    GRAPH_GENERATOR_URL: str
+    GEMINI_API_KEY: str
 
     class Config:
         env_file = ".env"
