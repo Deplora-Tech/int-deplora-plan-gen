@@ -14,7 +14,7 @@ app.include_router(analyzer_router, prefix="/api/v1/analyzer", tags=["Analyzer"]
 # CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Update with allowed origins in production
+    allow_origins=["http://localhost:3000"],  # Update with allowed origins in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

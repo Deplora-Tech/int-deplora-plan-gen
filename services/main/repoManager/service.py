@@ -3,6 +3,7 @@ import shutil
 from git import Repo, GitCommandError, InvalidGitRepositoryError, NoSuchPathError
 from typing import List, Dict
 from core.logger import logger
+from services.main.utils.caching.redis_service import SessionDataHandler
 
 class RepoService:
     def __init__(self, root_path: str):
@@ -34,7 +35,7 @@ class RepoService:
         """
         repo_path = f"{self.root_path}/{session_id}/{repo_url.split('/')[-1].replace('.git', '')}"
         
-
+        SessionDataHandler.update_session_data(session_id, {"repo_path": repo_path})
         try:
             if os.path.exists(repo_path):
                 logger.info(f"The repository at {repo_path} is bare. Deleting and re-cloning...")

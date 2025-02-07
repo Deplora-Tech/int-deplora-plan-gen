@@ -39,7 +39,7 @@ class ManagementService:
             repo_task = self.repo_service.clone_repo(
                 repo_url=git_url, branch="main", session_id=session_id
             )
-            await communication_service.publisher(user_id, LoraStatus.RETRIEVING_USER_PREFERENCES.value)
+            await communication_service.publisher(session_id, LoraStatus.RETRIEVING_USER_PREFERENCES.value)
 
             preferences_task = self.retrieve_preferences(
                 prompt=prompt,
@@ -49,14 +49,14 @@ class ManagementService:
                 chat_history=chat_history,
             )
 
-            await communication_service.publisher(user_id, LoraStatus.RETRIEVING_PROJECT_DETAILS.value)
+            await communication_service.publisher(session_id, LoraStatus.RETRIEVING_PROJECT_DETAILS.value)
             project_details_task = self.retrieve_project_details(project_id)
 
             repo, user_preferences, project_details = await asyncio.gather(
                 repo_task, preferences_task, project_details_task
             )
 
-            await communication_service.publisher(user_id, LoraStatus.GENERATING_DEPLOYMENT_PLAN.value)
+            await communication_service.publisher(session_id, LoraStatus.GENERATING_PLAN.value)
 
             deployment_recommendation, deployment_solution, parsed_files = (
                 await self.plan_generator_service.generate_deployment_plan(
@@ -68,7 +68,7 @@ class ManagementService:
             )
             
             logger.info(f"Files to be committed: {len(parsed_files)}")
-            await communication_service.publisher(user_id, LoraStatus.GATHERING_DATA.value)
+            await communication_service.publisher(session_id, LoraStatus.GATHERING_DATA.value)
             
             await self.repo_service.create_files_in_repo(repo, parsed_files)
 
@@ -82,7 +82,7 @@ class ManagementService:
             }
         except Exception as e:
             logger.error(f"Error occurred: {traceback.print_exc()}")
-            await communication_service.publisher(user_id, LoraStatus.FAILED.value)
+            await communication_service.publisher(session_id, LoraStatus.FAILED.value)
             raise e
 
 

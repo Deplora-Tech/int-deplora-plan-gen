@@ -1,6 +1,7 @@
 import re
 import os, json
 from typing import List, Dict
+from core.logger import logger
 
 
 class FileParser:
@@ -13,6 +14,8 @@ class FileParser:
         re.DOTALL,
     )
     MD_CODE_BLOCK_PATTERN = re.compile(r"^```[\w-]*\n|```$", re.MULTILINE)
+    CDATA_PATTERN = re.compile(r"<!\[CDATA\[(.*?)\]\]>", re.DOTALL)
+
 
     def __init__(self):
         """
@@ -34,23 +37,36 @@ class FileParser:
         files_content = []
         matches = self.FILE_PATTERN.finditer(text)
         for match in matches:
-            file_type = match.group("type")
-            file_path = match.group("path")
-            file_content = match.group("content").strip()
+            try:
+                file_type = match.group("type")
+                file_path = match.group("path")
+                file_content = match.group("content").strip()
 
-            # Remove Markdown code block indicators
-            file_content = re.sub(self.MD_CODE_BLOCK_PATTERN, "", file_content)
+                # Remove Markdown code block indicators
+                file_content = re.sub(self.MD_CODE_BLOCK_PATTERN, "", file_content)
+                
+                # Remove CDATA tags
+                file_content = re.sub(self.CDATA_PATTERN, r"\1", file_content)
 
-            file_name = os.path.basename(file_path)
-            file_object = {
-                "file_name": file_name,
-                "type": file_type,
-                "path": file_path,
-                "content": file_content,
-            }
+                file_name = os.path.basename(file_path)
+                file_object = {
+                    "file_name": file_name,
+                    "type": file_type,
+                    "path": file_path,
+                    "content": file_content,
+                }
 
-            files.append(file_object)
-            files_content.append(match.group(0))
+                files.append(file_object)
+                files_content.append(match.group(0))
+            except Exception as e:
+                logger.error(f"Error parsing file: {e}")
+                logger.error(f"Match: {match.group(0)}")
+                continue
+        
+        if not files:
+            logger.info(f"No files found in the input text. {text}")
+            # raise ValueError("No files found in the input text.")
+        
         return files, files_content
     
     

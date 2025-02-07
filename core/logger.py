@@ -20,8 +20,8 @@ file_handler = RotatingFileHandler(
 )
 
 stream_handler.setFormatter(formatter)
+stream_handler.setLevel(logging.INFO)
 file_handler.setFormatter(formatter)
 
 logger.handlers = [stream_handler, file_handler]
 
-logger.setLevel(logging.DEBUG)
