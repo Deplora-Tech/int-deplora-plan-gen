@@ -1,0 +1,118 @@
+{
+  "application": {
+    "name": "",
+    "type": [],
+    "description": "",
+    "dependencies": [
+      {"name": "", "version": "", "required": null}
+    ],
+    "language": [],
+    "framework": [],
+    "architecture": [],
+    "logging_and_monitoring": {
+      "enabled": null,
+      "logging_format": [],
+      "monitoring_tool": []
+    }
+  },
+  "environment": {
+    "deployment_type": [],
+    "cloud_provider": [],
+    "region": [],
+    "scaling": {
+      "type": [],
+      "min_units": null,
+      "max_units": null
+    },
+    "runtime": [],
+    "configuration_management": [],
+    "environment_variables": ""
+  },
+  "infrastructure": {
+    "iac_tool": [],
+    "storage": [
+      {"type": "", "example": ""}
+    ],
+    "networking": [
+      {"component": "", "purpose": ""}
+    ],
+    "monitoring_and_alerting": []
+  },
+  "ci_cd": {
+    "pipeline_tool": [],
+    "steps": [
+      {"name": "", "artifact": ""}
+    ],
+    "deployment_strategy": [],
+    "rollback_mechanism": {
+      "strategy": "",
+      "automated": null
+    }
+  },
+  "artifacts": {
+    "build_artifacts": [
+      {"type": "", "purpose": ""}
+    ],
+    "pipeline_artifacts": [
+      {"type": "", "purpose": ""}
+    ],
+    "deployment_artifacts": [
+      {"type": "", "example": ""}
+    ],
+    "artifact_registry": []
+  },
+  "security": {
+    "authentication": [],
+    "authorization": [],
+    "encryption": [],
+    "secret_management": []
+  },
+  "observability": {
+    "logging": {
+      "format": "",
+      "aggregation_tool": []
+    },
+    "metrics": {
+      "system": "",
+      "custom": ""
+    },
+    "tracing": []
+  },
+  "testing": {
+    "unit_tests": {
+      "tool": [],
+      "artifact": ""
+    },
+    "integration_tests": {
+      "tool": [],
+      "artifact": ""
+    },
+    "performance_tests": {
+      "tool": [],
+      "artifact": ""
+    },
+    "security_tests": {
+      "tool": [],
+      "artifact": ""
+    }
+  },
+  "notifications": {
+    "channels": [],
+    "alerts": []
+  },
+  "documentation": {
+    "required_documents": [
+      {"type": "", "purpose": ""}
+    ],
+    "storage_location": ""
+  },
+  "additional_info": {
+    "constraints": "",
+    "dependencies": "",
+    "SLA_requirements": "",
+    "backup_and_recovery": {
+      "backup_frequency": "",
+      "recovery_time_objective": ""
+    }
+  }
+}

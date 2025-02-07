@@ -12,3 +12,5 @@ groq~=0.13.1
 redis
 python-multipart
 anthropic
+motor
+gitingest
