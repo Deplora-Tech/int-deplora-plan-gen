@@ -45,18 +45,10 @@ async def handle_precondition(request: PreConditionRequest, condition: Preconndi
             )
         elif condition == Preconndition.CODE_QUALITY:
             # service = CodeQualityService(root_path="D:\\repos")
-            # result = service.analyze_repo(
-            #     "https://github.com/Deplora-Tech/test.git",
-            #     session_id,
-            #     language="Python",
-            # )
+
             pass
         elif condition == Preconndition.BUILD_STATUS:
             # service = BuildStatusService(root_path="D:\\repos")
-            # result = service.check_build_status(
-            #     "https://github.com/Deplora-Tech/test.git",
-            #     session_id,
-            # )
             pass
         else:
             raise HTTPException(status_code=400, detail="Invalid precondition type")
