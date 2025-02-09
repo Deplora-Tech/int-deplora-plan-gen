@@ -2,6 +2,7 @@ from services.main.utils.caching.redis import redis_session, redis_tfcache
 from core.logger import logger
 import os
 import json
+from services.main.enums import Preconndition
 
 
 class SessionDataHandler:
@@ -81,8 +82,7 @@ class SessionDataHandler:
         except Exception as e:
             logger.error(f"Error retrieving client data: {e}")
             return {}
-        
-    
+
     @staticmethod
     def update_session_data(session_id: str, data: dict):
         try:
@@ -93,7 +93,6 @@ class SessionDataHandler:
 
             # Update the session data with multiple key-value pairs
             session_object.update(data)
-            
 
             # Store the updated session data back to Redis
             redis_session.set(redis_key, json.dumps(session_object))
@@ -104,6 +103,28 @@ class SessionDataHandler:
         except Exception as e:
             logger.error(f"Error updating session data: {e}")
 
+    def store_preconditions(session_id: str, data: dict, condition: Preconndition):
+        try:
+            redis_key = session_id
+
+            session_data = redis_session.get(redis_key)
+            session_object = json.loads(session_data) if session_data else {}
+
+            session_object[condition.value] = data
+
+            redis_session.set(redis_key, json.dumps(session_object))
+            redis_session.expire(redis_key, SessionDataHandler.SESSION_TIMEOUT)
+            logger.debug(f"Preconditions stored for session: {redis_key}")
+        except Exception as e:
+            logger.error(f"Error storing preconditions: {e}")
+
+    def get_preconditions(session_id: str, condition: Preconndition):
+        try:
+            session_data = SessionDataHandler.get_session_data(session_id)
+            return session_data.get(condition.value, None)
+        except Exception as e:
+            logger.error(f"Error retrieving preconditions: {e}")
+            return None
 
 
 class TFDocsCache:

@@ -25,3 +25,4 @@ file_handler.setFormatter(formatter)
 
 logger.handlers = [stream_handler, file_handler]
 
+logger.setLevel(logging.INFO)
