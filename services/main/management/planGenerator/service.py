@@ -26,6 +26,7 @@ class PlanGeneratorService:
 
         self.MAX_VALIDATION_ITERATIONS = 1
         self.PLAN_GENERATION_PLATFORM = "gemini"
+        self.PLAN_GENERATION_MODEL = "gemini-2.0-flash-thinking-exp-01-21"
 
     async def generate_deployment_plan(
         self,
@@ -90,7 +91,7 @@ class PlanGeneratorService:
                 terraform_docs,
             )
             deployment_solution = await self.llm_service.llm_request(
-                prompt=generation_prompt, platform=self.PLAN_GENERATION_PLATFORM
+                prompt=generation_prompt, platform=self.PLAN_GENERATION_PLATFORM, model=self.PLAN_GENERATION_MODEL
             )
             logger.info(f"Deployment recommendation: {deployment_recommendation}")
             logger.info(f"Deployment solution: {deployment_solution}")
@@ -100,9 +101,9 @@ class PlanGeneratorService:
             )
 
             # Validate and fix files
-            # parsed_files = await self._validate_and_fix_files(
-            #     parsed_files, parsed_file_content
-            # )
+            parsed_files = await self._validate_and_fix_files(
+                parsed_files, parsed_file_content
+            )
 
             return (deployment_recommendation, deployment_solution, parsed_files)
 
@@ -157,6 +158,7 @@ class PlanGeneratorService:
         else:
             logger.error("Validation failed after maximum iterations.")
         return list(parsed_files_map.values())
+    
 
     async def _fetch_resource_with_doc(self, resource):
         """

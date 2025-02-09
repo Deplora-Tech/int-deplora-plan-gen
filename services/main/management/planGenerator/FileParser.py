@@ -10,7 +10,7 @@ class FileParser:
     """
 
     FILE_PATTERN = re.compile(
-        r'<deploraFile\s+type="(?P<type>\w+)"\s+filePath="(?P<path>[^"]+)">\n(?P<content>.*?)</deploraFile>',
+        r'<deploraFile(?=[^>]*\btype="(?P<type>\w+)")(?=[^>]*\bfilePath="(?P<path>[^"]+)")\s*[^>]*>\s*(?P<content>.*?)</deploraFile>',
         re.DOTALL,
     )
     MD_CODE_BLOCK_PATTERN = re.compile(r"^```[\w-]*\n|```$", re.MULTILINE)
@@ -41,6 +41,8 @@ class FileParser:
                 file_type = match.group("type")
                 file_path = match.group("path")
                 file_content = match.group("content").strip()
+                
+                print(f"File type: {file_type}")
 
                 # Remove Markdown code block indicators
                 file_content = re.sub(self.MD_CODE_BLOCK_PATTERN, "", file_content)
@@ -63,9 +65,9 @@ class FileParser:
                 logger.error(f"Match: {match.group(0)}")
                 continue
         
-        if not files:
-            logger.info(f"No files found in the input text. {text}")
-            # raise ValueError("No files found in the input text.")
+        if len(files) == 0:
+            # logger.info(f"No files found in the input text. {text}")
+            raise ValueError("No files found in the input text.")
         
         return files, files_content
     
