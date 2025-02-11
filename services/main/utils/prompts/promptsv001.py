@@ -177,6 +177,84 @@ docker_prompt = """You are Deplora—an expert AI assistant and senior software 
         <deploraFile type="Dockerfile" filePath="">
           # Dockerfile content here
         </deploraFile>
+
+        <deploraFile type="Jenkinsfile" filePath="">
+          pipeline {{
+              agent any
+
+              environment {{
+                  AWS_DEFAULT_REGION      = 'us-east-1'
+                  AWS_ACCESS_KEY_ID       = credentials('aws-access-key-id')
+                  AWS_SECRET_ACCESS_KEY   = credentials('aws-secret-access-key')
+                  // Full path to the already cloned repository
+                  CLONE_PATH              = credentials('clone_path')
+              }}
+
+              stages {{
+                  stage('CREDTEST'){{
+                      steps {{
+                          echo "${{env.CLONE_PATH}}/terraform"
+                      }}
+                  }}
+                  
+                  stage('Terraform: Init, Plan, and Apply') {{
+                      steps {{
+                          // Execute Terraform commands in the terraform subdirectory
+                          dir("${{env.CLONE_PATH}}/terraform") {{
+                              sh 'terraform init'
+                              sh 'terraform plan -out=tfplan'
+                              sh 'terraform apply -auto-approve tfplan'
+                          }}
+                      }}
+                  }}
+                  
+                  stage('Retrieve ECR Repository URI') {{
+                      steps {{
+                          script {{
+                              // Run Terraform output inside the terraform directory to get the ECR repository URI.
+                              // It is assumed that Terraform outputs a variable named "repository_url".
+                              dir("${{env.CLONE_PATH}}/terraform") {{
+                                  env.ECR_REPO_URI = sh(script: 'terraform output -raw repository_url', returnStdout: true).trim()
+                              }}
+                              echo "ECR Repository URI: ${{env.ECR_REPO_URI}}"
+                          }}
+                      }}
+                  }}
+                  
+                  stage('Docker Build and Push') {{
+                      steps {{
+                          script {{
+                              // Tag for the Docker image (here we use "latest"; modify as needed)
+                              def imageTag = "${{env.ECR_REPO_URI}}:latest"
+                              
+                              // Build the Docker image using the Dockerfile located at the repository root.
+                              dir("${{env.CLONE_PATH}}") {{
+                                  sh "docker build -t ${{imageTag}} ."
+                              }}
+                              
+                              // Extract the registry endpoint from the full ECR URI.
+                              // For example, from "123456789012.dkr.ecr.us-east-1.amazonaws.com/my-app"
+                              // we extract "123456789012.dkr.ecr.us-east-1.amazonaws.com"
+                              def registry = env.ECR_REPO_URI.tokenize('/')[0]
+                              
+                              // Log in to AWS ECR using the AWS CLI.
+                              sh "aws ecr get-login-password --region ${{env.AWS_DEFAULT_REGION}} | docker login --username AWS --password-stdin ${{registry}}"
+                              
+                              // Push the Docker image to the ECR repository.
+                              sh "docker push ${{imageTag}}"
+                          }}
+                      }}
+                  }}
+              }}
+              
+              post {{
+                  always {{
+                      echo "Pipeline finished."
+                  }}
+              }}
+          }}
+
+        </deploraFile>
       </deploraProject>
 
       ...

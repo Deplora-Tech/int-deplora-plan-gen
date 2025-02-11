@@ -11,6 +11,7 @@ communication_service = CommunicationService("PipelineService")
 
 async def excecute_pipeline(session_id: str):
     try:
+        logger.info(f"Excecution pipeline for session: {session_id}")
         chat_history = SessionDataHandler.get_session_data(session_id)
         logger.info(f"Path: {chat_history['repo_path']}")
         jenkins.create_folder(chat_history["organization_id"])
@@ -22,15 +23,9 @@ async def excecute_pipeline(session_id: str):
 
         build_info = ""
 
-        while not build_info:
-            try:
-                build_info = jenkins.trigger_pipeline_build(
+        build_id = jenkins.trigger_pipeline_build(
                     chat_history["organization_id"], chat_history["session_id"]
                 )
-            except Exception as e:
-                pass
-
-        build_id = build_info["id"]
         logger.info(f"Build ID: {build_id}")
 
         x = 0
@@ -41,6 +36,8 @@ async def excecute_pipeline(session_id: str):
             logger.info(f"Stages Info: {stages_info}")
 
             build_info["stages"] = stages_info
+            in_progress = [stage for stage in stages_info if stage["status"] == "IN_PROGRESS"]
+            build_info["building"] = len(in_progress) > 0
             print(build_info)
 
             await communication_service.publisher(

@@ -1,6 +1,7 @@
 import requests
-import os, time
+import os, time, re
 from dotenv import load_dotenv
+from bs4 import BeautifulSoup
 
 
 class JenkinsManager:
@@ -30,7 +31,7 @@ class JenkinsManager:
         elif response.status_code == 400 and "already exists" in response.text:
             print(f"Folder '{folder_name}' already exists.")
         else:
-            print(f"Failed to create folder '{folder_name}': {response.text}")
+            print(f"Failed to create folder '{folder_name}': {self._parse_error_text(response)}")
 
     def create_local_pipeline(self, folder_name, pipeline_name, local_directory_path):
         jenkinsfile_content = open(f"{local_directory_path}/Jenkinsfile", "r").read()
@@ -69,7 +70,7 @@ class JenkinsManager:
             self.create_local_pipeline(folder_name, pipeline_name, local_directory_path)
             
         else:
-            print(f"Failed to create pipeline '{pipeline_name}': {response.text}")
+            print(f"Failed to create pipeline '{pipeline_name}': {self._parse_error_text(response)}")
 
     def delete_pipeline(self, folder_name, pipeline_name):
         url = f"{self.jenkins_url}/job/{folder_name}/job/{pipeline_name}/doDelete"
@@ -83,20 +84,29 @@ class JenkinsManager:
             print(f"Pipeline '{pipeline_name}' not found in folder '{folder_name}'.")
         else:
             print(
-                f"Failed to delete pipeline '{pipeline_name}': {response.status_code} - {response.text}"
+                f"Failed to delete pipeline '{pipeline_name}': {response.status_code} - {self._parse_error_text(response)}"
             )
 
     def trigger_pipeline_build(self, folder_name, pipeline_name):
+        last_build_id = "0"
+
+        try:
+            last_build_id = self.monitor_build_status(folder_name, pipeline_name, "lastBuild")["id"]
+        except Exception:
+            pass
+
+        new_build_id = int(last_build_id) + 1
+
         build_url = f"{self.jenkins_url}/job/{folder_name}/job/{pipeline_name}/build"
         response = requests.post(build_url, auth=(self.username, self.api_token))
 
         if response.status_code == 201:
             print(f"Build triggered successfully for pipeline '{pipeline_name}'.")
             time.sleep(10)
-            return self.monitor_build_status(folder_name, pipeline_name, "lastBuild")
+            return new_build_id
         else:
             print(
-                f"Failed to trigger build for pipeline '{pipeline_name}': {response.text}"
+                f"Failed to trigger build for pipeline '{pipeline_name}': {self._parse_error_text(response)}"
             )
             return None
 
@@ -106,6 +116,7 @@ class JenkinsManager:
         response = requests.get(queue_url, auth=(self.username, self.api_token))
         if response.status_code == 200:
             build_info = response.json()
+            
             result = {
                 "id": build_info.get("id"),
                 "estimatedDuration": build_info.get("estimatedDuration"),
@@ -117,7 +128,8 @@ class JenkinsManager:
 
             return result
         else:
-            raise Exception(f"Failed to monitor build status:")
+            
+            raise Exception(f"Failed to monitor build status: Received response {self._parse_error_text(response)}")
 
     def get_stages_info(self, folder_name, pipeline_name, build_id):
         stages_url = f"{self.jenkins_url}/job/{folder_name}/job/{pipeline_name}/{build_id}/wfapi/describe"
@@ -142,7 +154,7 @@ class JenkinsManager:
             if response.status_code == 200:
                 print(response.text)
             else:
-                print(f"Error fetching console output: {response.text}")
+                print(f"Error fetching console output: {self._parse_error_text(response)}")
         except KeyboardInterrupt:
             print("Console output fetching stopped.")
 
@@ -153,6 +165,26 @@ class JenkinsManager:
             builds = response.json()
             return builds
         else:
-            print(f"Failed to list builds: {response.text}")
-            return None       
+            print(f"Failed to list builds: {self._parse_error_text(response)}")
+            return None     
+
+    def _parse_error_text(self, response):
+        try:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            return soup.get_text(strip=True) 
+        
+        except Exception:
+            return "Failed to parse the error"
+    
+    def list_stages(jenkinsfile_text):
+        """
+        Extracts stage names from a Jenkinsfile text.
+        
+        This regex looks for patterns like:
+        stage('Stage Name')
+        stage("Stage Name")
+        """
+        # Regular expression to capture the stage name inside single or double quotes
+        stage_pattern = r'stage\s*\(\s*[\'"](.+?)[\'"]\s*\)'
+        return re.findall(stage_pattern, jenkinsfile_text)
  
