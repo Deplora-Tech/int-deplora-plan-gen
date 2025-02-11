@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     REPO_PATH: str
     JENKINS_URL: str
     JENKINS_USERNAME: str
+    JENKINS_PASSWORD: str
     JENKINS_API_TOKEN: str
     ATLAS_MONGO_URI: str
     GRAPH_GENERATOR_URL: str

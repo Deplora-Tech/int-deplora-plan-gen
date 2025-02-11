@@ -25,8 +25,8 @@ class PlanGeneratorService:
         self.terraform_doc_scraper = TerraformDocScraper()
 
         self.MAX_VALIDATION_ITERATIONS = 1
-        self.PLAN_GENERATION_PLATFORM = "gemini"
-        self.PLAN_GENERATION_MODEL = "gemini-2.0-flash-thinking-exp-01-21"
+        self.PLAN_GENERATION_PLATFORM = "deepseek"
+        self.PLAN_GENERATION_MODEL = "" #"gemini-2.0-flash-thinking-exp-01-21"
 
     async def generate_deployment_plan(
         self,
