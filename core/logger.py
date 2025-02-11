@@ -27,5 +27,3 @@ file_handler.setLevel(logging.DEBUG)
 file_handler.setFormatter(formatter)
 
 logger.handlers = [stream_handler, file_handler]
-
-

@@ -17,3 +17,4 @@ gitingest
 pydantic_settings
 nest_asyncio
 google-genai
+psutil
