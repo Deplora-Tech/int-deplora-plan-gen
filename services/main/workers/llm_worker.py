@@ -33,16 +33,16 @@ class LLMService:
     async def llm_request(self, prompt: str, platform: str = None, model: str = None):
         
         # Set default platform if not provided
-        if platform is None:
+        if not platform:
             # if modeel provided
-            if model is not None:
+            if model:
                 raise HTTPException(
                     status_code=500, detail="Model provided without platform."
                 )
             
             platform = self.DEFAULT_PLATFORM
         
-        if model is None:
+        if not model:
             model = self.DEFAULT_MODELS.get(platform)
 
 

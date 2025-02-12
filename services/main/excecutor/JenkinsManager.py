@@ -32,9 +32,14 @@ class JenkinsManager:
             print(f"Folder '{folder_name}' already exists.")
         else:
             print(f"Failed to create folder '{folder_name}': {self._parse_error_text(response)}")
+    
+    def _read_jenkinsfile(self, local_directory_path):
+        jenkinsfile_path = f"{local_directory_path}/Jenkinsfile"
+        with open(jenkinsfile_path, "r") as file:
+            return file.read()
 
     def create_local_pipeline(self, folder_name, pipeline_name, local_directory_path):
-        jenkinsfile_content = open(f"{local_directory_path}/Jenkinsfile", "r").read()
+        jenkinsfile_content = self._read_jenkinsfile(local_directory_path)
 
         url = f"{self.jenkins_url}/job/{folder_name}/createItem?name={pipeline_name}"
         headers = {"Content-Type": "application/xml"}
@@ -121,7 +126,7 @@ class JenkinsManager:
                 "id": build_info.get("id"),
                 "estimatedDuration": build_info.get("estimatedDuration"),
                 "timestamp": build_info.get("timestamp"),
-                "url": build_info.get("url"),
+                # "url": build_info.get("url"),
                 "duration": build_info.get("duration"),
                 "building": build_info.get("building"),
             }
@@ -145,10 +150,14 @@ class JenkinsManager:
                 }
                 for stage in stages_info
             ]
-            return stages_info
 
-    def fetch_console_output(self, build_url):
-        console_url = f"{build_url}/consoleFull"
+            is_building = self.monitor_build_status(folder_name, pipeline_name, build_id)["building"]
+
+            return stages_info, is_building
+
+    def fetch_console_output(self, folder_name, pipeline_name, build_id):
+        console_url = f"{self.jenkins_url}/job/{folder_name}/job/{pipeline_name}/{build_id}/consoleText"
+
         try:
             response = requests.get(console_url, auth=(self.username, self.api_token))
             if response.status_code == 200:
@@ -176,7 +185,7 @@ class JenkinsManager:
         except Exception:
             return "Failed to parse the error"
     
-    def list_stages(jenkinsfile_text):
+    def list_stages(self, local_directory_path):
         """
         Extracts stage names from a Jenkinsfile text.
         
@@ -184,7 +193,18 @@ class JenkinsManager:
         stage('Stage Name')
         stage("Stage Name")
         """
+        jenkinsfile_text = self._read_jenkinsfile(local_directory_path)
         # Regular expression to capture the stage name inside single or double quotes
         stage_pattern = r'stage\s*\(\s*[\'"](.+?)[\'"]\s*\)'
         return re.findall(stage_pattern, jenkinsfile_text)
+
+    def get_logs_for_stage(self, folder_name, pipeline_name, build_id, stage_id):
+        stages_url = f"{self.jenkins_url}/job/{folder_name}/job/{pipeline_name}/{build_id}/pipeline-console/log?nodeId={stage_id}"
+        response = requests.get(stages_url, auth=(self.username, self.api_token))
+
+        if response.status_code == 200:
+            return response.text
+        else:
+            return f"Failed to fetch logs for stage {stage_id}: {self._parse_error_text(response)}"
+        
  
