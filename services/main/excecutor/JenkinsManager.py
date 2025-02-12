@@ -70,10 +70,18 @@ class JenkinsManager:
                 f"Pipeline '{pipeline_name}' created successfully inside '{folder_name}'."
             )
         elif response.status_code == 400 and "already exists" in response.text:
-            print(f"Pipeline '{pipeline_name}' already exists inside '{folder_name}'.")
-            self.delete_pipeline(folder_name, pipeline_name)
-            self.create_local_pipeline(folder_name, pipeline_name, local_directory_path)
-            
+            print(f"Pipeline '{pipeline_name}' already exists inside '{folder_name}'. Updating the pipeline script.")
+            update_url = f"{self.jenkins_url}/job/{folder_name}/job/{pipeline_name}/config.xml"
+            update_response = requests.post(
+                update_url,
+                auth=(self.username, self.api_token),
+                headers=headers,
+                data=pipeline_config,
+            )
+            if update_response.status_code == 200:
+                print(f"Pipeline '{pipeline_name}' updated successfully inside '{folder_name}'.")
+            else:
+                print(f"Failed to update pipeline '{pipeline_name}': {self._parse_error_text(update_response)}")
         else:
             print(f"Failed to create pipeline '{pipeline_name}': {self._parse_error_text(response)}")
 
