@@ -26,7 +26,7 @@ async def excecute_pipeline(session_id: str):
             )
     
 
-        jenkins.create_folder(chat_history["organization_id"])
+        jenkins.create_folder(chat_history["organization_id"], chat_history["repo_path"])
         jenkins.create_local_pipeline(
             chat_history["organization_id"],
             chat_history["session_id"],
@@ -39,6 +39,12 @@ async def excecute_pipeline(session_id: str):
                     chat_history["organization_id"], chat_history["session_id"]
                 )
         logger.info(f"Build ID: {build_id}")
+        build_info["id"] = build_id
+        await communication_service.publisher(
+                chat_history["session_id"],
+                ExcecutionStatus.INITIALIZE.value,
+                build_info,
+            )
 
         build_info = jenkins.monitor_build_status(
             chat_history["organization_id"],
@@ -78,6 +84,21 @@ async def excecute_pipeline(session_id: str):
 
     except Exception as e:
         logger.error(f"Error excecution pipeline: {traceback.format_exc()}")
+        await communication_service.publisher(
+            chat_history["session_id"], ExcecutionStatus.FAILED.value, {"error": str(e)}
+        )
+
+
+async def abort_pipeline(session_id: str, build_id: str):
+    try:
+        chat_history = SessionDataHandler.get_session_data(session_id)
+        jenkins.stop_pipeline_build(chat_history["organization_id"], chat_history["session_id"], build_id)
+        await communication_service.publisher(
+            chat_history["session_id"], ExcecutionStatus.ABORTED.value, {"message": "Pipeline aborted"}
+        )
+
+    except Exception as e:
+        logger.error(f"Error aborting pipeline: {traceback.format_exc()}")
         await communication_service.publisher(
             chat_history["session_id"], ExcecutionStatus.FAILED.value, {"error": str(e)}
         )

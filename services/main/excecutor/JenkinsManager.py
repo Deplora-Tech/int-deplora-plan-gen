@@ -1,5 +1,5 @@
 import requests
-import os, time, re
+import os, time, re, json
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 
@@ -10,8 +10,34 @@ class JenkinsManager:
         self.jenkins_url = os.getenv("JENKINS_URL")
         self.username = os.getenv("JENKINS_USERNAME")
         self.api_token = os.getenv("JENKINS_API_TOKEN")
+    
+    def create_jenkins_secret_text(self, folder_name, credential_id, secret_text, description=""):
 
-    def create_folder(self, folder_name):
+        url = f"{self.jenkins_url}/job/{folder_name}/credentials/store/folder/domain/_/createCredentials"
+
+        xml_payload = f"""
+        <org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl>
+            <scope>FOLDER</scope>
+            <id>{credential_id}</id>
+            <description>{description}</description>
+            <secret>{secret_text}</secret>
+        </org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl>
+        """
+
+        headers = {
+            "Content-Type": "application/xml"
+        }
+
+        response = requests.post(url, auth=(self.username, self.api_token), headers=headers, data=xml_payload)
+
+        if response.status_code == 200:
+            return {"status": "success", "message": "Secret text credential created successfully"}
+        else:
+            return {"status": "error", "message": f"Failed to create credential: {self._parse_error_text(response)}"}
+
+
+
+    def create_folder(self, folder_name, clone_path):
         url = f"{self.jenkins_url}/createItem?name={folder_name}"
         headers = {"Content-Type": "application/xml"}
         folder_config = f"""
@@ -27,6 +53,9 @@ class JenkinsManager:
         )
 
         if response.status_code == 200:
+            self.create_secret_text_credential(folder_name, "clone_path", clone_path, "Path to the repository")
+            self.create_secret_text_credential(folder_name, "aws-access-key-id", "", "AWS Access Key ID")
+            self.create_secret_text_credential(folder_name, "aws-secret-access-key", "", "AWS Secret Access Key")
             print(f"Folder '{folder_name}' created successfully.")
         elif response.status_code == 400 and "already exists" in response.text:
             print(f"Folder '{folder_name}' already exists.")
@@ -122,6 +151,15 @@ class JenkinsManager:
                 f"Failed to trigger build for pipeline '{pipeline_name}': {self._parse_error_text(response)}"
             )
             return None
+    
+    def stop_pipeline_build(self, folder_name, pipeline_name, build_id):
+        stop_url = f"{self.jenkins_url}/job/{folder_name}/job/{pipeline_name}/{build_id}/stop"
+        response = requests.post(stop_url, auth=(self.username, self.api_token))
+
+        if response.status_code == 200:
+            print(f"Build {build_id} stopped successfully for pipeline '{pipeline_name}'.")
+        else:
+            print(f"Failed to stop build {build_id} for pipeline '{pipeline_name}': {self._parse_error_text(response)}")
 
     def monitor_build_status(self, folder_name, pipeline_name, build_id):
         queue_url = f"{self.jenkins_url}/job/{folder_name}/job/{pipeline_name}/{build_id}/api/json"
@@ -214,5 +252,6 @@ class JenkinsManager:
             return response.text
         else:
             return f"Failed to fetch logs for stage {stage_id}: {self._parse_error_text(response)}"
+
         
  
