@@ -16,6 +16,7 @@ class LLMService:
             "deepseek": "deepseek-coder",
             "claude": "deepseek-3-5-sonnet-20241022",
             "gemini": "gemini-2.0-flash",
+            "openai": "gpt-4o",
         }
         
         # Initialize the Groq client
@@ -28,21 +29,22 @@ class LLMService:
             api_key=os.environ.get("DEEPSEEK_API_KEY"),
             base_url="https://api.deepseek.com",
         )
+        self.openai = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
         self.gemini = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
     
     async def llm_request(self, prompt: str, platform: str = None, model: str = None):
         
         # Set default platform if not provided
-        if platform is None:
+        if not platform:
             # if modeel provided
-            if model is not None:
+            if model:
                 raise HTTPException(
                     status_code=500, detail="Model provided without platform."
                 )
             
             platform = self.DEFAULT_PLATFORM
         
-        if model is None:
+        if not model:
             model = self.DEFAULT_MODELS.get(platform)
 
 
@@ -89,6 +91,35 @@ class LLMService:
             return content
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+        
+    async def llm_request_openai(self, prompt: str, model: str):
+        try:
+            # Generate the chat completion using the OpenAI client
+            message = self.openai.chat.create(
+                model=model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are Deplora, an intelligent deployment assistant designed to generate, analyze, and optimize deployment plans. Your primary goal is to assist users in creating accurate, efficient, and personalized deployment strategies for software applications. Respond with clear and actionable insights, leveraging your expertise in deployment technologies such as Terraform, Docker, Kubernetes, CI/CD pipelines, and cloud platforms. Ensure responses are structured, professional, and align with industry best practices.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                stream=False,
+            )
+
+            # Extract and return the response content
+            content = message.choices[0].message.content
+            if not content:
+                raise HTTPException(
+                    status_code=500, detail="Content not found in the response."
+                )
+
+            return content
+
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+        
+
 
     async def llm_request_deepseek(self, prompt: str, model: str):
         try:
