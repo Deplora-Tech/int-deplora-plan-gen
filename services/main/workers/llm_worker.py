@@ -10,7 +10,7 @@ class LLMService:
     
     
     def __init__(self):
-        self.DEFAULT_PLATFORM = "gemini"
+        self.DEFAULT_PLATFORM = "openai"
         self.DEFAULT_MODELS = {
             "groq": "llama-3.3-70b-specdec",
             "deepseek": "deepseek-coder",
@@ -56,6 +56,8 @@ class LLMService:
             return await self.llm_request_claude(prompt, model)
         elif platform == "gemini":
             return await self.llm_request_gemini(prompt, model)
+        elif platform == "openai":
+            return await self.llm_request_openai(prompt, model)
         else:
             raise HTTPException(
                 status_code=500, detail="Invalid platform specified."
@@ -95,7 +97,7 @@ class LLMService:
     async def llm_request_openai(self, prompt: str, model: str):
         try:
             # Generate the chat completion using the OpenAI client
-            message = self.openai.chat.create(
+            message = self.openai.chat.completions.create(
                 model=model,
                 messages=[
                     {

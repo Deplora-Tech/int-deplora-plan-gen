@@ -81,7 +81,7 @@ class PlanGeneratorService:
             # logger.info(f"Terraform docs: {terraform_docs}")
 
             # Generate initial deployment solution
-            terraform_docs = ""
+            # terraform_docs = ""
             generation_prompt = self._get_strategy_prompt(
                 deployment_strategy,
                 user_preferences,

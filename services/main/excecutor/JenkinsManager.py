@@ -2,6 +2,7 @@ import requests
 import os, time, re, json
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
+import xml.etree.ElementTree as ET
 
 
 class JenkinsManager:
@@ -10,6 +11,74 @@ class JenkinsManager:
         self.jenkins_url = os.getenv("JENKINS_URL")
         self.username = os.getenv("JENKINS_USERNAME")
         self.api_token = os.getenv("JENKINS_API_TOKEN")
+    
+
+
+    def set_folder_env_variable( self, folder_name, var_name, var_value):
+        """
+        Sets an environment variable for a specific folder in Jenkins using REST API.
+
+        Args:
+            jenkins_url (str): Base URL of your Jenkins instance.
+            folder_path (str): Path to your folder, e.g., "my-folder" or "folder1/folder2".
+            var_name (str): Environment variable name.
+            var_value (str): Environment variable value.
+            username (str): Jenkins username.
+            api_token (str): Jenkins user API token/password.
+
+        Returns:
+            bool: True if successfully updated, False otherwise.
+        """
+
+        config_url = f"{self.jenkins_url}/job/{folder_name}/config.xml"
+
+        # Get current configuration
+        response = requests.get(config_url, auth=(self.username, self.api_token))
+
+        if response.status_code != 200:
+            print("Failed to retrieve config.xml", response.status_code, response.text)
+            return False
+
+        # Parse XML
+        root = ET.fromstring(response.text)
+
+        # Namespace fix
+        ns = {'jenkins': 'http://maven.apache.org/POM/4.0.0'}
+
+        # Check if folder-properties exists; create if not
+        properties = root.find('properties')
+        if properties is None:
+            properties = ET.SubElement(root, 'properties')
+
+        folder_properties = properties.find('com.mig82.folders.properties.FolderProperties')
+        if folder_properties is None:
+            folder_properties = ET.SubElement(properties, 'com.mig82.folders.properties.FolderProperties')
+            env_vars = ET.SubElement(folder_properties, 'properties')
+        else:
+            env_vars = folder_properties.find('properties')
+            if env_vars is None:
+                env_vars = ET.SubElement(folder_properties, 'properties')
+
+        # Add or update environment variable
+        new_var = ET.SubElement(env_vars, 'com.mig82.folders.properties.StringProperty')
+        key_elem = ET.SubElement(new_var, 'key')
+        key_elem.text = var_name
+        value_elem = ET.SubElement(new_var, 'value')
+        value_elem.text = var_value
+
+        # Convert XML back to string
+        updated_config_xml = ET.tostring(root, encoding='utf-8').decode('utf-8')
+
+        # POST updated configuration back to Jenkins
+        headers = {'Content-Type': 'application/xml'}
+        update_response = requests.post(config_url, data=updated_config_xml, auth=(self.username, self.api_token), headers=headers)
+
+        if update_response.status_code == 200:
+            print("Folder environment variable updated successfully!")
+            return True
+        else:
+            print("Failed to update config.xml", update_response.status_code, update_response.text)
+            return False
     
     def create_jenkins_secret_text(self, folder_name, credential_id, secret_text, description=""):
 
@@ -53,10 +122,12 @@ class JenkinsManager:
         )
 
         if response.status_code == 200:
-            self.create_jenkins_secret_text(folder_name, "clone_path", clone_path, "Path to the repository")
             self.create_jenkins_secret_text(folder_name, "aws-access-key-id", "", "AWS Access Key ID")
             self.create_jenkins_secret_text(folder_name, "aws-secret-access-key", "", "AWS Secret Access Key")
-            self.create_jenkins_secret_text(folder_name, "aws-region", "", "AWS Region")
+            
+            self.set_folder_env_variable(folder_name, "CLONE_PATH", clone_path)
+            self.set_folder_env_variable(folder_name, "AWS_REGION", "us-east-1")
+            self.set_folder_env_variable(folder_name, "AWS_ACCOUNT_ID", "123")
             print(f"Folder '{folder_name}' created successfully.")
         elif response.status_code == 400 and "already exists" in response.text:
             print(f"Folder '{folder_name}' already exists.")
