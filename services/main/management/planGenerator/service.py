@@ -25,8 +25,8 @@ class PlanGeneratorService:
         self.terraform_doc_scraper = TerraformDocScraper()
 
         self.MAX_VALIDATION_ITERATIONS = 0
-        self.PLAN_GENERATION_PLATFORM = "gemini"
-        self.PLAN_GENERATION_MODEL = "" #"gemini-2.0-flash-thinking-exp-01-21"
+        self.PLAN_GENERATION_PLATFORM = "groq"
+        self.PLAN_GENERATION_MODEL = "llama-3.3-70b-versatile" #"gemini-2.0-flash-thinking-exp-01-21"
 
     async def generate_deployment_plan(
         self,
@@ -101,9 +101,9 @@ class PlanGeneratorService:
             )
 
             # Validate and fix files
-            parsed_files = await self._validate_and_fix_files(
-                parsed_files, parsed_file_content
-            )
+            # parsed_files = await self._validate_and_fix_files(
+            #     parsed_files, parsed_file_content
+            # )
 
             return (deployment_recommendation, deployment_solution, parsed_files)
 
@@ -118,6 +118,9 @@ class PlanGeneratorService:
 
         if history["current_plan"]:
             refine = True
+
+        # this should be removed once the other workflows are implemented
+        strategy = DeploymentOptions.DOCKERIZED_DEPLOYMENT.value
 
         if DeploymentOptions.DOCKERIZED_DEPLOYMENT.value in strategy:
             if refine:

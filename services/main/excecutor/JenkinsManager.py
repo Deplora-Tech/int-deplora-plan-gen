@@ -53,9 +53,10 @@ class JenkinsManager:
         )
 
         if response.status_code == 200:
-            self.create_secret_text_credential(folder_name, "clone_path", clone_path, "Path to the repository")
-            self.create_secret_text_credential(folder_name, "aws-access-key-id", "", "AWS Access Key ID")
-            self.create_secret_text_credential(folder_name, "aws-secret-access-key", "", "AWS Secret Access Key")
+            self.create_jenkins_secret_text(folder_name, "clone_path", clone_path, "Path to the repository")
+            self.create_jenkins_secret_text(folder_name, "aws-access-key-id", "", "AWS Access Key ID")
+            self.create_jenkins_secret_text(folder_name, "aws-secret-access-key", "", "AWS Secret Access Key")
+            self.create_jenkins_secret_text(folder_name, "aws-region", "", "AWS Region")
             print(f"Folder '{folder_name}' created successfully.")
         elif response.status_code == 400 and "already exists" in response.text:
             print(f"Folder '{folder_name}' already exists.")
@@ -68,6 +69,7 @@ class JenkinsManager:
             return file.read()
 
     def create_local_pipeline(self, folder_name, pipeline_name, local_directory_path):
+        # local_directory_path = "/home/sahiru/deplora/repo-clones/d114e906-957a-428f-b1af-6c47bb6577c4/po-server"
         jenkinsfile_content = self._read_jenkinsfile(local_directory_path)
 
         url = f"{self.jenkins_url}/job/{folder_name}/createItem?name={pipeline_name}"

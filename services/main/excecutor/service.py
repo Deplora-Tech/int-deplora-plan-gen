@@ -80,6 +80,7 @@ async def excecute_pipeline(session_id: str):
             # await asyncio.sleep(1)
             x += 1
             if x >= 10000:
+                logger.info("Breaking")
                 break
 
     except Exception as e:

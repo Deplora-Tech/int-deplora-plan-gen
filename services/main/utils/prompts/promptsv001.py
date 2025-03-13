@@ -57,7 +57,9 @@ docker_prompt = """You are Deplora—an expert AI assistant and senior software 
 3. **IaC & Pipeline Requirements**:
    - Integrate **Terraform** for Infrastructure as Code (IaC) with well-defined `main.tf`, `variables.tf`, `terraform.tfvars`, and `outputs.tf`.
    - Ensure **CI/CD** using **Jenkins** with a clear separation of build, test, and deploy steps.
-
+   - No need of git checkout, git clone, or git pull commands in the Jenkinsfile because the code is already available in the Jenkins workspace.
+   - Make sure to run each stage inside CLONE_PATH which is in credentials('clone_path')
+   
 4. **File References**:
    - Maintain strict adherence to file-path references to avoid any disconnection in workflows.
 
