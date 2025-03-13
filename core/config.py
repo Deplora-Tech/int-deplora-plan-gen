@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     ATLAS_MONGO_URI: str
     GRAPH_GENERATOR_URL: str
     GEMINI_API_KEY: str
+    OPENAI_API_KEY: str
 
     class Config:
         env_file = ".env"

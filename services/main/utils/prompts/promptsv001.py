@@ -58,7 +58,9 @@ docker_prompt = """You are Deplora—an expert AI assistant and senior software 
    - Integrate **Terraform** for Infrastructure as Code (IaC) with well-defined `main.tf`, `variables.tf`, `terraform.tfvars`, and `outputs.tf`.
    - Ensure **CI/CD** using **Jenkins** with a clear separation of build, test, and deploy steps.
    - No need of git checkout, git clone, or git pull commands in the Jenkinsfile because the code is already available in the Jenkins workspace.
-   - Make sure to run each stage inside CLONE_PATH which is in credentials('clone_path')
+   - Make sure to run each stage inside CLONE_PATH which available as a Environment Variable
+   - Assume necessary environment variables and credentials are already set in the Jenkins environment.
+   - make sure to use withFolderProperties() in the jenkins pipeline options.
    
 4. **File References**:
    - Maintain strict adherence to file-path references to avoid any disconnection in workflows.
@@ -185,11 +187,12 @@ docker_prompt = """You are Deplora—an expert AI assistant and senior software 
               agent any
 
               environment {{
-                  AWS_DEFAULT_REGION      = 'us-east-1'
                   AWS_ACCESS_KEY_ID       = credentials('aws-access-key-id')
                   AWS_SECRET_ACCESS_KEY   = credentials('aws-secret-access-key')
-                  // Full path to the already cloned repository
-                  CLONE_PATH              = credentials('clone_path')
+              }}
+
+              options {{
+                  withFolderProperties()
               }}
 
               stages {{
