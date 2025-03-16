@@ -18,3 +18,7 @@ pydantic_settings
 nest_asyncio
 google-genai
 psutil
+langgraph
+langchain_openai
+langchain
+langchain_google_genai
