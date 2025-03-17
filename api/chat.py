@@ -31,6 +31,12 @@ async def send_message(request: MessageRequest):
             request.session_id,
             LoraStatus.FAILED.value,
         )
+        SessionDataHandler.update_message_state_and_data(
+            request.session_id,
+            request.mid,
+            LoraStatus.FAILED.value,
+            "Error occurred. Please try again.",
+        )
 
         return {
             "status": "Error",
