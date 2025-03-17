@@ -3,7 +3,7 @@ from langchain_openai import ChatOpenAI
 from langgraph.types import Command
 from langgraph.graph import StateGraph, START, END, MessagesState
 from langchain_core.tools import tool
-
+from langchain_core.messages import ToolMessage
 import json
 import asyncio
 import concurrent.futures
@@ -29,7 +29,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 
 model = ChatGoogleGenerativeAI(
     model="gemini-2.0-flash",
-    temperature=0.7,
+    temperature=0.5,
     max_tokens=None,
     timeout=None,
     max_retries=2,
@@ -105,28 +105,55 @@ class TerraformDocumentationAgent:
     
     def invoke(self, state) -> Command[Literal["resource_agent"]]:
         print("Invoking Terraform documentation agent")
-        deployment_recommendation = agentState.deployment_strategy.deployment_recommendation
+        deployment_recommendation = agentState.deployment_strategy.deployment_recommendation if agentState.deployment_strategy else "Dockerized Deployments (Containerization)"
+        
 
         prompt = f"""
         You are an expert deployment solution architect. Your task is to identify the resources required for the deployment based on the project details and user preferences.
+        The deployment recommendation is: {deployment_recommendation}.
         You have a tool to scrape Terraform documentation for the identified resources.
         {agentState.format_context()}
 
-        You have already identified the following resources: {agentState.format_resources()}.
+        You have already identified the following resources: {", ".join([doc.name for doc in agentState.resource_documents.get("terraform", [])])}
+        ALWAYS call `fetch_resource_definitions` if you need more information.        
         """
         # response = self.model.invoke(prompt)
         # resources = self.file_parser.parse_json(response.content).get("resources", [])
         # agentState.identified_resources = resources
 
-        response = model.bind_tools([fetch_resource_definitions]).invoke(prompt)
-        print("Response from Terraform documentation agent", response)
-        exit()
+        ai_msg = model.bind_tools([fetch_resource_definitions]).invoke(prompt)
+        print("Response from Terraform documentation agent", ai_msg.tool_calls)
+
         # print("Identified resources")
         # print(resources)
 
+        if ai_msg.tool_calls:
+            tool_responses = []
+            for call in ai_msg.tool_calls:
+                tool_name = call["name"]
+                tool_call_id = call["id"]
+                arguments = call["args"]
+
+                if tool_name == "fetch_resource_definitions":
+                    resource_defs = [ResourceDefinition(**res) for res in arguments["resources"]]
+                    result = fetch_resource_definitions.invoke({"resources": [res.model_dump() for res in resource_defs]})
+                    
+                    for doc in result:
+                        print(doc)
+                        print("-"*10)
+                        if "terraform" not in agentState.resource_documents:
+                            agentState.resource_documents["terraform"] = []
+                        agentState.resource_documents["terraform"].append(doc)
+
+                    # Append actual results
+                    tool_msg = ToolMessage(content=json.dumps(result), tool_call_id=tool_call_id)
+                    tool_responses.append(tool_msg)
+
+        # Return with real execution results
+        print("TOOL EXECUTION RESULTS")
         return Command(
             goto="resource_agent",
-            update={"messages": [response]},
+            update={"messages": [ai_msg]}
         )
 
 class DeploymentPlanGeneratorAgent:
@@ -166,14 +193,19 @@ from typing import Dict
 class TerraformDocumentationTool:
     def __init__(self, scraper: TerraformDocScraper):
         self.scraper = scraper
-        asyncio.run(self.scraper.initialize_browser())
+        # asyncio.run(self.scraper.initialize_browser())
     
     def fetch_resources(self, resources: List[Dict[str, str]]):
         resource_docs = []
         for resource in resources:
             name = resource.get("name")
-            definition = asyncio.run(self.scraper.fetch_definition(name))
-            resource_docs.append({"name": name, "content": definition})
+            try:
+                definition = asyncio.run(asyncio.wait_for(self.scraper.fetch_definition(name), timeout=10))
+                if definition:
+                    resource_docs.append({"name": name, "content": definition})
+            except asyncio.TimeoutError:
+                definition = "Timeout occurred while fetching the definition."
+            
         
         return resource_docs
 
@@ -198,7 +230,6 @@ def fetch_resource_definitions(resources: List[ResourceDefinition]) -> List[Dict
     Returns:
         List[Dict[str, str]]: A list of dictionaries containing resource definitions.
     """
-    print("Fetching Terraform documentation")
     return terraform_doc_scraper.fetch_resources([{"name": res.name} for res in resources])
 
 
@@ -243,7 +274,7 @@ class AgentState:
         self.messages: List[str] = []
         self.deployment_strategy: str = ""
         self.identified_resources: List[Dict[str, str]] = []
-        self.resource_documents: Dict[str, Dict[str, str]] = {}
+        self.resource_documents: Dict[str, List[Dict[str, str]]] = {}
         self.deployment_solution: str = ""
         self.validated_files: List[Dict] = []
     
@@ -375,7 +406,17 @@ def runME():
     ):
         pretty_print_messages(chunk)
 
+def saveGraph():
+    try:
+        img_data = supervisor.get_graph().draw_mermaid_png()
+        with open("graph_output.png", "wb") as f:
+            f.write(img_data)
+        print("Workflow diagram saved to graph_output.png")
+    except Exception as e:
+        print(f"Error generating diagram: {e}")
+
 
 if __name__ == "__main__":
+    # saveGraph()
     asyncio.run(runME())
         
