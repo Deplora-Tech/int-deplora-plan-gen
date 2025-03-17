@@ -6,6 +6,7 @@ from services.main.utils.prompts.service import PromptManagerService
 from services.main.management.planGenerator.service import PlanGeneratorService
 from services.main.management.repoManager.service import RepoService
 from services.main.workers.llm_worker import LLMService
+from services.main.utils.caching.redis_service import SessionDataHandler
 
 import asyncio, os
 import traceback
@@ -25,6 +26,7 @@ class ManagementService:
 
     async def generate_deployment_plan(
         self,
+        request: MessageRequest,
         prompt: str,
         project_id: str,
         organization_id: str,
@@ -43,6 +45,13 @@ class ManagementService:
                 session_id, LoraStatus.RETRIEVING_USER_PREFERENCES.value
             )
 
+            SessionDataHandler.update_message_state_and_data(
+                session_id,
+                request.mid,
+                LoraStatus.RETRIEVING_USER_PREFERENCES.value,
+                "",
+            )
+
             preferences_task = self.retrieve_preferences(
                 prompt=prompt,
                 project_id=project_id,
@@ -54,6 +63,13 @@ class ManagementService:
             await communication_service.publisher(
                 session_id, LoraStatus.RETRIEVING_PROJECT_DETAILS.value
             )
+
+            SessionDataHandler.update_message_state_and_data(
+                session_id,
+                request.mid,
+                LoraStatus.RETRIEVING_PROJECT_DETAILS.value,
+                "",
+            )
             project_details_task = self.retrieve_project_details(project_id)
 
             repo, user_preferences, project_details = await asyncio.gather(
@@ -62,6 +78,13 @@ class ManagementService:
 
             await communication_service.publisher(
                 session_id, LoraStatus.GENERATING_PLAN.value
+            )
+
+            SessionDataHandler.update_message_state_and_data(
+                session_id,
+                request.mid,
+                LoraStatus.GENERATING_PLAN.value,
+                "",
             )
 
             deployment_recommendation, deployment_solution, parsed_files = (
@@ -76,6 +99,13 @@ class ManagementService:
             logger.info(f"Files to be committed: {len(parsed_files)}")
             await communication_service.publisher(
                 session_id, LoraStatus.GATHERING_DATA.value
+            )
+
+            SessionDataHandler.update_message_state_and_data(
+                session_id,
+                request.mid,
+                LoraStatus.GATHERING_DATA.value,
+                "",
             )
 
             await self.repo_service.create_files_in_repo(repo, parsed_files)
@@ -93,6 +123,13 @@ class ManagementService:
         except Exception as e:
             logger.error(f"Error occurred: {traceback.print_exc()}")
             await communication_service.publisher(session_id, LoraStatus.FAILED.value)
+
+            SessionDataHandler.update_message_state_and_data(
+                session_id,
+                request.mid,
+                LoraStatus.FAILED.value,
+                "",
+            )
             raise e
 
     async def process_conversation(

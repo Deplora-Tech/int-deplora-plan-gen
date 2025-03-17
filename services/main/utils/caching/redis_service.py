@@ -3,13 +3,15 @@ from core.logger import logger
 import os
 import json
 from services.main.enums import Preconndition
+from uuid import uuid4
+from datetime import datetime
 
 
 class SessionDataHandler:
     SESSION_TIMEOUT = int(os.getenv("SESSION_TIMEOUT", 3600 * 24 * 365))
 
     @staticmethod
-    def store_message(session_id: str, client_id: str, role: str, message: str):
+    def store_message_user(session_id: str, client_id: str, role: str, message: str):
         try:
             redis_key = session_id
             # Fetch the existing session or initialize a new one
@@ -20,7 +22,7 @@ class SessionDataHandler:
 
             # Update chat history
             chat_history = session_object.get("chat_history", [])
-            chat_history.append({"role": role, "message": message})
+            chat_history.append({"role": role, "message": message, "state": None})
 
             session_object["chat_history"] = chat_history
 
@@ -29,6 +31,66 @@ class SessionDataHandler:
             logger.debug(f"Message stored in session: {redis_key} - {role}: {message}")
         except Exception as e:
             logger.error(f"Error storing message: {e}")
+
+    def initialize_message_state_and_return(
+        session_id: str, client_id: str, role: str, state: list
+    ):
+        try:
+            redis_key = session_id
+            # Fetch the existing session or initialize a new one
+            session_data = redis_session.get(redis_key)
+            session_object = (
+                json.loads(session_data) if session_data else {"client_id": client_id}
+            )
+
+            # Update chat history
+            chat_history = session_object.get("chat_history", [])
+            unique_id = str(uuid4())
+            chat_history.append(
+                {
+                    "id": unique_id,
+                    "role": role,
+                    "message": "message",
+                    "state": state,
+                    "created_At": str(datetime.now()),
+                }
+            )
+            session_object["chat_history"] = chat_history
+
+            redis_session.set(redis_key, json.dumps(session_object))
+            redis_session.expire(redis_key, SessionDataHandler.SESSION_TIMEOUT)
+            logger.debug(
+                f"Message stored in session: {redis_key} - {role} - id: {unique_id}: {state}"
+            )
+            return unique_id
+        except Exception as e:
+            logger.error(f"Error storing message: {e}")
+
+    def update_message_state_and_data(
+        session_id: str, message_id: str, state: str, message: str
+    ):
+        try:
+            redis_key = session_id
+            # Fetch the existing session or initialize a new one
+            session_data = redis_session.get(redis_key)
+            session_object = (
+                json.loads(session_data) if session_data else {session_id: {}}
+            )
+
+            # Update chat history
+            chat_history = session_object.get("chat_history", [])
+            for m in chat_history:
+                if m.get("id") == message_id:
+                    m["state"].append(state)
+                    m["message"] = message
+                    break
+            session_object["chat_history"] = chat_history
+
+            redis_session.set(redis_key, json.dumps(session_object))
+            redis_session.expire(redis_key, SessionDataHandler.SESSION_TIMEOUT)
+            logger.debug(f"Message state updated in session: {redis_key}")
+        except Exception as e:
+            logger.error(f"Error updating message state: {e}")
 
     @staticmethod
     def store_current_plan(session_id: str, client_id: str, plan_data: dict):

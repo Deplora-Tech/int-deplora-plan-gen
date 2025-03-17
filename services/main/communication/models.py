@@ -8,6 +8,7 @@ class MessageRequest(BaseModel):
     project_id: str
     organization_id: str
     session_id: str
+    mid: str | None = None
 
 
 class PromptRequest(BaseModel):
