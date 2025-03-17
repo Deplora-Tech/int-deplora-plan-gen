@@ -27,15 +27,23 @@ from pydantic import BaseModel, Field
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 
+from langchain_core.rate_limiters import InMemoryRateLimiter
+
+rate_limiter = InMemoryRateLimiter(
+    requests_per_second=0.2, 
+    check_every_n_seconds=0.1,
+    max_bucket_size=10,
+)
+
 model = ChatGoogleGenerativeAI(
     model="gemini-2.0-flash",
     temperature=0.5,
     max_tokens=None,
     timeout=None,
     max_retries=2,
-    # other params...
+    rate_limiter=rate_limiter,
 )
-# model = ChatOpenAI(model="gpt-4o")
+gen_model = ChatOpenAI(model="gpt-4o")
 
 class DeploymentRecommendation(BaseModel):
     deployment_recommendation: str = Field(description="The recommended deployment option.")
@@ -69,8 +77,14 @@ class DeploymentRecommendationAgent:
 class ResourceCollectorAgent:
     def __init__(self):
         self.model = model
+        self.run_count = 0
+        self.max_runs = 3
         
     def invoke(self, state) -> Command[Literal["tf_doc_agent", "jenkins_doc_agent"]]:
+        if self.run_count >= self.max_runs:
+            return Command(goto="supervisor", update={"messages": ["Resource collection completed."]})
+        self.run_count += 1
+        
         print("Invoking resource agent")
         system_prompt = f"""You are an expert deployment solution architect. Your task is to identify the resources required for the deployment based on the project details and user preferences.
                                 You have the following tools. {', '.join(f"{agent}: {agent_descriptions[agent]}" for agent in agents_for_resource.keys())}.
@@ -97,6 +111,7 @@ class JenkinsDocumenationAgent:
 
         return Command(goto="resource_agent", update={"messages": [response]})
 
+from services.main.management.planGenerator.PlanGenAgent.agentPrompts import identify_resources_prompt, docker_prompt
 class TerraformDocumentationAgent:
     def __init__(self):
         self.model = model
@@ -106,26 +121,15 @@ class TerraformDocumentationAgent:
     def invoke(self, state) -> Command[Literal["resource_agent"]]:
         print("Invoking Terraform documentation agent")
         deployment_recommendation = agentState.deployment_strategy.deployment_recommendation if agentState.deployment_strategy else "Dockerized Deployments (Containerization)"
-        
+    
 
-        prompt = f"""
-        You are an expert deployment solution architect. Your task is to identify the resources required for the deployment based on the project details and user preferences.
-        The deployment recommendation is: {deployment_recommendation}.
-        You have a tool to scrape Terraform documentation for the identified resources.
-        {agentState.format_context()}
-
-        You have already identified the following resources: {", ".join([doc.name for doc in agentState.resource_documents.get("terraform", [])])}
-        ALWAYS call `fetch_resource_definitions` if you need more information.        
-        """
-        # response = self.model.invoke(prompt)
-        # resources = self.file_parser.parse_json(response.content).get("resources", [])
-        # agentState.identified_resources = resources
+        prompt = identify_resources_prompt.format(deployment_recommendation, 
+                                                  agentState.format_context(), 
+                                                  ", ".join([doc["name"] for doc in agentState.resource_documents.get("terraform", []) if "name" in doc])
+)
 
         ai_msg = model.bind_tools([fetch_resource_definitions]).invoke(prompt)
         print("Response from Terraform documentation agent", ai_msg.tool_calls)
-
-        # print("Identified resources")
-        # print(resources)
 
         if ai_msg.tool_calls:
             tool_responses = []
@@ -139,8 +143,6 @@ class TerraformDocumentationAgent:
                     result = fetch_resource_definitions.invoke({"resources": [res.model_dump() for res in resource_defs]})
                     
                     for doc in result:
-                        print(doc)
-                        print("-"*10)
                         if "terraform" not in agentState.resource_documents:
                             agentState.resource_documents["terraform"] = []
                         agentState.resource_documents["terraform"].append(doc)
@@ -158,12 +160,14 @@ class TerraformDocumentationAgent:
 
 class DeploymentPlanGeneratorAgent:
     def __init__(self):
-        self.model = model
+        self.model = gen_model
     
-    def invoke(self, state) -> Command[Literal["supervisor"]]:
-        response = self.model.invoke("hi")
+    def invoke(self, state) -> Command[Literal[END]]:
+        prompt = docker_prompt.format(agentState.format_context(), agentState.format_resources())
+        response = self.model.invoke(prompt)
+        agentState.deployment_solution = response.content
 
-        return Command(goto="supervisor", update={"messages": [response]})
+        return Command(goto=END, update={"messages": [response]})
 
 
 class Supervisor:
@@ -329,48 +333,9 @@ builder.add_edge(START, "supervisor")
 
 supervisor = builder.compile()
 
-preferences = {
-            "positive_preferences": [
-                ["CloudProvider", "Azure", 0.81809013001114, "High"],
-                ["ObjectStorageService", "S3", 0.6786340000000001, "Low"],
-                ["ComputeService", "Lambda", 0.6722666666666667, "Low"],
-                ["IdentityAndAccessManagementService", "IAM", 0.6571, "Low"],
-                ["DatabaseService", "RDS", 0.649, "Low"],
-                ["ContainerOrchestrationPlatform", "ECS", 0.64, "Low"],
-                ["OtherService", "VPC", 0.64, "Low"],
-                ["MessageQueueService", "Pub/Sub", 0.63, "Low"],
-                ["NoSQLDatabaseService", "Firestore", 0.63, "Low"],
-                ["ContentDeliveryNetwork", "CloudFront", 0.626, "Low"],
-                ["MonitoringService", "CloudWatch", 0.61, "Low"],
-            ],
-            "negative_preferences": [],
-        }
 
-project_data = {
-            "application": {
-                "name": "React Application",
-                "type": ["Web Application", "ReactJS", "React"],
-                "description": "A Simple ReactJS Project",
-                "dependencies": [
-                    {
-                        "name": "React",
-                        "version": "x.x.x",
-                    },
-                    "react-router-dom",
-                    "react-bootstrap",
-                    "axios",
-                ],
-                "language": ["JavaScript"],
-                "framework": ["ReactJS"],
-                "architecture": ["Single-page application", "Client-Server"],
-            },
-            "environment": {"runtime": ["Node.js"]},
-        }
 
-user_prompt = "Deploy an S3 bucket, Lambda function, and IAM role."
-chat_history = []
-
-context = Context(project_data, preferences, user_prompt, chat_history)
+context = Context()
 agentState = AgentState(context)
 
 def parse_next_agent(text):
@@ -400,7 +365,7 @@ def pretty_print_messages(update):
         print("\n")
 
 
-def runME():
+async def runME():
     for chunk in supervisor.stream(
         {"messages": [("user", "")]}
     ):
@@ -416,7 +381,18 @@ def saveGraph():
         print(f"Error generating diagram: {e}")
 
 
+def invokeAgent(preferences, project_data, user_prompt, chat_history):
+    context = Context(project_data, preferences, user_prompt, chat_history)
+    agentState.context = context
+    for chunk in supervisor.stream(
+        {"messages": [("user", "")]}
+    ):
+        pretty_print_messages(chunk)
+    
+    return agentState
+
 if __name__ == "__main__":
-    # saveGraph()
-    asyncio.run(runME())
+    saveGraph()
+    # asyncio.run(runME())
+    invokeAgent(preferences, project_data, user_prompt, chat_history)
         

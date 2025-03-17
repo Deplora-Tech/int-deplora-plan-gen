@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     GRAPH_GENERATOR_URL: str
     GEMINI_API_KEY: str
     OPENAI_API_KEY: str
+    GOOGLE_API_KEY: str
 
     class Config:
         env_file = ".env"

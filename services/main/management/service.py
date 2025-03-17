@@ -86,7 +86,7 @@ class ManagementService:
             )
             return {
                 "status": "success",
-                "response": deployment_recommendation["Deployment Plan"],
+                "response": "Deployment plan generated successfully.",
                 "folder_structure": folder_structure,
                 "file_contents": file_contents,  # Add file contents in response
             }
