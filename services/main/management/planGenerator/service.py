@@ -59,13 +59,14 @@ class PlanGeneratorService:
                 parsed_files, parsed_file_content = self.file_parser.parse(
                     deployment_solution
                 )
-                return (deployment_recommendation, missing_information, parsed_files)
             if missing_information:
-                return (
-                    deployment_recommendation,
-                    self.file_parser.parse_json(missing_information),
-                    parsed_files,
-                )
+                print("missings:", missing_information)
+                missing_information = self.file_parser.parse_json(missing_information)
+            return (
+                deployment_recommendation,
+                missing_information,
+                parsed_files,
+            )
 
         except Exception as e:
             logger.error(f"Error occurred: {traceback.print_exc()}")

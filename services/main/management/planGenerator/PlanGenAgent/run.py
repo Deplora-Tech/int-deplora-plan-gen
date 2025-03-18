@@ -199,8 +199,8 @@ class DeploymentPlanGeneratorAgent:
         prompt = docker_prompt.format(
             agentState.format_context(), agentState.format_resources()
         )
-        print(f"Prompt: {prompt}")
         response = self.model.invoke(prompt)
+        print("response from deployment plan generator agent", response.content)
         if "missing_information" in response.content:
             agentState.missing_information = response.content
         else:
