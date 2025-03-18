@@ -4,6 +4,7 @@ from core.logger import logger
 from services.main.utils.caching.redis_service import TFDocsCache
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 import traceback
+from bs4 import BeautifulSoup
 
 class TerraformDocScraper:
     """
@@ -70,7 +71,23 @@ class TerraformDocScraper:
                 # Wait for the element containing the content to be visible
                 element = await page.wait_for_selector("#provider-docs-content", timeout=10000)
                 html = await element.inner_html()
-                content = markdownify(html, heading_style="ATX")
+
+                soup = BeautifulSoup(html, "html.parser")
+
+                example_header = soup.find("h2", string="Example Usage")
+                
+                if not example_header:
+                    print("No 'Example Usage' section found.")
+                    content = None
+
+                else:
+                    for tag in example_header.find_next_siblings():
+                        if tag.name == "h2":  # Stop when we reach the next h2
+                            break
+                        if tag.name == "div":
+                            content = f"{content}\n\n{tag.prettify()}"
+
+                    content = markdownify(html, heading_style="ATX")
 
                 if "This documentation page doesn't exist" in content:
                     content = None

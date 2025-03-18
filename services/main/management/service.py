@@ -37,7 +37,7 @@ class ManagementService:
     ) -> dict:
 
         try:
-            git_url = "https://github.com/sahiruw/po-server"
+            git_url = "https://github.com/sahiruw/demo-app.git"
             repo_task = self.repo_service.clone_repo(
                 repo_url=git_url, branch="main", session_id=session_id
             )
@@ -152,7 +152,7 @@ class ManagementService:
         logger.debug("Retrieving user preferences...")
         preferences = {
             "positive_preferences": [
-                ["CloudProvider", "Azure", 0.81809013001114, "High"],
+                ["CloudProvider", "AWS", 0.81809013001114, "High"],
                 ["ObjectStorageService", "S3", 0.6786340000000001, "Low"],
                 ["ComputeService", "Lambda", 0.6722666666666667, "Low"],
                 ["IdentityAndAccessManagementService", "IAM", 0.6571, "Low"],

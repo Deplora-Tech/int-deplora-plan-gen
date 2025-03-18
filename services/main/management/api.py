@@ -78,7 +78,7 @@ async def handle_message(
             request.session_id,
             request.mid,
             LoraStatus.COMPLETED.value,
-            dep_plan["processed_message"],
+            res["response"],
         )
         return res
 

@@ -47,10 +47,7 @@ class PlanGeneratorService:
             
             deployment_recommendation = agentFinalState.deployment_strategy
             deployment_solution = agentFinalState.deployment_solution
-            print("deployment_recommendation",deployment_recommendation)
-            print("deployment_solution",deployment_solution)
 
-            
             parsed_files, parsed_file_content = self.file_parser.parse(
                 deployment_solution
             )

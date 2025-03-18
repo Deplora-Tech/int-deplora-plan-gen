@@ -28,6 +28,7 @@ from pydantic import BaseModel, Field
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from langchain_core.rate_limiters import InMemoryRateLimiter
+from langchain_groq import ChatGroq
 
 rate_limiter = InMemoryRateLimiter(
     requests_per_second=0.2, 
@@ -43,7 +44,21 @@ model = ChatGoogleGenerativeAI(
     max_retries=2,
     rate_limiter=rate_limiter,
 )
-gen_model = ChatOpenAI(model="gpt-4o")
+# gen_model = ChatOpenAI(model="gpt-4o")
+# model = ChatGroq(
+#     model="llama-3.3-70b-specdec",
+#     temperature=0.5,
+#     max_tokens=None,
+#     timeout=None,
+#     max_retries=2,
+# )
+gen_model = ChatGoogleGenerativeAI(
+    model="gemini-2.0-flash",
+    temperature=0.5,
+    max_tokens=None,
+    timeout=None,
+    max_retries=2,
+)
 
 class DeploymentRecommendation(BaseModel):
     deployment_recommendation: str = Field(description="The recommended deployment option.")
@@ -72,7 +87,7 @@ class DeploymentRecommendationAgent:
 
         print("Deployment recommendation")
         print(response.deployment_recommendation)
-        return Command(goto="supervisor", update={"messages": ["{response}"]})
+        return Command(goto="supervisor", update={"messages": [response.deployment_recommendation]})
 
 class ResourceCollectorAgent:
     def __init__(self):
@@ -86,9 +101,9 @@ class ResourceCollectorAgent:
         self.run_count += 1
         
         print("Invoking resource agent")
-        system_prompt = f"""You are an expert deployment solution architect. Your task is to identify the resources required for the deployment based on the project details and user preferences.
+        system_prompt = f"""You are an expert deployment solution architect. Your task is to identify the resources required for the deployment based on the project details and user preferences. Terraform files and the jenkin pipeline need to be created later. Identify the data sources needed.
                                 You have the following tools. {', '.join(f"{agent}: {agent_descriptions[agent]}" for agent in agents_for_resource.keys())}.
-                                You already know {agentState.format_resources()}. 
+                                You already know about {", ".join([doc["name"] for doc in agentState.resource_documents.get("terraform", []) if "name" in doc])}. 
                                 Only return the next agent to invoke or 'supervisor' to continue the next steps if you have identified enough resources."""
     
         data = agentState.format_context()
@@ -164,6 +179,7 @@ class DeploymentPlanGeneratorAgent:
     
     def invoke(self, state) -> Command[Literal[END]]:
         prompt = docker_prompt.format(agentState.format_context(), agentState.format_resources())
+        print(prompt)
         response = self.model.invoke(prompt)
         agentState.deployment_solution = response.content
 
@@ -178,8 +194,9 @@ class Supervisor:
         print("Invoking supervisor")
         response = self.model.invoke(f"""You are an expert deployment solution architect. Your task is to generate a deployment plan using the agents you have access to. 
             You have the following tools: {', '.join(f"{agent}: {agent_descriptions[agent]}" for agent in agents_for_supervisor.keys())}. 
-            You already know {agentState.format_state()}. Only return the next agent to invoke.
+            You already know {agentState.format_state()}. 
             It is adviced to get the recommendation, then resources, then generate a plan but you can choose any order that optimizes the workflow.
+            Only return the next agent to invoke.
             """)
 
             

@@ -61,6 +61,7 @@ docker_prompt = """You are Deplora—an expert AI assistant and senior software 
    - Wrap all generated file content within `<deploraFile>` tags.
    - Include `filePath` and `type` attributes for `<deploraFile>` tags.
    - Do not provide code or file content outside these tags.
+   - Do not include any other tag except given.
 
 ---
 
