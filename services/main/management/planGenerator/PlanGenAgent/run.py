@@ -23,6 +23,7 @@ from core.logger import logger
 from typing import Optional
 
 from pydantic import BaseModel, Field
+
 # from services.main.management.planGenerator.PlanGenAgent.agents import DeploymentRecommendationAgent, ResourceCollectorAgent, TerraformDocumentationAgent, JenkinsDocumenationAgent, Supervisor, DeploymentPlanGeneratorAgent
 
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -30,7 +31,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.rate_limiters import InMemoryRateLimiter
 
 rate_limiter = InMemoryRateLimiter(
-    requests_per_second=0.2, 
+    requests_per_second=0.2,
     check_every_n_seconds=0.1,
     max_bucket_size=10,
 )
@@ -45,9 +46,13 @@ model = ChatGoogleGenerativeAI(
 )
 gen_model = ChatOpenAI(model="gpt-4o")
 
+
 class DeploymentRecommendation(BaseModel):
-    deployment_recommendation: str = Field(description="The recommended deployment option.")
+    deployment_recommendation: str = Field(
+        description="The recommended deployment option."
+    )
     reason: str = Field(description="The reason for the recommendation.")
+
 
 class DeploymentRecommendationAgent:
     def __init__(self):
@@ -62,71 +67,94 @@ class DeploymentRecommendationAgent:
                                 3. **AMI/VM Image-Based Deployment**:
                                 - Ideal for immutable infrastructure, compliance with strict security or performance requirements, or traditional VM-based setups.
                                 """
-    
+
     def invoke(self, state) -> Command[Literal["supervisor"]]:
         print("Invoking recommendation agent")
         data = agentState.format_context()
         prompt = f"{self.system_prompt}\n\n{data}"
-        response = self.model.with_structured_output(DeploymentRecommendation).invoke(prompt)
+        response = self.model.with_structured_output(DeploymentRecommendation).invoke(
+            prompt
+        )
         agentState.deployment_strategy = response
 
         print("Deployment recommendation")
         print(response.deployment_recommendation)
         return Command(goto="supervisor", update={"messages": ["{response}"]})
 
+
 class ResourceCollectorAgent:
     def __init__(self):
         self.model = model
         self.run_count = 0
         self.max_runs = 3
-        
+
     def invoke(self, state) -> Command[Literal["tf_doc_agent", "jenkins_doc_agent"]]:
         if self.run_count >= self.max_runs:
-            return Command(goto="supervisor", update={"messages": ["Resource collection completed."]})
+            return Command(
+                goto="supervisor",
+                update={"messages": ["Resource collection completed."]},
+            )
         self.run_count += 1
-        
+
         print("Invoking resource agent")
         system_prompt = f"""You are an expert deployment solution architect. Your task is to identify the resources required for the deployment based on the project details and user preferences.
                                 You have the following tools. {', '.join(f"{agent}: {agent_descriptions[agent]}" for agent in agents_for_resource.keys())}.
                                 You already know {agentState.format_resources()}. 
                                 Only return the next agent to invoke or 'supervisor' to continue the next steps if you have identified enough resources."""
-    
+
         data = agentState.format_context()
         prompt = f"{system_prompt}\n\n{data}"
         response = self.model.invoke(prompt)
-        
+
         next_agent = parse_next_agent(response.content)
         print(f"Next agent is {next_agent}")
         if next_agent:
             return Command(goto=next_agent, update={"messages": [response]})
         else:
             return Command(goto=END, update={"messages": [response]})
-    
+
+
 class JenkinsDocumenationAgent:
     def __init__(self):
         self.model = model
-    
+
     def invoke(self, state) -> Command[Literal["resource_agent"]]:
         response = self.model.invoke("hi")
 
         return Command(goto="resource_agent", update={"messages": [response]})
 
-from services.main.management.planGenerator.PlanGenAgent.agentPrompts import identify_resources_prompt, docker_prompt
+
+from services.main.management.planGenerator.PlanGenAgent.agentPrompts import (
+    identify_resources_prompt,
+    docker_prompt,
+)
+
+
 class TerraformDocumentationAgent:
     def __init__(self):
         self.model = model
         self.prompt_manager = PromptManagerService()
         self.file_parser = FileParser()
-    
+
     def invoke(self, state) -> Command[Literal["resource_agent"]]:
         print("Invoking Terraform documentation agent")
-        deployment_recommendation = agentState.deployment_strategy.deployment_recommendation if agentState.deployment_strategy else "Dockerized Deployments (Containerization)"
-    
+        deployment_recommendation = (
+            agentState.deployment_strategy.deployment_recommendation
+            if agentState.deployment_strategy
+            else "Dockerized Deployments (Containerization)"
+        )
 
-        prompt = identify_resources_prompt.format(deployment_recommendation, 
-                                                  agentState.format_context(), 
-                                                  ", ".join([doc["name"] for doc in agentState.resource_documents.get("terraform", []) if "name" in doc])
-)
+        prompt = identify_resources_prompt.format(
+            deployment_recommendation,
+            agentState.format_context(),
+            ", ".join(
+                [
+                    doc["name"]
+                    for doc in agentState.resource_documents.get("terraform", [])
+                    if "name" in doc
+                ]
+            ),
+        )
 
         ai_msg = model.bind_tools([fetch_resource_definitions]).invoke(prompt)
         print("Response from Terraform documentation agent", ai_msg.tool_calls)
@@ -139,33 +167,44 @@ class TerraformDocumentationAgent:
                 arguments = call["args"]
 
                 if tool_name == "fetch_resource_definitions":
-                    resource_defs = [ResourceDefinition(**res) for res in arguments["resources"]]
-                    result = fetch_resource_definitions.invoke({"resources": [res.model_dump() for res in resource_defs]})
-                    
+                    resource_defs = [
+                        ResourceDefinition(**res) for res in arguments["resources"]
+                    ]
+                    result = fetch_resource_definitions.invoke(
+                        {"resources": [res.model_dump() for res in resource_defs]}
+                    )
+
                     for doc in result:
                         if "terraform" not in agentState.resource_documents:
                             agentState.resource_documents["terraform"] = []
                         agentState.resource_documents["terraform"].append(doc)
 
                     # Append actual results
-                    tool_msg = ToolMessage(content=json.dumps(result), tool_call_id=tool_call_id)
+                    tool_msg = ToolMessage(
+                        content=json.dumps(result), tool_call_id=tool_call_id
+                    )
                     tool_responses.append(tool_msg)
 
         # Return with real execution results
         print("TOOL EXECUTION RESULTS")
-        return Command(
-            goto="resource_agent",
-            update={"messages": [ai_msg]}
-        )
+        return Command(goto="resource_agent", update={"messages": [ai_msg]})
+
 
 class DeploymentPlanGeneratorAgent:
     def __init__(self):
-        self.model = gen_model
-    
+        self.model = model
+
     def invoke(self, state) -> Command[Literal[END]]:
-        prompt = docker_prompt.format(agentState.format_context(), agentState.format_resources())
+        logger.info(f"Invoking deployment plan generator agent")
+        prompt = docker_prompt.format(
+            agentState.format_context(), agentState.format_resources()
+        )
+        print(f"Prompt: {prompt}")
         response = self.model.invoke(prompt)
-        agentState.deployment_solution = response.content
+        if "missing_information" in response.content:
+            agentState.missing_information = response.content
+        else:
+            agentState.deployment_solution = response.content
 
         return Command(goto=END, update={"messages": [response]})
 
@@ -173,16 +212,19 @@ class DeploymentPlanGeneratorAgent:
 class Supervisor:
     def __init__(self):
         self.model = model
-    
-    def invoke(self, super_state) -> Command[Literal["recommendation_agent", "resource_agent", "plan_agent", END]]:
+
+    def invoke(
+        self, super_state
+    ) -> Command[Literal["recommendation_agent", "resource_agent", "plan_agent", END]]:
         print("Invoking supervisor")
-        response = self.model.invoke(f"""You are an expert deployment solution architect. Your task is to generate a deployment plan using the agents you have access to. 
+        response = self.model.invoke(
+            f"""You are an expert deployment solution architect. Your task is to generate a deployment plan using the agents you have access to. 
             You have the following tools: {', '.join(f"{agent}: {agent_descriptions[agent]}" for agent in agents_for_supervisor.keys())}. 
             You already know {agentState.format_state()}. Only return the next agent to invoke.
             It is adviced to get the recommendation, then resources, then generate a plan but you can choose any order that optimizes the workflow.
-            """)
+            """
+        )
 
-            
         next_agent = parse_next_agent(response.content)
         print(f"Next agent is {next_agent}")
         if next_agent:
@@ -194,24 +236,27 @@ class Supervisor:
 import asyncio
 from typing import Dict
 
+
 class TerraformDocumentationTool:
     def __init__(self, scraper: TerraformDocScraper):
         self.scraper = scraper
         # asyncio.run(self.scraper.initialize_browser())
-    
+
     def fetch_resources(self, resources: List[Dict[str, str]]):
         resource_docs = []
         for resource in resources:
             name = resource.get("name")
             try:
-                definition = asyncio.run(asyncio.wait_for(self.scraper.fetch_definition(name), timeout=10))
+                definition = asyncio.run(
+                    asyncio.wait_for(self.scraper.fetch_definition(name), timeout=10)
+                )
                 if definition:
                     resource_docs.append({"name": name, "content": definition})
             except asyncio.TimeoutError:
                 definition = "Timeout occurred while fetching the definition."
-            
-        
+
         return resource_docs
+
 
 terraform_doc_scraper = TerraformDocumentationTool(TerraformDocScraper())
 
@@ -219,12 +264,16 @@ from typing import List, Dict
 from langchain_core.tools import tool
 from pydantic import BaseModel
 
+
 class ResourceDefinition(BaseModel):
     name: str
     description: str  # Optional, but helps structure the request.
 
+
 @tool
-def fetch_resource_definitions(resources: List[ResourceDefinition]) -> List[Dict[str, str]]:
+def fetch_resource_definitions(
+    resources: List[ResourceDefinition],
+) -> List[Dict[str, str]]:
     """
     Fetch Terraform resource definitions based on a list of resources.
 
@@ -234,8 +283,64 @@ def fetch_resource_definitions(resources: List[ResourceDefinition]) -> List[Dict
     Returns:
         List[Dict[str, str]]: A list of dictionaries containing resource definitions.
     """
-    return terraform_doc_scraper.fetch_resources([{"name": res.name} for res in resources])
+    return terraform_doc_scraper.fetch_resources(
+        [{"name": res.name} for res in resources]
+    )
 
+
+class SecureField(BaseModel):
+    name: str
+    description: str
+    required: bool
+
+
+class SecureDataResponse(BaseModel):
+    required_secure_data: List[SecureField] = Field(
+        ..., description="List of secure data fields required for deployment."
+    )
+
+
+@tool
+def required_data_for_execution() -> Dict:
+    """
+    Identify the secure data fields required for safe execution of the deployment."""
+
+    prompt = """
+    You are an expert deployment solution architect. Given the deployment strategy, identified resources, and project context provided below, explicitly identify and list all secure credentials or sensitive data fields that must be collected from the user to safely execute the deployment.
+
+    Respond strictly in JSON format:
+
+    {
+      "required_secure_data": [
+        { "field_name": "example_field", "description": "Clear explanation", "is_mandatory": true }
+      ]
+    ]
+    }
+
+    ## Deployment Strategy:
+    {}
+
+    ## Project Context:
+    {}
+
+    ## Identified Resources:
+    {}
+    """.format(
+        agentState.deployment_strategy,
+        json.dumps(agentState.format_context(), indent=2),
+        json.dumps(agentState.identified_resources, indent=2),
+    )
+
+    # Invoke model to obtain structured secure data fields
+    response = model.invoke(prompt)
+
+    # Parse and ensure correct JSON format
+    try:
+        secure_data = json.loads(response.content)
+    except json.JSONDecodeError:
+        secure_data = {"required_secure_data": []}
+
+    return secure_data
 
 
 agent_descriptions = {
@@ -258,15 +363,22 @@ agents_for_resource = {
     "jenkins_doc_agent": "jenkins_doc_agent",
 }
 
+
 class Context:
-    def __init__(self, 
-                 project_data: Dict[str, str] = None, 
-                 user_preferences: Dict[str, str] = None, 
-                 user_prompt: str = "", 
-                 chat_history: List[str] = None):
-        
-        self.project_data: Dict[str, str] = project_data if project_data is not None else {}
-        self.user_preferences: Dict[str, str] = user_preferences if user_preferences is not None else {}
+    def __init__(
+        self,
+        project_data: Dict[str, str] = None,
+        user_preferences: Dict[str, str] = None,
+        user_prompt: str = "",
+        chat_history: List[str] = None,
+    ):
+
+        self.project_data: Dict[str, str] = (
+            project_data if project_data is not None else {}
+        )
+        self.user_preferences: Dict[str, str] = (
+            user_preferences if user_preferences is not None else {}
+        )
         self.user_prompt: str = user_prompt
         self.chat_history: List[str] = chat_history if chat_history is not None else []
 
@@ -281,10 +393,13 @@ class AgentState:
         self.resource_documents: Dict[str, List[Dict[str, str]]] = {}
         self.deployment_solution: str = ""
         self.validated_files: List[Dict] = []
-    
+        self.required_secure_data: List[Dict] = []
+        self.missing_information: List[Dict] = []
+
     def format_state(self):
         return {
-            key: value for key, value in {
+            key: value
+            for key, value in {
                 "messages": self.messages,
                 "context": self.context.__dict__,
                 "deployment_strategy": self.deployment_strategy,
@@ -292,30 +407,33 @@ class AgentState:
                 "resource_documents": self.resource_documents,
                 "deployment_solution": self.deployment_solution,
                 "validated_files": self.validated_files,
-            }.items() if value
+            }.items()
+            if value
         }
-    
+
     def format_context(self):
         return {
-            key: value for key, value in {
+            key: value
+            for key, value in {
                 "project_data": self.context.project_data,
                 "user_preferences": self.context.user_preferences,
                 "user_prompt": self.context.user_prompt,
                 "chat_history": self.context.chat_history,
-            }.items() if value
+            }.items()
+            if value
         }
 
     def format_resources(self):
         formatted_resources = []
-        
+
         for tool, documents in self.resource_documents.items():
-            tool_resources = [f"{doc['name']}: {doc.get('content', 'No content available')}" for doc in documents]
+            tool_resources = [
+                f"{doc['name']}: {doc.get('content', 'No content available')}"
+                for doc in documents
+            ]
             formatted_resources.append(f"{tool}:\n" + "\n".join(tool_resources))
-        
+
         return "\n\n".join(formatted_resources)
-
-
-
 
 
 builder = StateGraph(MessagesState)
@@ -334,15 +452,16 @@ builder.add_edge(START, "supervisor")
 supervisor = builder.compile()
 
 
-
 context = Context()
 agentState = AgentState(context)
+
 
 def parse_next_agent(text):
 
     for agent in agent_descriptions:
         if f"{agent}" in text:
             return f"{agent}"
+
 
 from langchain_core.messages import convert_to_messages
 
@@ -366,10 +485,9 @@ def pretty_print_messages(update):
 
 
 async def runME():
-    for chunk in supervisor.stream(
-        {"messages": [("user", "")]}
-    ):
+    for chunk in supervisor.stream({"messages": [("user", "")]}):
         pretty_print_messages(chunk)
+
 
 def saveGraph():
     try:
@@ -384,15 +502,13 @@ def saveGraph():
 def invokeAgent(preferences, project_data, user_prompt, chat_history):
     context = Context(project_data, preferences, user_prompt, chat_history)
     agentState.context = context
-    for chunk in supervisor.stream(
-        {"messages": [("user", "")]}
-    ):
+    for chunk in supervisor.stream({"messages": [("user", "")]}):
         pretty_print_messages(chunk)
-    
+
     return agentState
+
 
 if __name__ == "__main__":
     saveGraph()
     # asyncio.run(runME())
     invokeAgent(preferences, project_data, user_prompt, chat_history)
-        

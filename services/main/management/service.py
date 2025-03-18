@@ -87,7 +87,7 @@ class ManagementService:
                 "",
             )
 
-            deployment_recommendation, deployment_solution, parsed_files = (
+            deployment_recommendation, missing_information, parsed_files = (
                 await self.plan_generator_service.generate_deployment_plan(
                     prompt=prompt,
                     user_preferences=user_preferences,
@@ -118,6 +118,7 @@ class ManagementService:
                 "status": "success",
                 "response": "Deployment plan generated successfully.",
                 "folder_structure": folder_structure,
+                "missing_information": missing_information,
                 "file_contents": file_contents,  # Add file contents in response
             }
         except Exception as e:

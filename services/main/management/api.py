@@ -54,12 +54,20 @@ async def handle_message(
         SessionDataHandler.store_current_plan(
             request.session_id, request.client_id, dep_plan["file_contents"]
         )
-        SessionDataHandler.update_message_state_and_data(
-            request.session_id,
-            request.mid,
-            LoraStatus.COMPLETED.value,
-            dep_plan["response"],
-        )
+        if dep_plan["missing_information"]:
+            SessionDataHandler.update_message_state_and_data(
+                request.session_id,
+                request.mid,
+                LoraStatus.COMPLETED.value,
+                dep_plan["missing_information"],
+            )
+        else:
+            SessionDataHandler.update_message_state_and_data(
+                request.session_id,
+                request.mid,
+                LoraStatus.COMPLETED.value,
+                dep_plan["response"],
+            )
 
         # Send the files to the graph generator
         logger.info("Sending files to the graph generator")
@@ -78,7 +86,7 @@ async def handle_message(
             request.session_id,
             request.mid,
             LoraStatus.COMPLETED.value,
-            dep_plan["processed_message"],
+            res["response"],
         )
         return res
 

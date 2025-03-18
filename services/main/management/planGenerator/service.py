@@ -27,7 +27,7 @@ class PlanGeneratorService:
 
         self.MAX_VALIDATION_ITERATIONS = 0
         self.PLAN_GENERATION_PLATFORM = "gemini"
-        self.PLAN_GENERATION_MODEL = "" #"gemini-2.0-flash-thinking-exp-01-21"
+        self.PLAN_GENERATION_MODEL = ""  # "gemini-2.0-flash-thinking-exp-01-21"
 
     async def generate_deployment_plan(
         self,
@@ -43,21 +43,30 @@ class PlanGeneratorService:
         """
 
         try:
-            agentFinalState = invokeAgent(user_preferences,project_details, prompt, chat_history)
-            
+            parsed_files = []
+            agentFinalState = invokeAgent(
+                user_preferences, project_details, prompt, chat_history
+            )
+
             deployment_recommendation = agentFinalState.deployment_strategy
             deployment_solution = agentFinalState.deployment_solution
-            print("deployment_recommendation",deployment_recommendation)
-            print("deployment_solution",deployment_solution)
+            missing_information = agentFinalState.missing_information
+            print("missing_information:", missing_information)
+            print("deployment_recommendation", deployment_recommendation)
+            print("deployment_solution", deployment_solution)
 
-            
-            parsed_files, parsed_file_content = self.file_parser.parse(
-                deployment_solution
-            )
-            return (deployment_recommendation, deployment_solution, parsed_files)
+            if deployment_solution:
+                parsed_files, parsed_file_content = self.file_parser.parse(
+                    deployment_solution
+                )
+                return (deployment_recommendation, missing_information, parsed_files)
+            if missing_information:
+                return (
+                    deployment_recommendation,
+                    self.file_parser.parse_json(missing_information),
+                    parsed_files,
+                )
 
         except Exception as e:
             logger.error(f"Error occurred: {traceback.print_exc()}")
             raise e
-
-    
