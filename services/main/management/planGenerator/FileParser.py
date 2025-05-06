@@ -1,5 +1,5 @@
-import re
-import os, json
+import os
+import json
 from typing import List, Dict
 from core.logger import logger
 
@@ -8,14 +8,6 @@ class FileParser:
     """
     A parser to identify, extract, and generate file objects from text containing <deploraFile> tags.
     """
-
-    FILE_PATTERN = re.compile(
-        r'<deploraFile(?=[^>]*\btype="(?P<type>\w+)")(?=[^>]*\bfilePath="(?P<path>[^"]+)")\s*[^>]*>\s*(?P<content>.*?)</deploraFile>',
-        re.DOTALL,
-    )
-    MD_CODE_BLOCK_PATTERN = re.compile(r"^```[\w-]*\n|```$", re.MULTILINE)
-    CDATA_PATTERN = re.compile(r"<!\[CDATA\[(.*?)\]\]>", re.DOTALL)
-
 
     def __init__(self):
         """
@@ -35,44 +27,71 @@ class FileParser:
         """
         files = []
         files_content = []
-        matches = self.FILE_PATTERN.finditer(text)
-        for match in matches:
-            try:
-                file_type = match.group("type")
-                file_path = match.group("path")
-                file_content = match.group("content").strip()
-                
-                print(f"File type: {file_type}")
 
-                # Remove Markdown code block indicators
-                file_content = re.sub(self.MD_CODE_BLOCK_PATTERN, "", file_content)
-                
-                # Remove CDATA tags
-                file_content = re.sub(self.CDATA_PATTERN, r"\1", file_content)
+        # Start and end markers for the <deploraFile> tag
+        file_start_tag = "<deploraFile"
+        file_end_tag = "</deploraFile>"
 
-                file_name = os.path.basename(file_path)
-                file_object = {
-                    "file_name": file_name,
-                    "type": file_type,
-                    "path": file_path,
-                    "content": file_content,
-                }
+        # Iterate over the text to find file blocks
+        start_pos = 0
+        while True:
+            start_pos = text.find(file_start_tag, start_pos)
+            if start_pos == -1:
+                break
 
-                files.append(file_object)
-                files_content.append(match.group(0))
-            except Exception as e:
-                logger.error(f"Error parsing file: {e}")
-                logger.error(f"Match: {match.group(0)}")
-                continue
-        
+            # Find the corresponding end tag
+            end_pos = text.find(file_end_tag, start_pos)
+            if end_pos == -1:
+                break
+
+            # Extract the file block and process it
+            file_block = text[start_pos:end_pos + len(file_end_tag)]
+
+            # Extract file type and filePath from the <deploraFile> tag
+            file_type_start = file_block.find('type="') + len('type="')
+            file_type_end = file_block.find('"', file_type_start)
+            file_type = file_block[file_type_start:file_type_end]
+
+            file_path_start = file_block.find('filePath="') + len('filePath="')
+            file_path_end = file_block.find('"', file_path_start)
+            file_path = file_block[file_path_start:file_path_end]
+
+            # Extract content from between the tags
+            content_start = file_block.find('>', file_block.find(file_start_tag)) + 1
+            content_end = file_block.rfind('<', file_block.find(file_end_tag))
+            file_content = file_block[content_start:content_end].strip()
+
+            # Clean up content (removing Markdown code blocks and CDATA)
+            # Remove Markdown code blocks (```)
+            file_content = self.remove_markdown_code_blocks(file_content)
+
+            # Remove CDATA tags
+            if "<![CDATA[" in file_content and "]]>" in file_content:
+                cdata_start = file_content.find("<![CDATA[") + len("<![CDATA[")
+                cdata_end = file_content.find("]]>", cdata_start)
+                file_content = file_content[cdata_start:cdata_end]
+
+            # Prepare the file object and append it to the result
+            file_name = os.path.basename(file_path)
+            file_object = {
+                "file_name": file_name,
+                "type": file_type,
+                "path": file_path,
+                "content": file_content,
+            }
+
+            files.append(file_object)
+            files_content.append(file_block)
+
+            # Move the position to the next possible file tag
+            start_pos = end_pos + len(file_end_tag)
+
         if len(files) == 0:
-            # logger.info(f"No files found in the input text. {text}")
             raise ValueError("No files found in the input text.")
-        
+
         return files, files_content
     
-    
-    def parse_json(self, text:str) -> Dict:
+    def parse_json(self, text: str) -> Dict:
         """
         Parse the input text and extract json details.
 
@@ -82,7 +101,28 @@ class FileParser:
         Returns:
             Dict: A json object containing json details.
         """
-        
+        # Clean up the text before parsing
         text = "{".join(text.split("{")[1:])
         text = "}".join(text.split("}")[:-1])
         return json.loads(f"{{{text}}}")
+    
+    def remove_markdown_code_blocks(self, content: str) -> str:
+        """
+        Removes Markdown code blocks from the content.
+
+        Args:
+            content (str): The content to remove code blocks from.
+
+        Returns:
+            str: The content with code blocks removed.
+        """
+        # Remove Markdown code blocks wrapped in triple backticks
+        in_code_block = False
+        result = []
+        for line in content.split("\n"):
+            if line.strip().startswith("```"):
+                in_code_block = not in_code_block
+                continue  # Skip the line with the opening or closing ```
+            if not in_code_block:
+                result.append(line)
+        return "\n".join(result).strip()

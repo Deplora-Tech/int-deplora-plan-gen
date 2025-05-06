@@ -401,10 +401,10 @@ def saveGraph():
 def invokeAgent(preferences, project_data, user_prompt, chat_history):
     context = Context(project_data, preferences, user_prompt, chat_history)
     agentState.context = context
-    for chunk in supervisor.stream(
-        {"messages": [("user", "")]}
-    ):
-        pretty_print_messages(chunk)
+    # for chunk in supervisor.stream(
+    #     {"messages": [("user", "")]}
+    # ):
+    #     pretty_print_messages(chunk)
     
     return agentState
 

@@ -24,7 +24,7 @@ async def handle_message(
     SessionDataHandler.update_session_data(request.session_id, request)
 
     intent = await classify_intent(request.message, chat_history)
-    logger.info(f"Detected intent: {intent}")
+
     await communcationService.publisher(
         request.session_id, LoraStatus.INTENT_DETECTED.value
     )
@@ -37,7 +37,7 @@ async def handle_message(
     request.mid = mid
 
     # Step 2: Route the message based on the detected intent
-    if "Deployment" in intent:
+    if "create_deployment_plan" in intent:
         logger.info("Detected deployment intent")
         dep_plan = await managementService.generate_deployment_plan(
             request=request,
@@ -71,7 +71,7 @@ async def handle_message(
 
         return dep_plan
 
-    elif "Other" in intent:
+    elif "greeting" in intent or "insult" in intent:
         logger.info("Detected other intent")
         res = await managementService.process_conversation(request, chat_history)
         SessionDataHandler.update_message_state_and_data(
