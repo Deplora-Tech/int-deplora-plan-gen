@@ -221,7 +221,7 @@ class TerraformDocumentationTool:
         for resource in resources:
             name = resource.get("name")
             try:
-                definition = asyncio.run(asyncio.wait_for(self.scraper.fetch_definition(name), timeout=10))
+                definition = asyncio.wait_for(self.scraper.fetch_definition(name), timeout=10)
                 if definition:
                     resource_docs.append({"name": name, "content": definition})
             except asyncio.TimeoutError:
@@ -401,10 +401,10 @@ def saveGraph():
 def invokeAgent(preferences, project_data, user_prompt, chat_history):
     context = Context(project_data, preferences, user_prompt, chat_history)
     agentState.context = context
-    # for chunk in supervisor.stream(
-    #     {"messages": [("user", "")]}
-    # ):
-    #     pretty_print_messages(chunk)
+    for chunk in supervisor.stream(
+        {"messages": [("user", "")]}
+    ):
+        pretty_print_messages(chunk)
     
     return agentState
 
