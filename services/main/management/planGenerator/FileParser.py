@@ -47,7 +47,7 @@ class FileParser:
             # Extract the file block and process it
             file_block = text[start_pos:end_pos + len(file_end_tag)]
 
-            # Extract file type and filePath from the <deploraFile> tag
+            # Extract file type, filePath and action from the <deploraFile> tag
             file_type_start = file_block.find('type="') + len('type="')
             file_type_end = file_block.find('"', file_type_start)
             file_type = file_block[file_type_start:file_type_end]
@@ -55,6 +55,13 @@ class FileParser:
             file_path_start = file_block.find('filePath="') + len('filePath="')
             file_path_end = file_block.find('"', file_path_start)
             file_path = file_block[file_path_start:file_path_end]
+
+            file_action_start = file_block.find('action="') + len('action="')
+            if file_action_start != -1:
+                file_action_end = file_block.find('"', file_action_start)
+                file_action = file_block[file_action_start:file_action_end]
+            else:
+                file_action = "create"
 
             # Extract content from between the tags
             content_start = file_block.find('>', file_block.find(file_start_tag)) + 1
@@ -78,6 +85,7 @@ class FileParser:
                 "type": file_type,
                 "path": file_path,
                 "content": file_content,
+                "action": file_action,
             }
 
             files.append(file_object)
@@ -91,7 +99,8 @@ class FileParser:
 
         return files, files_content
     
-    def parse_json(self, text: str) -> Dict:
+    @staticmethod
+    def parse_json( text: str) -> Dict:
         """
         Parse the input text and extract json details.
 
