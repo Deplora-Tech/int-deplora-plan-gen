@@ -4,6 +4,7 @@ from services.main.communication.service import CommunicationService
 from services.main.enums import LoraStatus
 from services.main.utils.prompts.service import PromptManagerService
 from services.main.management.planGenerator.service import PlanGeneratorService
+from services.main.management.planRefiner.service import PlanRefinerService
 from services.main.management.repoManager.service import RepoService
 from services.main.workers.llm_worker import LLMService
 from services.main.utils.caching.redis_service import SessionDataHandler
@@ -21,8 +22,29 @@ class ManagementService:
         load_dotenv()
         self.repo_service = RepoService(os.getenv("REPO_PATH"))
         self.plan_generator_service = PlanGeneratorService()
+        self.plan_refiner_service = PlanRefinerService()
         self.llm_service = LLMService()
         self.prompt_manager_service = PromptManagerService()
+    
+
+    async def refine_deployment_plan(
+            self,
+            session_id: str,
+            prompt: str,
+    ) -> dict:
+        try:
+            session  = SessionDataHandler.get_session_data(session_id)
+            current_files = session["current_plan"]
+            new_files = await self.plan_refiner_service.run_change_agent(
+                prompt=prompt,
+                current_files=current_files
+            )
+            SessionDataHandler.store_current_plan(session_id, new_files)
+
+        except Exception as e:
+            logger.error(f"Error occurred: {traceback.print_exc()}")
+
+            # raise e
 
     async def generate_deployment_plan(
         self,
