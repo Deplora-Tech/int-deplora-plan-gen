@@ -107,7 +107,31 @@ class JenkinsManager:
 
 
 
-    def create_folder(self, folder_name, clone_path):
+    def create_project_folder(self, organization, folder_name, clone_path):
+        url = f"{self.jenkins_url}/job/{organization}/createItem?name={folder_name}"
+        headers = {"Content-Type": "application/xml"}
+        folder_config = f"""
+        <com.cloudbees.hudson.plugins.folder.Folder plugin="cloudbees-folder@6.15">
+            <description>Folder for {folder_name}</description>
+        </com.cloudbees.hudson.plugins.folder.Folder>
+        """
+        response = requests.post(
+            url,
+            auth=(self.username, self.api_token),
+            headers=headers,
+            data=folder_config,
+        )
+
+        if response.status_code == 200:
+            self.set_folder_env_variable(f"{organization}/job/{folder_name}", "CLONE_PATH", clone_path)
+            print(f"Folder '{folder_name}' created successfully.")
+        elif response.status_code == 400 and "already exists" in response.text:
+            print(f"Folder '{folder_name}' already exists.")
+        else:
+            print(f"Failed to create folder '{folder_name}': {self._parse_error_text(response)}")
+    
+
+    def create_org_folder(self, folder_name):
         url = f"{self.jenkins_url}/createItem?name={folder_name}"
         headers = {"Content-Type": "application/xml"}
         folder_config = f"""
@@ -126,7 +150,6 @@ class JenkinsManager:
             self.create_jenkins_secret_text(folder_name, "aws-access-key-id", "", "AWS Access Key ID")
             self.create_jenkins_secret_text(folder_name, "aws-secret-access-key", "", "AWS Secret Access Key")
             
-            self.set_folder_env_variable(folder_name, "CLONE_PATH", clone_path)
             self.set_folder_env_variable(folder_name, "AWS_REGION", "us-east-1")
             self.set_folder_env_variable(folder_name, "AWS_ACCOUNT_ID", "123")
             print(f"Folder '{folder_name}' created successfully.")
@@ -134,6 +157,7 @@ class JenkinsManager:
             print(f"Folder '{folder_name}' already exists.")
         else:
             print(f"Failed to create folder '{folder_name}': {self._parse_error_text(response)}")
+
     
     def _read_jenkinsfile(self, local_directory_path):
         jenkinsfile_path = f"{local_directory_path}/Jenkinsfile"

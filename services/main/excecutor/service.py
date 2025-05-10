@@ -26,17 +26,27 @@ async def excecute_pipeline(session_id: str):
             )
     
 
-        jenkins.create_folder(chat_history["organization_id"], chat_history["repo_path"])
-        jenkins.create_local_pipeline(
+        # CREATE ORGANIZATION FOLDER
+        jenkins.create_org_folder(chat_history["organization_id"])
+
+        # CREATE REPO FOLDER
+        jenkins.create_project_folder(
             chat_history["organization_id"],
             chat_history["session_id"],
             chat_history["repo_path"],
         )
 
+        jenkins.create_local_pipeline(
+            folder_name=f"{chat_history['organization_id']}/job/{chat_history['session_id']}",
+            pipeline_name=chat_history["session_id"],
+            local_directory_path=chat_history["repo_path"],
+        )
+
         
 
         build_id = jenkins.trigger_pipeline_build(
-                    chat_history["organization_id"], chat_history["session_id"]
+                    folder_name=f"{chat_history["organization_id"]}/job/{chat_history["session_id"]}",
+                    pipeline_name=chat_history["session_id"],
                 )
         logger.info(f"Build ID: {build_id}")
         build_info["id"] = build_id
@@ -73,7 +83,10 @@ async def abort_pipeline(session_id: str, build_id: str):
 async def get_status(session_id: str, build_id: str):
     chat_history = SessionDataHandler.get_session_data(session_id)
     stages_info, is_building = jenkins.get_stages_info(
-        chat_history["organization_id"], chat_history["session_id"], build_id
+        folder_name=f"{chat_history['organization_id']}/job/{chat_history['session_id']}",
+        pipeline_name=chat_history["session_id"],
+        build_id=build_id,
+
     )
 
 
@@ -84,10 +97,10 @@ async def get_status(session_id: str, build_id: str):
 
     for stage in stages_info:
         logs = jenkins.get_logs_for_stage(
-            chat_history["organization_id"],
-            chat_history["session_id"],
-            build_id,
-            stage["id"],
+            folder_name=f"{chat_history['organization_id']}/job/{chat_history['session_id']}",
+            pipeline_name=chat_history["session_id"],
+            build_id=build_id,
+            stage_id=stage["id"],
         )
         stage["logs"] = logs.split("\n")
 

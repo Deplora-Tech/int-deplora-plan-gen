@@ -1,34 +1,30 @@
+# Standard library imports
+import asyncio
+import json
+
+# Typing imports
 from typing import Literal, Dict, List
-from langchain_openai import ChatOpenAI
+
+# Third-party library imports
+from pydantic import BaseModel, Field
+from langchain_core.messages import ToolMessage, convert_to_messages
+from langchain_core.tools import tool
+from langchain_core.rate_limiters import InMemoryRateLimiter
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.types import Command
 from langgraph.graph import StateGraph, START, END, MessagesState
-from langchain_core.tools import tool
-from langchain_core.messages import ToolMessage
-import json
-import asyncio
-import concurrent.futures
-import traceback
 
-from services.main.workers.llm_worker import LLMService
-from services.main.utils.prompts.service import PromptManagerService
-from services.main.enums import DeploymentOptions
-from services.main.management.planGenerator.FileParser import FileParser
-
-from services.main.management.planGenerator.TerraformDocScraper import (
-    TerraformDocScraper,
-)
-from services.main.management.validationManager.service import ValidatorService
+# Local application imports
 from core.logger import logger
+from services.main.utils.prompts.service import PromptManagerService
+from services.main.management.planGenerator.FileParser import FileParser
+from services.main.management.planGenerator.TerraformDocScraper import TerraformDocScraper
+from services.main.management.planGenerator.PlanGenAgent.agentPrompts import (
+    identify_resources_prompt,
+    docker_prompt,
+)
 
-from typing import Optional
 
-from pydantic import BaseModel, Field
-# from services.main.management.planGenerator.PlanGenAgent.agents import DeploymentRecommendationAgent, ResourceCollectorAgent, TerraformDocumentationAgent, JenkinsDocumenationAgent, Supervisor, DeploymentPlanGeneratorAgent
-
-from langchain_google_genai import ChatGoogleGenerativeAI
-
-from langchain_core.rate_limiters import InMemoryRateLimiter
-from langchain_groq import ChatGroq
 
 rate_limiter = InMemoryRateLimiter(
     requests_per_second=0.2, 
@@ -126,7 +122,7 @@ class JenkinsDocumenationAgent:
 
         return Command(goto="resource_agent", update={"messages": [response]})
 
-from services.main.management.planGenerator.PlanGenAgent.agentPrompts import identify_resources_prompt, docker_prompt
+
 class TerraformDocumentationAgent:
     def __init__(self):
         self.model = model
@@ -155,8 +151,9 @@ class TerraformDocumentationAgent:
 
                 if tool_name == "fetch_resource_definitions":
                     resource_defs = [ResourceDefinition(**res) for res in arguments["resources"]]
+                    print("Resource definitions", resource_defs)
                     result = fetch_resource_definitions.invoke({"resources": [res.model_dump() for res in resource_defs]})
-                    
+                    print("Result from fetch_resource_definitions", result[:20])
                     for doc in result:
                         if "terraform" not in agentState.resource_documents:
                             agentState.resource_documents["terraform"] = []
@@ -208,8 +205,7 @@ class Supervisor:
             return Command(goto=END, update={"messages": [response]})
 
 
-import asyncio
-from typing import Dict
+
 
 class TerraformDocumentationTool:
     def __init__(self, scraper: TerraformDocScraper):
@@ -232,16 +228,14 @@ class TerraformDocumentationTool:
 
 terraform_doc_scraper = TerraformDocumentationTool(TerraformDocScraper())
 
-from typing import List, Dict
-from langchain_core.tools import tool
-from pydantic import BaseModel
+
 
 class ResourceDefinition(BaseModel):
     name: str
     description: str  # Optional, but helps structure the request.
 
 @tool
-def fetch_resource_definitions(resources: List[ResourceDefinition]) -> List[Dict[str, str]]:
+async def fetch_resource_definitions(resources: List[ResourceDefinition]) -> List[Dict[str, str]]:
     """
     Fetch Terraform resource definitions based on a list of resources.
 
@@ -251,7 +245,8 @@ def fetch_resource_definitions(resources: List[ResourceDefinition]) -> List[Dict
     Returns:
         List[Dict[str, str]]: A list of dictionaries containing resource definitions.
     """
-    return terraform_doc_scraper.fetch_resources([{"name": res.name} for res in resources])
+    res = await terraform_doc_scraper.fetch_resources([{"name": res.name} for res in resources])
+    return res
 
 
 
@@ -361,7 +356,7 @@ def parse_next_agent(text):
         if f"{agent}" in text:
             return f"{agent}"
 
-from langchain_core.messages import convert_to_messages
+
 
 
 def pretty_print_messages(update):
