@@ -38,9 +38,17 @@ class RepoService:
         SessionDataHandler.update_session_data(session_id, {"repo_path": repo_path})
         try:
             if os.path.exists(repo_path):
-                logger.info(f"The repository at {repo_path} is bare. Deleting and re-cloning...")
-                shutil.rmtree(repo_path, onerror=self.handle_remove_readonly)
-                logger.info(f"Deleted bare repository at {repo_path}.")
+                try:
+                    repo = Repo(repo_path)
+                    if repo.bare:
+                        logger.warning(f"The repository at {repo_path} is bare. Deleting and re-cloning...")
+                        shutil.rmtree(repo_path, onerror=self.handle_remove_readonly)
+                    else:
+                        logger.info(f"Repository already exists at {repo_path}. Returning existing repository.")
+                        return repo
+                except InvalidGitRepositoryError:
+                    logger.warning(f"The directory at {repo_path} is not a valid Git repository. Deleting and re-cloning...")
+                    shutil.rmtree(repo_path, onerror=self.handle_remove_readonly)
 
             # Clone the repository if it doesn't exist or was deleted
             logger.info(f"Cloning repository from {repo_url} to {repo_path}...")
