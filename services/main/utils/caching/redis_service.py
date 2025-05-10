@@ -93,7 +93,7 @@ class SessionDataHandler:
             logger.error(f"Error updating message state: {e}")
 
     @staticmethod
-    def store_current_plan(session_id: str, client_id: str, plan_data: dict):
+    def store_current_plan(session_id: str, plan_data: dict):
         try:
             redis_key = session_id
             # Fetch the existing session or initialize a new one
@@ -105,8 +105,9 @@ class SessionDataHandler:
             redis_session.set(redis_key, json.dumps(session_object))
             redis_session.expire(redis_key, SessionDataHandler.SESSION_TIMEOUT)
             logger.debug(
-                f"Current plan stored for client_id: {client_id} in session: {redis_key}"
+                f"Current plan stored in session: {redis_key}"
             )
+            print(f"Current plan stored in session: {redis_key}")
         except Exception as e:
             logger.error(f"Error storing current plan: {e}")
 
