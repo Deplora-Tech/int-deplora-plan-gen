@@ -7,12 +7,13 @@ import xml.etree.ElementTree as ET
 
 class JenkinsManager:
     def __init__(self):
-        load_dotenv()
-        self.jenkins_url = os.getenv("JENKINS_URL")
+        load_dotenv(override=True)
+        self.jenkins_url = os.getenv("JENKINS_URL").strip().strip('"').strip("'")
+
         self.username = os.getenv("JENKINS_USERNAME")
         self.api_token = os.getenv("JENKINS_API_TOKEN")
     
-
+        print("Jenkins URL:", self.jenkins_url)
 
     def set_folder_env_variable( self, folder_name, var_name, var_value):
         """

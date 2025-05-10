@@ -46,43 +46,8 @@ async def excecute_pipeline(session_id: str):
                 build_info,
             )
 
-        build_info = jenkins.monitor_build_status(
-            chat_history["organization_id"],
-            chat_history["session_id"],
-            build_id,
-        )
+        return build_id
         
-        x = 0
-        while build_info["building"]:
-            stages_info, is_building = jenkins.get_stages_info(
-                chat_history["organization_id"], chat_history["session_id"], build_id
-            )
-
-            build_info["stages"] = stages_info
-            build_info["building"] = is_building
-
-            for stage in stages_info:
-                logs = jenkins.get_logs_for_stage(
-                    chat_history["organization_id"],
-                    chat_history["session_id"],
-                    build_id,
-                    stage["id"],
-                )
-                stage["logs"] = logs.split("\n")
-
-
-            await communication_service.publisher(
-                chat_history["session_id"],
-                ExcecutionStatus.PROCESSING.value,
-                build_info,
-            )
-
-            # await asyncio.sleep(1)
-            x += 1
-            if x >= 10000:
-                logger.info("Breaking")
-                break
-
     except Exception as e:
         logger.error(f"Error excecution pipeline: {traceback.format_exc()}")
         await communication_service.publisher(
@@ -103,3 +68,35 @@ async def abort_pipeline(session_id: str, build_id: str):
         await communication_service.publisher(
             chat_history["session_id"], ExcecutionStatus.FAILED.value, {"error": str(e)}
         )
+
+
+async def get_status(session_id: str, build_id: str):
+    chat_history = SessionDataHandler.get_session_data(session_id)
+    stages_info, is_building = jenkins.get_stages_info(
+        chat_history["organization_id"], chat_history["session_id"], build_id
+    )
+
+
+    build_info = {}
+    
+    build_info["stages"] = stages_info
+    build_info["building"] = is_building
+
+    for stage in stages_info:
+        logs = jenkins.get_logs_for_stage(
+            chat_history["organization_id"],
+            chat_history["session_id"],
+            build_id,
+            stage["id"],
+        )
+        stage["logs"] = logs.split("\n")
+
+
+    await communication_service.publisher(
+        chat_history["session_id"],
+        ExcecutionStatus.PROCESSING.value,
+        build_info,
+    )
+
+    return build_info
+
