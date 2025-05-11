@@ -89,7 +89,7 @@ class TerraformDocScraper:
 
                     content = markdownify(html, heading_style="ATX")
 
-                if "This documentation page doesn't exist" in content:
+                if content and "This documentation page doesn't exist" in content:
                     content = None
 
             except PlaywrightTimeoutError:
