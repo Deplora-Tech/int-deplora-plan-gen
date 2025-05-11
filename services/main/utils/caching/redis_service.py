@@ -11,7 +11,7 @@ class SessionDataHandler:
     SESSION_TIMEOUT = int(os.getenv("SESSION_TIMEOUT", 3600 * 24 * 365))
 
     @staticmethod
-    def store_message_user(session_id: str, client_id: str, role: str, message: str):
+    def store_message_user(session_id: str, client_id: str, role: str, message: str, variation: str = "chat"):
         try:
             redis_key = session_id
             # Fetch the existing session or initialize a new one
@@ -22,7 +22,7 @@ class SessionDataHandler:
 
             # Update chat history
             chat_history = session_object.get("chat_history", [])
-            chat_history.append({"role": role, "message": message, "state": None})
+            chat_history.append({"role": role, "message": message, "state": None, variation: variation })
 
             session_object["chat_history"] = chat_history
 
@@ -132,6 +132,7 @@ class SessionDataHandler:
             return {
                 "chat_history": session_data.get("chat_history", []),
                 "current_plan": session_data.get("current_plan", None),
+                "pipeline_data": session_data.get("pipeline_data", {}),
             }
         except Exception as e:
             logger.error(f"Error retrieving chat history: {e}")
@@ -188,6 +189,26 @@ class SessionDataHandler:
         except Exception as e:
             logger.error(f"Error retrieving preconditions: {e}")
             return None
+        
+    @staticmethod  
+    def store_pipeline_data(session_id: str, build_id: str, data: dict):
+        try:
+            redis_key = session_id
+            # Fetch the existing session or initialize a new one
+            session_data = redis_session.get(redis_key)
+            session_object = json.loads(session_data) if session_data else {}
+
+            # Update the session data with multiple key-value pairs
+            session_object["pipeline_data"][build_id] = data
+
+            # Store the updated session data back to Redis
+            redis_session.set(redis_key, json.dumps(session_object))
+            redis_session.expire(redis_key, SessionDataHandler.SESSION_TIMEOUT)
+
+            logger.debug(f"Pipeline data stored for session_id: {session_id}")
+
+        except Exception as e:
+            logger.error(f"Error storing pipeline data: {e}")
 
 
 class TFDocsCache:

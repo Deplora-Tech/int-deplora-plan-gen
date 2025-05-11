@@ -3,7 +3,7 @@ from services.main.communication.service import CommunicationService
 from services.main.enums import LoraStatus
 from services.main.management.classifier import classify_intent
 from services.main.management.service import ManagementService
-from services.main.communication.models import MessageRequest
+from services.main.communication.models import MessageRequest, FileChangeRequest
 from services.main.utils.caching.redis_service import SessionDataHandler
 from dotenv import load_dotenv
 import requests
@@ -107,3 +107,9 @@ async def handle_message(
             "status": "success",
             "response": "I'm sorry, I didn't understand that. Can you clarify?",
         }
+
+
+async def handle_file_change(
+        request: FileChangeRequest):
+
+    return await managementService.update_file(request=request)

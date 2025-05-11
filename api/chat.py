@@ -2,10 +2,10 @@ from fastapi import (
     APIRouter,
 )
 from core.logger import logger
-from services.main.communication.models import MessageRequest
+from services.main.communication.models import MessageRequest, FileChangeRequest
 from services.main.communication.service import CommunicationService
 from services.main.enums import LoraStatus
-from services.main.management.api import handle_message
+from services.main.management.api import handle_message, handle_file_change
 from services.main.utils.caching.redis_service import SessionDataHandler
 
 router = APIRouter()
@@ -48,3 +48,21 @@ async def send_message(request: MessageRequest):
 async def get_chat_history(session_id: str):
     chat_history = SessionDataHandler.get_chat_history(session_id)
     return chat_history
+
+@router.post("/update-file")
+async def update_file(request: FileChangeRequest):
+    try:
+        await handle_file_change(request)
+        return {
+            "status": True,
+            "message": "File updated successfully.",
+        } 
+
+    except Exception as e:
+        print("Error", e)
+        return {
+            "status": False,
+            "message": "An error occurred. Please try again.",
+        }
+
+    

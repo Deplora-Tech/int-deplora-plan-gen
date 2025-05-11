@@ -22,3 +22,8 @@ class PreConditionRequest(BaseModel):
     organization_id: str
     session_id: str
     pre_condition: Preconndition
+
+class FileChangeRequest(BaseModel):
+    session_id: str
+    file_path: str
+    file_content: str

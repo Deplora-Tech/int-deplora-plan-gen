@@ -1,5 +1,5 @@
 from core.logger import logger
-from services.main.communication.models import MessageRequest
+from services.main.communication.models import MessageRequest, FileChangeRequest
 from services.main.communication.service import CommunicationService
 from services.main.enums import LoraStatus
 from services.main.utils.prompts.service import PromptManagerService
@@ -35,11 +35,14 @@ class ManagementService:
         try:
             session  = SessionDataHandler.get_session_data(session_id)
             current_files = session["current_plan"]
-            new_files = await self.plan_refiner_service.run_change_agent(
+            new_files, changed_files_objs = await self.plan_refiner_service.run_change_agent(
                 prompt=prompt,
                 current_files=current_files
             )
             SessionDataHandler.store_current_plan(session_id, new_files)
+
+
+            await self.repo_service.create_files_in_repo(session["repo_path"], changed_files_objs)
 
         except Exception as e:
             logger.error(f"Error occurred: {traceback.print_exc()}")
@@ -59,7 +62,7 @@ class ManagementService:
     ) -> dict:
 
         try:
-            git_url = "https://github.com/sahiruw/demo-app.git"
+            git_url = "https://github.com/Deplora-Tech/int-deplora-web.git"
             repo_task = self.repo_service.clone_repo(
                 repo_url=git_url, branch="main", session_id=session_id
             )
@@ -94,7 +97,7 @@ class ManagementService:
             )
             project_details_task = self.retrieve_project_details(project_id)
 
-            repo, user_preferences, project_details = await asyncio.gather(
+            repo_path, user_preferences, project_details = await asyncio.gather(
                 repo_task, preferences_task, project_details_task
             )
 
@@ -130,7 +133,7 @@ class ManagementService:
                 "",
             )
 
-            await self.repo_service.create_files_in_repo(repo, parsed_files)
+            await self.repo_service.create_files_in_repo(repo_path, parsed_files)
 
             logger.info("Files committed successfully.")
             folder_structure, file_contents = self.repo_service.get_folder_and_content(
@@ -197,12 +200,12 @@ class ManagementService:
 
         project_data = {
             "application": {
-                "name": "React Application",
-                "type": ["Web Application", "ReactJS", "React"],
-                "description": "A Simple ReactJS Project",
+                "name": "Deplora Web",
+                "type": ["Web Application", "NextJS", "Next"],
+                "description": "User Interface for Deplora",
                 "dependencies": [
                     {
-                        "name": "React",
+                        "name": "Next",
                         "version": "x.x.x",
                     },
                     "react-router-dom",
@@ -210,7 +213,7 @@ class ManagementService:
                     "axios",
                 ],
                 "language": ["JavaScript"],
-                "framework": ["ReactJS"],
+                "framework": ["NextJS"],
                 "architecture": ["Single-page application", "Client-Server"],
             },
             "environment": {"runtime": ["Node.js"]},
@@ -218,3 +221,35 @@ class ManagementService:
 
         # await asyncio.sleep(3)
         return project_data
+
+
+    async def update_file(
+        self,
+        request: FileChangeRequest,
+    ) -> dict:
+        try:
+            session = SessionDataHandler.get_session_data(request.session_id)
+            repo_path = session["repo_path"]
+            await self.repo_service.create_files_in_repo(
+                repo_path=repo_path,
+                file_objects=[
+                    {
+                        "path": request.file_path,
+                        "content": request.file_content,
+                    }
+                ],
+            )
+
+
+            # update session memory
+            current_files = session["current_plan"]
+            current_files[request.file_path] = request.file_content
+            SessionDataHandler.store_current_plan(request.session_id, current_files)
+
+            return {
+                "status": "success",
+                "response": "File updated successfully.",
+            }
+        except Exception as e:
+            logger.error(f"Error occurred: {traceback.print_exc()}")
+            raise e
