@@ -56,6 +56,21 @@ async def excecute_pipeline(session_id: str):
                 build_info,
             )
 
+        # store the build id in the session data
+        SessionDataHandler.store_pipeline_data(
+            session_id=session_id,
+            build_id=build_id,
+            data={"stages":[{"name": name} for name in stages]},
+        )
+
+        SessionDataHandler.store_message_user(
+            session_id=session_id,
+            client_id=chat_history["client_id"],
+            role="executor",
+            message=build_id,
+            variation="pipeline",
+        )
+
         return build_id
         
     except Exception as e:
@@ -110,6 +125,14 @@ async def get_status(session_id: str, build_id: str):
         ExcecutionStatus.PROCESSING.value,
         build_info,
     )
+
+    # store the build id in the session data
+    SessionDataHandler.store_pipeline_data(
+        session_id=session_id,
+        build_id=build_id,
+        data=build_info
+    )
+
 
     return build_info
 

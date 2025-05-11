@@ -54,7 +54,7 @@ class RepoService:
             logger.info(f"Cloning repository from {repo_url} to {repo_path}...")
             repo = Repo.clone_from(repo_url, repo_path, branch=branch)
             logger.info(f"Repository cloned successfully to {repo_path}.")
-            return repo
+            return repo_path
 
         except (InvalidGitRepositoryError, NoSuchPathError) as e:
             logger.error(f"Error: {e}")
@@ -68,7 +68,7 @@ class RepoService:
             logger.error(f"An unexpected error occurred: {e}")
             raise
 
-    async def create_files_in_repo(self, repo: Repo, file_objects: List[Dict[str, str]]):
+    async def create_files_in_repo(self, repo_path: str, file_objects: List[Dict[str, str]]):
         """
         Create the parsed files in the given repository.
 
@@ -76,7 +76,6 @@ class RepoService:
             repo (Repo): The GitPython Repo object for the repository.
             file_objects (List[Dict[str, str]]): A list of file objects containing file details.
         """
-        repo_path = repo.working_dir  # Get the root path of the cloned repository
         for file_object in file_objects:
             file_path = os.path.join(repo_path, file_object["path"])
             os.makedirs(os.path.dirname(file_path), exist_ok=True)  # Ensure the directory exists

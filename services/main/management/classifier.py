@@ -14,7 +14,7 @@ async def classify_intent(user_query, chat_history=None):
         combined_query = user_query
 
     prompt = f"""
-    Now, you are an intent classifier for a chatbot that handles deployment-related queries. The input categories are defined below:
+    You are an intent classifier for a chatbot that handles deployment-related queries. The input categories are defined below:
     
     Intent Categories:
     1. **unrelated_question**: Queries that are not related to deployment plans or other deployment-related topics.
@@ -25,7 +25,9 @@ async def classify_intent(user_query, chat_history=None):
     6. **greeting**: User greetings, such as "hello", "hi", etc.
     7. **insult**: Insulting or offensive remarks.
 
-    Input: 
+    Based on the both chat history and the user query, classify the intent into one of the above categories.
+    The user may send error messages, in that case classify the intent as modify_deployment_plan.
+    Input:
     {combined_query}
 
     Output:

@@ -27,7 +27,7 @@ class PlanRefinerService:
         merged_files = self.merge_files(current_files, changed_files_map_by_action)
         print(f"Merged files: {merged_files.keys()}")
         
-        return merged_files
+        return merged_files, changed_files
 
     def merge_files(self, current_files: dict, changed_files: dict) -> dict:
         """
@@ -76,7 +76,7 @@ class PlanRefinerService:
 
         # Call the LLM service to get the response
         try:
-            response = await self.llm_service.llm_request(PROMPT)
+            response = await self.llm_service.llm_request(PROMPT, platform="deepseek")
             # print(f"Change agent response: {response}")
             files, files_content = self.file_parser.parse(response)
             # print(f"Parsed files: {files}")
