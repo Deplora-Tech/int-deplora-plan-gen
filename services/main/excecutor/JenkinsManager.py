@@ -307,7 +307,7 @@ class JenkinsManager:
         try:
             response = requests.get(console_url, auth=(self.username, self.api_token))
             if response.status_code == 200:
-                print(response.text)
+                return response.text
             else:
                 print(f"Error fetching console output: {self._parse_error_text(response)}")
         except KeyboardInterrupt:

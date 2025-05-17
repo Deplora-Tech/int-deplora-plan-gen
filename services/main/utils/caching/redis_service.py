@@ -199,6 +199,8 @@ class SessionDataHandler:
             session_object = json.loads(session_data) if session_data else {}
 
             # Update the session data with multiple key-value pairs
+            if "pipeline_data" not in session_object:
+                session_object["pipeline_data"] = {}
             session_object["pipeline_data"][build_id] = data
 
             # Store the updated session data back to Redis

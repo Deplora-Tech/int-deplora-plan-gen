@@ -114,21 +114,11 @@ class PlanGeneratorService:
     def _get_strategy_prompt(
         self, strategy, preferences, details, history, prompt, terraform_docs
     ):
-        refine = False
-
-        if history["current_plan"]:
-            refine = True
-
         # this should be removed once the other workflows are implemented
         strategy = DeploymentOptions.DOCKERIZED_DEPLOYMENT.value
 
         if DeploymentOptions.DOCKERIZED_DEPLOYMENT.value in strategy:
-            if refine:
-                return self.prompt_manager_service.prepare_docker_refine_prompt(
-                    preferences, details, history, prompt, history["current_plan"]
-                )
-            else:
-                return self.prompt_manager_service.prepare_docker_prompt(
+            return self.prompt_manager_service.prepare_docker_prompt(
                     preferences, details, history, prompt, terraform_docs
                 )
         elif DeploymentOptions.KUBERNETES_DEPLOYMENT.value in strategy:

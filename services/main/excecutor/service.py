@@ -20,11 +20,10 @@ async def excecute_pipeline(session_id: str):
         build_info = {"building": True, "stages": stages}
 
         await communication_service.publisher(
-                chat_history["session_id"],
-                ExcecutionStatus.INITIALIZE.value,
-                build_info,
-            )
-    
+            chat_history["session_id"],
+            ExcecutionStatus.INITIALIZE.value,
+            build_info,
+        )
 
         # CREATE ORGANIZATION FOLDER
         jenkins.create_org_folder(chat_history["organization_id"])
@@ -42,25 +41,23 @@ async def excecute_pipeline(session_id: str):
             local_directory_path=chat_history["repo_path"],
         )
 
-        
-
         build_id = jenkins.trigger_pipeline_build(
-                    folder_name=f"{chat_history["organization_id"]}/job/{chat_history["session_id"]}",
-                    pipeline_name=chat_history["session_id"],
-                )
+            folder_name=f"{chat_history["organization_id"]}/job/{chat_history["session_id"]}",
+            pipeline_name=chat_history["session_id"],
+        )
         logger.info(f"Build ID: {build_id}")
         build_info["id"] = build_id
         await communication_service.publisher(
-                chat_history["session_id"],
-                ExcecutionStatus.INITIALIZE.value,
-                build_info,
-            )
+            chat_history["session_id"],
+            ExcecutionStatus.INITIALIZE.value,
+            build_info,
+        )
 
         # store the build id in the session data
         SessionDataHandler.store_pipeline_data(
             session_id=session_id,
             build_id=build_id,
-            data={"stages":[{"name": name} for name in stages]},
+            data={"stages": [{"name": name} for name in stages], "building": True},
         )
 
         SessionDataHandler.store_message_user(
@@ -72,7 +69,7 @@ async def excecute_pipeline(session_id: str):
         )
 
         return build_id
-        
+
     except Exception as e:
         logger.error(f"Error excecution pipeline: {traceback.format_exc()}")
         await communication_service.publisher(
@@ -83,9 +80,13 @@ async def excecute_pipeline(session_id: str):
 async def abort_pipeline(session_id: str, build_id: str):
     try:
         chat_history = SessionDataHandler.get_session_data(session_id)
-        jenkins.stop_pipeline_build(chat_history["organization_id"], chat_history["session_id"], build_id)
+        jenkins.stop_pipeline_build(
+            chat_history["organization_id"], chat_history["session_id"], build_id
+        )
         await communication_service.publisher(
-            chat_history["session_id"], ExcecutionStatus.ABORTED.value, {"message": "Pipeline aborted"}
+            chat_history["session_id"],
+            ExcecutionStatus.ABORTED.value,
+            {"message": "Pipeline aborted"},
         )
 
     except Exception as e:
@@ -101,15 +102,11 @@ async def get_status(session_id: str, build_id: str):
         folder_name=f"{chat_history['organization_id']}/job/{chat_history['session_id']}",
         pipeline_name=chat_history["session_id"],
         build_id=build_id,
-
     )
+    all_stages = jenkins.list_stages(chat_history["repo_path"])
+    existing_stages = [s["name"] for s in stages_info]
 
-
-    build_info = {}
     
-    build_info["stages"] = stages_info
-    build_info["building"] = is_building
-
     for stage in stages_info:
         logs = jenkins.get_logs_for_stage(
             folder_name=f"{chat_history['organization_id']}/job/{chat_history['session_id']}",
@@ -119,6 +116,30 @@ async def get_status(session_id: str, build_id: str):
         )
         stage["logs"] = logs.split("\n")
 
+        # Check if there are any new stages that are not in the existing stages
+    # If so, add them to the stages_info with status "PENDING"
+
+    for stage in all_stages:
+        if stage not in existing_stages:
+            stages_info.append({"name": stage, "status": "PENDING"})
+
+    # check if atleast one stage has logs when building=false
+    # there can be cases none of the stages are started but pipeline crached
+    # probably due to errors in jenkins file
+    if not is_building and not any("logs" in stage for stage in stages_info):
+        console_out = jenkins.fetch_console_output(
+            folder_name=f"{chat_history['organization_id']}/job/{chat_history['session_id']}",
+            pipeline_name=chat_history["session_id"],
+            build_id=build_id,
+        )
+        stages_info[0]["logs"] = console_out.split("\n")
+        stages_info[0]["status"] = "FAILED"
+
+
+    build_info = {}
+
+    build_info["stages"] = stages_info
+    build_info["building"] = is_building
 
     await communication_service.publisher(
         chat_history["session_id"],
@@ -128,11 +149,7 @@ async def get_status(session_id: str, build_id: str):
 
     # store the build id in the session data
     SessionDataHandler.store_pipeline_data(
-        session_id=session_id,
-        build_id=build_id,
-        data=build_info
+        session_id=session_id, build_id=build_id, data=build_info
     )
 
-
     return build_info
-
