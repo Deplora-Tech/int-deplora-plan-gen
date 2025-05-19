@@ -1,8 +1,10 @@
-from core.database import database as db
+from core.database import analysis_results
 from services.main.analyzer.service import AnalyzerService
 from core.config import settings
 import logging
 import nest_asyncio
+
+
 
 nest_asyncio.apply()
 logger = logging.getLogger(__name__)
@@ -31,7 +33,7 @@ async def run_analyzer_task(client_id: str, project_id: str, repo_url: str):
             "repo_url": repo_url,
             "generated_template": generated_template,
         }
-        await db.db.analysis_results.insert_one(db_entry)
+        await analysis_results.insert_one(db_entry)
         logger.info(
             f"Analysis completed and stored for client_id={client_id}, project_id={project_id}"
         )
@@ -53,7 +55,7 @@ async def get_generated_template(project_id: str) -> dict:
     """
     try:
         # Query the database for the specific project_id
-        result = await db.db.analysis_results.find_one({"project_id": project_id})
+        result = await analysis_results.find_one({"project_id": project_id})
 
         if not result:
             raise ValueError(f"No generated template found for project_id={project_id}")
