@@ -25,7 +25,7 @@ class PlanRefinerService:
 
         # Merge the current files with the changed files based on the action
         merged_files = self.merge_files(current_files, changed_files_map_by_action)
-        print(f"Merged files: {merged_files.keys()}")
+        print(f"Merged files: {[file["path"] for file in changed_files]}")
         
         return merged_files, changed_files
 

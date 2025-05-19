@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     GRAPH_GENERATOR_URL: str
     GEMINI_API_KEY: str
     OPENAI_API_KEY: str
+
     MONGO_URI: str
     MONGO_DB_NAME: str
     INIT_TEMPLATE_PATH: str
@@ -22,6 +23,12 @@ class Settings(BaseSettings):
     ATLAS_MONGO_URI: str
     GITHUB_ACCESS_TOKEN: str
     NGROK_URL: str
+
+    GOOGLE_API_KEY: str
+    AWS_ACCESS_KEY_ID: str
+    AWS_SECRET_ACCESS_KEY: str
+    AWS_REGION: str
+
 
     class Config:
         env_file = ".env"

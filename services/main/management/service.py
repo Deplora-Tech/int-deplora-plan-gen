@@ -64,7 +64,7 @@ class ManagementService:
     ) -> dict:
 
         try:
-            git_url = "https://github.com/Deplora-Tech/int-deplora-web.git"
+            git_url = "https://github.com/sahiruw/demo-app.git"
             repo_task = self.repo_service.clone_repo(
                 repo_url=git_url, branch="main", session_id=session_id
             )
