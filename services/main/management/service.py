@@ -1,4 +1,5 @@
 from core.logger import logger
+from services.main.analyzer.api import get_generated_template
 from services.main.communication.models import MessageRequest, FileChangeRequest
 from services.main.communication.service import CommunicationService
 from services.main.enums import LoraStatus
@@ -8,6 +9,7 @@ from services.main.management.planRefiner.service import PlanRefinerService
 from services.main.management.repoManager.service import RepoService
 from services.main.workers.llm_worker import LLMService
 from services.main.utils.caching.redis_service import SessionDataHandler
+
 
 import asyncio, os
 import traceback
@@ -198,31 +200,16 @@ class ManagementService:
     async def retrieve_project_details(self, project_id: str) -> dict:
         logger.debug("Retrieving project details...")
 
-        project_data = {
-            "application": {
-                "name": "Deplora Web",
-                "type": ["Web Application", "NextJS", "Next"],
-                "description": "User Interface for Deplora",
-                "dependencies": [
-                    {
-                        "name": "Next",
-                        "version": "x.x.x",
-                    },
-                    "react-router-dom",
-                    "react-bootstrap",
-                    "axios",
-                ],
-                "language": ["JavaScript"],
-                "framework": ["NextJS"],
-                "architecture": ["Single-page application", "Client-Server"],
-            },
-            "environment": {"runtime": ["Node.js"]},
-        }
+        # Await the async call to fetch full document
+        full_doc = await get_generated_template(project_id)
 
-        # await asyncio.sleep(3)
+        # Extract only the 'generated_template' part (the nested dictionary)
+        project_data = full_doc.get("generated_template", {})
+
+        # Simulate some async processing delay (optional)
+        await asyncio.sleep(3)
+
         return project_data
-
-
     async def update_file(
         self,
         request: FileChangeRequest,
