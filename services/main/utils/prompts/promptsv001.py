@@ -109,6 +109,9 @@ docker_prompt = """You are Deplora—an expert AI assistant and senior software 
 ### General Instructions
 - Do not assume any resources from the providers. Create all the resources that are needed for the deployment.
 - If logconfiguration in the task definition is required, create the required resources.
+- Make sure to only use terraform outputs that are defined in the terraform files.
+- Check the port mapping to match the task definitions, health check, Dockerfile and container definitions.
+- Secuirity groups should allow http traffic at least.
 
 ---
 
@@ -273,6 +276,255 @@ docker_prompt = """You are Deplora—an expert AI assistant and senior software 
     ...
    </assistant_response>
   </example>
+
+  <example>
+
+  <user_query>Deploy this app to aws</user_query>
+   <assistant_response>
+    <deploraProject>
+      <deploraFile type="terraform" filePath="terraform/main.tf">
+
+provider "aws" {{
+  region = var.region
+}}
+
+resource "aws_vpc" "main" {{
+  cidr_block = "10.0.0.0/16"
+  enable_dns_support = true
+  enable_dns_hostnames = true
+  tags = {{
+    Name = "deplora-vpc"
+  }}
+}}
+
+resource "aws_subnet" "public" {{
+  count             = length(var.availability_zones)
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)
+  availability_zone = var.availability_zones[count.index]
+  map_public_ip_on_launch = true
+  tags = {{
+    Name = "deplora-public-${{count.index}}"
+  }}
+}}
+
+resource "aws_internet_gateway" "gw" {{
+  vpc_id = aws_vpc.main.id
+  tags = {{
+    Name = "deplora-igw"
+  }}
+}}
+
+resource "aws_route_table" "public" {{
+  vpc_id = aws_vpc.main.id
+  route {{
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.gw.id
+  }}
+  tags = {{
+    Name = "deplora-public-rt"
+  }}
+}}
+
+resource "aws_route_table_association" "public" {{
+  count          = length(var.availability_zones)
+  subnet_id      = aws_subnet.public[count.index].id
+  route_table_id = aws_route_table.public.id
+}}
+
+resource "aws_security_group" "alb" {{
+  name        = "deplora-alb-sg"
+  description = "Allow HTTP traffic"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {{
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }}
+
+  ingress {{
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }}
+
+  egress {{
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }}
+
+  tags = {{
+    Name = "deplora-alb-sg"
+  }}
+}}
+
+resource "aws_security_group" "ecs" {{
+  name        = "deplora-ecs-sg"
+  description = "Allow traffic from ALB"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {{
+    from_port       = 3000
+    to_port         = 3000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }}
+
+  egress {{
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }}
+
+  tags = {{
+    Name = "deplora-ecs-sg"
+  }}
+}}
+
+resource "aws_ecr_repository" "app" {{
+  name                 = "deplora-web"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {{
+    scan_on_push = true
+  }}
+}}
+
+resource "aws_ecs_cluster" "main" {{
+  name = "deplora-cluster"
+}}
+
+resource "aws_ecs_task_definition" "app" {{
+  family                   = "deplora-web"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "512"
+  memory                   = "1024"
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+
+  container_definitions = jsonencode([{{
+    name      = "deplora-web"
+    image     = "${{aws_ecr_repository.app.repository_url}}:latest"
+    essential = true
+    portMappings = [{{
+      containerPort = 3000
+      hostPort      = 3000
+    }}]
+    environment = [
+      {{ name = "NODE_ENV", value = "production" }}
+    ]
+    logConfiguration = {{
+      logDriver = "awslogs"
+      options = {{
+        "awslogs-group"         = "/ecs/deplora-web"
+        "awslogs-region"       = var.region
+        "awslogs-stream-prefix" = "ecs"
+      }}
+    }}
+  }}])
+}}
+
+resource "aws_ecs_service" "app" {{
+  name            = "deplora-web-service"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.app.arn
+  desired_count   = 2
+  launch_type     = "FARGATE"
+
+  network_configuration {{
+    subnets          = aws_subnet.public[*].id
+    security_groups  = [aws_security_group.ecs.id]
+    assign_public_ip = true
+  }}
+
+  load_balancer {{
+    target_group_arn = aws_lb_target_group.app.arn
+    container_name   = "deplora-web"
+    container_port   = 3000
+  }}
+
+  depends_on = [aws_lb_listener.http]
+}}
+
+resource "aws_iam_role" "ecs_task_execution_role" {{
+  name = "deplora-ecs-task-execution-role"
+
+  assume_role_policy = jsonencode({{
+    Version = "2012-10-17"
+    Statement = [{{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {{
+        Service = "ecs-tasks.amazonaws.com"
+      }}
+    }}]
+  }})
+}}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role" {{
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}}
+
+resource "aws_lb" "app" {{
+  name               = "deplora-lb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.alb.id]
+  subnets            = aws_subnet.public[*].id
+
+  enable_deletion_protection = false
+
+  tags = {{
+    Name = "deplora-lb"
+  }}
+}}
+
+resource "aws_lb_target_group" "app" {{
+  name        = "deplora-tg"
+  port        = 80
+  protocol    = "HTTP"
+  vpc_id      = aws_vpc.main.id
+  target_type = "ip"
+
+  health_check {{
+    path                = "/"
+    protocol            = "HTTP"
+    matcher             = "200"
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+  }}
+}}
+
+resource "aws_lb_listener" "http" {{
+  load_balancer_arn = aws_lb.app.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {{
+    type = "forward"
+    target_group_arn = aws_lb_target_group.app.arn
+  }}
+}}
+
+resource "aws_cloudwatch_log_group" "ecs" {{
+  name = "/ecs/deplora-web"
+}}
+ </deploraFile>
+    </deploraProject>
+
+    ...
+   </assistant_response>
+  </example>
+  
 </examples>
 
 ---
