@@ -27,24 +27,25 @@ class ManagementService:
         self.plan_refiner_service = PlanRefinerService()
         self.llm_service = LLMService()
         self.prompt_manager_service = PromptManagerService()
-    
 
     async def refine_deployment_plan(
-            self,
-            session_id: str,
-            prompt: str,
+        self,
+        session_id: str,
+        prompt: str,
     ) -> dict:
         try:
-            session  = SessionDataHandler.get_session_data(session_id)
+            session = SessionDataHandler.get_session_data(session_id)
             current_files = session["current_plan"]
-            new_files, changed_files_objs = await self.plan_refiner_service.run_change_agent(
-                prompt=prompt,
-                current_files=current_files
+            new_files, changed_files_objs = (
+                await self.plan_refiner_service.run_change_agent(
+                    prompt=prompt, current_files=current_files
+                )
             )
             SessionDataHandler.store_current_plan(session_id, new_files)
 
-
-            await self.repo_service.create_files_in_repo(session["repo_path"], changed_files_objs)
+            await self.repo_service.create_files_in_repo(
+                session["repo_path"], changed_files_objs
+            )
 
         except Exception as e:
             logger.error(f"Error occurred: {traceback.print_exc()}")
@@ -198,7 +199,8 @@ class ManagementService:
         return preferences
 
     async def retrieve_project_details(self, project_id: str) -> dict:
-        logger.debug("Retrieving project details...")
+        logger.info("Retrieving project details...")
+        return {}
 
         # Await the async call to fetch full document
         full_doc = await get_generated_template(project_id)
@@ -210,6 +212,7 @@ class ManagementService:
         await asyncio.sleep(3)
 
         return project_data
+
     async def update_file(
         self,
         request: FileChangeRequest,
@@ -226,7 +229,6 @@ class ManagementService:
                     }
                 ],
             )
-
 
             # update session memory
             current_files = session["current_plan"]

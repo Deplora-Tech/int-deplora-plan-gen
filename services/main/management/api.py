@@ -70,18 +70,19 @@ async def handle_message(
         # )
 
         return dep_plan
-    
+
     elif "modify_deployment_plan" in intent:
         logger.info("Detected modify deployment intent")
         await managementService.refine_deployment_plan(
             session_id=request.session_id,
-            prompt=request.message,)
+            prompt=request.message,
+        )
 
         SessionDataHandler.update_message_state_and_data(
             request.session_id,
             request.mid,
             LoraStatus.COMPLETED.value,
-            "Thambara Thambara! Your deployment plan has been modified.",
+            "Your deployment plan has been modified.",
         )
 
     elif "greeting" in intent or "insult" in intent:
@@ -109,7 +110,6 @@ async def handle_message(
         }
 
 
-async def handle_file_change(
-        request: FileChangeRequest):
+async def handle_file_change(request: FileChangeRequest):
 
     return await managementService.update_file(request=request)
