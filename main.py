@@ -8,6 +8,8 @@ from api.sockets import router as sockets
 from api.executer import router as executer
 from api.graph import router as graph
 from api.health import router as health
+from api.organization import router as organization
+from api.project import router as project
 from core.database import mongodb
 from core.logger import logger
 
@@ -36,6 +38,8 @@ app.include_router(chat, prefix="/api/v1/communication", tags=["Communication"])
 app.include_router(sockets, prefix="/api/v1/communication", tags=["Communication"])
 app.include_router(executer, prefix="/api/v1/communication", tags=["Communication"])
 app.include_router(graph, prefix="/api/v1/communication", tags=["Communication"])
+app.include_router(organization, prefix="/api/v1/communication", tags=["communication"])
+app.include_router(project, prefix="/api/v1/communication", tags=["communication"])
 app.include_router(analyze, prefix="/api/v1/analyzer", tags=["Analyzer"])
 app.include_router(precon, prefix="/api/v1/preconditions", tags=["Preconditions"])
 app.include_router(health, prefix="/api/v1", tags=["Health"])
