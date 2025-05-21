@@ -2,6 +2,7 @@ import os
 import json
 from services.main.utils.prompts.service import PromptManagerService
 from services.main.workers.llm_worker import LLMService
+from services.main.management.planGenerator.FileParser import FileParser
 from gitingest import ingest
 
 
@@ -9,9 +10,10 @@ class AnalyzerService:
     def __init__(self):
         self.llm_service = LLMService()
         self.prompt_manager = PromptManagerService()
+        self.file_parser = FileParser()
 
     async def identify_deployment_files(
-        self, repo_path: str, template_path: str
+        self, repo_path: str, branch: str, template_path: str
     ) -> list:
         """
         Identifies files in the repository that may contain deployment-related information.
@@ -25,7 +27,7 @@ class AnalyzerService:
             template_content = file.read()
 
         # Use GitIngest to analyze the repository structure
-        summary, tree, content = ingest(repo_path)
+        summary, tree, content = ingest(repo_path, branch=branch)
 
         # Prepare the prompt for the LLM
         prompt = f"""
@@ -41,15 +43,25 @@ class AnalyzerService:
         Your task:
         - Identify and return a **JSON array** of file paths that may contain deployment-related information.
         - Only include file paths that are likely to help fill fields in the provided JSON structure.
-        - STRICTLY OUTPUT ONLY A VALID JSON ARRAY. Do not include explanations, comments, or any additional text.
+        - STRICTLY OUTPUT IN THE FOLLOWING FORMAT. Do not include explanations, comments, or any additional text.
+
+        <output>
+        {{
+            "files": [
+                "docker-compose.yml",
+                "dockerfile",
+                "package.json"
+                ]
+        }}
+        </output>
         """
 
         # Send the prompt to the LLM and get the response
         response = await self.llm_service.llm_request(prompt)
-
+        identified_files = self.file_parser.parse_json(response)["files"]
+        print(f"Identified files: {response} parsed: {identified_files}")  
         try:
             # Parse the response as JSON
-            identified_files = json.loads(response.strip())
             if not isinstance(identified_files, list):
                 raise ValueError("The LLM response is not a valid list.")
         except json.JSONDecodeError as e:
@@ -182,7 +194,7 @@ class AnalyzerService:
         """
         files = {}
         sections = repo_contents.split(
-            "================================================"
+            "================================================\n"
         )
 
         for i in range(1, len(sections), 2):
@@ -195,6 +207,7 @@ class AnalyzerService:
                     .lstrip("/")
                     .replace("\\", "/")
                 )
+                print(f"File path: {file_path}")
                 file_content = sections[i + 1].strip()
                 files[file_path] = file_content
 
@@ -363,7 +376,7 @@ class AnalyzerService:
         return optimized_template
 
     async def process_files_and_update_template(
-        self, repo_path: str, described_template_path: str, empty_template_path: str
+        self, repo_path: str, branch: str, described_template_path: str, empty_template_path: str
     ) -> dict:
         """
         Processes files identified from the repository and updates the JSON template file by file.
@@ -382,7 +395,9 @@ class AnalyzerService:
             current_template = json.load(f)
 
         # Identify deployment-related files
-        files = await self.identify_deployment_files(repo_path, described_template_path)
+        files = await self.identify_deployment_files(
+            repo_path=repo_path, branch=branch, template_path=described_template_path
+  )
 
         if not files:
             print("No deployment-related files found.")
@@ -391,10 +406,14 @@ class AnalyzerService:
         print(f"Files identified: {files}")
 
         # Use GitIngest to get the repository content
-        _, _, repo_contents = ingest(repo_path)
+        _, _, repo_contents = ingest(repo_path, branch=branch)
+        
+        with open("repo_contents.txt", "w", encoding="utf-8") as f:
+            f.write(repo_contents)
 
         # Parse the repository contents into a dictionary
         parsed_contents = self.parse_repo_contents(repo_contents)
+        # print(f"Repository contents: {parsed_contents}")
 
         for file_name in files:
             print(f"Processing file: {file_name}")

@@ -10,6 +10,7 @@ from services.main.management.repoManager.service import RepoService
 from services.main.workers.llm_worker import LLMService
 from services.main.utils.caching.redis_service import SessionDataHandler
 
+from services.main.communication.models import GitRepo
 
 import asyncio, os
 import traceback
@@ -55,7 +56,7 @@ class ManagementService:
         self,
         request: MessageRequest,
         prompt: str,
-        project_id: str,
+        project: GitRepo,
         organization_id: str,
         user_id: str,
         chat_history: dict,
@@ -64,9 +65,9 @@ class ManagementService:
     ) -> dict:
 
         try:
-            git_url = "https://github.com/sahiruw/demo-app.git"
+            project_id = project.id
             repo_task = self.repo_service.clone_repo(
-                repo_url=git_url, branch="main", session_id=session_id
+                repo_url=project.repo_url, branch=project.branch, session_id=session_id
             )
             await communication_service.publisher(
                 session_id, LoraStatus.RETRIEVING_USER_PREFERENCES.value
@@ -202,14 +203,13 @@ class ManagementService:
 
         # Await the async call to fetch full document
         full_doc = await get_generated_template(project_id)
-
         # Extract only the 'generated_template' part (the nested dictionary)
         project_data = full_doc.get("generated_template", {})
-
-        # Simulate some async processing delay (optional)
-        await asyncio.sleep(3)
+        print(f"Project data: {project_data} for {project_id}")
 
         return project_data
+    
+    
     async def update_file(
         self,
         request: FileChangeRequest,

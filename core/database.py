@@ -51,7 +51,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 from core.config import settings
 
@@ -60,3 +60,4 @@ client = AsyncIOMotorClient(settings.ATLAS_MONGO_URI)
 db = client[settings.MONGO_DB_NAME]
 
 analysis_results = db.analysis_results  # async collection
+user_projects = db.user_projects  # async collection

@@ -16,7 +16,7 @@ pipeline_communication_service = CommunicationService("PipelineService")
 @router.post("/send-message")
 async def send_message(request: MessageRequest):
     try:
-        logger.info(f"Received message: {request.message}")
+        logger.info(f"Received message: {request}")
         message = await handle_message(request, communication_service)
         await communication_service.publisher(
             request.session_id,

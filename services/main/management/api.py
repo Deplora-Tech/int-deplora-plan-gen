@@ -21,7 +21,7 @@ async def handle_message(
     SessionDataHandler.store_message_user(
         request.session_id, request.client_id, "user", request.message
     )
-    SessionDataHandler.update_session_data(request.session_id, request)
+    SessionDataHandler.update_session_data(request.session_id, request.to_dict())
 
     intent = await classify_intent(request.message, chat_history)
 
@@ -42,7 +42,7 @@ async def handle_message(
         dep_plan = await managementService.generate_deployment_plan(
             request=request,
             prompt=request.message,
-            project_id=request.project_id,
+            project=request.project,
             organization_id=request.organization_id,
             user_id=request.client_id,
             chat_history=chat_history,

@@ -96,6 +96,10 @@ class FileParser:
         # Clean up the text before parsing
         text = "{".join(text.split("{")[1:])
         text = "}".join(text.split("}")[:-1])
+
+        text = text.replace("```json", "")
+        text = text.replace("```", "")
+        text = text.strip()
         return json.loads(f"{{{text}}}")
     
     def remove_markdown_code_blocks(self, content: str) -> str:
