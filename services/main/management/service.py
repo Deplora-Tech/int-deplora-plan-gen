@@ -204,7 +204,6 @@ class ManagementService:
 
     async def retrieve_project_details(self, project_id: str) -> dict:
         logger.info("Retrieving project details... for project_id: %s", project_id)
-        return {}
 
         # Await the async call to fetch full document
         project_data = await get_generated_template(project_id)

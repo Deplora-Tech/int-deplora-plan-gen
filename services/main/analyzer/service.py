@@ -34,6 +34,8 @@ class AnalyzerService:
         print(f"Repo path: {repo_path}")
         summary, tree, content = ingest(repo_path, branch=branch)
 
+        print("\n".join(tree.split("\n")[1:]))
+
         # Prepare the prompt for the LLM
         prompt = f"""
         You are an intelligent assistant tasked with analyzing a Git repository structure to identify files
@@ -43,12 +45,13 @@ class AnalyzerService:
 
         Here is the Git repository structure:
 
-        {tree}
+        {"\n".join(tree.split("\n")[1:])}
 
         Your task:
         - Identify and return a **JSON array** of file paths that may contain deployment-related information.
         - Only include file paths that are likely to help fill fields in the provided JSON structure.
         - STRICTLY OUTPUT IN THE FOLLOWING FORMAT. Do not include explanations, comments, or any additional text.
+        - Do not include the root directory in the file paths.
 
         <output>
         {{
@@ -415,7 +418,8 @@ class AnalyzerService:
 
         # Parse the repository contents into a dictionary
         parsed_contents = self.parse_repo_contents(repo_contents)
-        # print(f"Repository contents: {parsed_contents}")
+        dockerfile = parsed_contents.get("Dockerfile", None)
+        print(f"Dockerfile contents: {dockerfile}")
 
         async def process_file(file_name):
             print(f"Processing file: {file_name}")
@@ -447,5 +451,8 @@ class AnalyzerService:
         current_template = await self.optimize_template(
             current_template, described_template
         )
+
+        if dockerfile:
+            current_template["dockerfile"] = dockerfile
 
         return current_template
