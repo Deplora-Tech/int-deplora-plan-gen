@@ -3,16 +3,17 @@ import os, time, re, json
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 import xml.etree.ElementTree as ET
-
+from xml.sax.saxutils import escape
 
 class JenkinsManager:
     def __init__(self):
-        load_dotenv()
-        self.jenkins_url = os.getenv("JENKINS_URL")
+        load_dotenv(override=True)
+        self.jenkins_url = os.getenv("JENKINS_URL").strip().strip('"').strip("'")
+
         self.username = os.getenv("JENKINS_USERNAME")
         self.api_token = os.getenv("JENKINS_API_TOKEN")
     
-
+        print("Jenkins URL:", self.jenkins_url)
 
     def set_folder_env_variable( self, folder_name, var_name, var_value):
         """
@@ -106,7 +107,31 @@ class JenkinsManager:
 
 
 
-    def create_folder(self, folder_name, clone_path):
+    def create_project_folder(self, organization, folder_name, clone_path):
+        url = f"{self.jenkins_url}/job/{organization}/createItem?name={folder_name}"
+        headers = {"Content-Type": "application/xml"}
+        folder_config = f"""
+        <com.cloudbees.hudson.plugins.folder.Folder plugin="cloudbees-folder@6.15">
+            <description>Folder for {folder_name}</description>
+        </com.cloudbees.hudson.plugins.folder.Folder>
+        """
+        response = requests.post(
+            url,
+            auth=(self.username, self.api_token),
+            headers=headers,
+            data=folder_config,
+        )
+
+        if response.status_code == 200:
+            self.set_folder_env_variable(f"{organization}/job/{folder_name}", "CLONE_PATH", clone_path)
+            print(f"Folder '{folder_name}' created successfully.")
+        elif response.status_code == 400 and "already exists" in response.text:
+            print(f"Folder '{folder_name}' already exists.")
+        else:
+            print(f"Failed to create folder '{folder_name}': {self._parse_error_text(response)}")
+    
+
+    def create_org_folder(self, folder_name):
         url = f"{self.jenkins_url}/createItem?name={folder_name}"
         headers = {"Content-Type": "application/xml"}
         folder_config = f"""
@@ -125,7 +150,6 @@ class JenkinsManager:
             self.create_jenkins_secret_text(folder_name, "aws-access-key-id", "", "AWS Access Key ID")
             self.create_jenkins_secret_text(folder_name, "aws-secret-access-key", "", "AWS Secret Access Key")
             
-            self.set_folder_env_variable(folder_name, "CLONE_PATH", clone_path)
             self.set_folder_env_variable(folder_name, "AWS_REGION", "us-east-1")
             self.set_folder_env_variable(folder_name, "AWS_ACCOUNT_ID", "123")
             print(f"Folder '{folder_name}' created successfully.")
@@ -133,6 +157,7 @@ class JenkinsManager:
             print(f"Folder '{folder_name}' already exists.")
         else:
             print(f"Failed to create folder '{folder_name}': {self._parse_error_text(response)}")
+
     
     def _read_jenkinsfile(self, local_directory_path):
         jenkinsfile_path = f"{local_directory_path}/Jenkinsfile"
@@ -160,6 +185,8 @@ class JenkinsManager:
             <disabled>false</disabled>
         </flow-definition>
         """
+        # Escape special characters in the XML
+        pipeline_config = pipeline_config.replace("&", "&amp;")
         response = requests.post(
             url,
             auth=(self.username, self.api_token),
@@ -280,7 +307,7 @@ class JenkinsManager:
         try:
             response = requests.get(console_url, auth=(self.username, self.api_token))
             if response.status_code == 200:
-                print(response.text)
+                return response.text
             else:
                 print(f"Error fetching console output: {self._parse_error_text(response)}")
         except KeyboardInterrupt:
@@ -318,7 +345,7 @@ class JenkinsManager:
         return re.findall(stage_pattern, jenkinsfile_text)
 
     def get_logs_for_stage(self, folder_name, pipeline_name, build_id, stage_id):
-        stages_url = f"{self.jenkins_url}/job/{folder_name}/job/{pipeline_name}/{build_id}/pipeline-console/log?nodeId={stage_id}"
+        stages_url = f"{self.jenkins_url}/job/{folder_name}/job/{pipeline_name}/{build_id}/pipeline-overview/log?nodeId={stage_id}"
         response = requests.get(stages_url, auth=(self.username, self.api_token))
 
         if response.status_code == 200:

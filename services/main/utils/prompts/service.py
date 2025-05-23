@@ -1,7 +1,6 @@
 from services.main.utils.prompts.promptsv001 import (
     classification_prompt,
     docker_prompt,
-    docker_refine_prompt,
     identify_resources_prompt,
 )
 from services.main.utils.prompts.promptsv001 import (
@@ -32,23 +31,6 @@ class PromptManagerService:
 
         return PROMPT_TO_IDENTIFY_DEPLOYMENT_OPTION
 
-    def prepare_docker_refine_prompt(
-        self,
-        user_preferences: dict,
-        project_details: dict,
-        chat_history: dict,
-        prompt: str,
-        files: dict,
-    ) -> str:
-        """
-        Prepare the prompt for Docker deployment
-        """
-
-        PROMPT_TO_GENERATE = docker_refine_prompt.format(
-            files, project_details, user_preferences, prompt, chat_history
-        )
-
-        return PROMPT_TO_GENERATE
 
     def prepare_docker_prompt(
         self,

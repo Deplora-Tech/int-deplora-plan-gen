@@ -10,7 +10,7 @@ class LLMService:
     
     
     def __init__(self):
-        self.DEFAULT_PLATFORM = "openai"
+        self.DEFAULT_PLATFORM = "gemini"
         self.DEFAULT_MODELS = {
             "groq": "llama-3.3-70b-specdec",
             "deepseek": "deepseek-coder",

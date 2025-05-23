@@ -9,6 +9,7 @@ from api.graph import router as graph
 
 from fastapi.middleware.cors import CORSMiddleware
 
+
 # Initialize FastAPI application with lifespan event handlers
 app = FastAPI()
 
@@ -36,3 +37,4 @@ app.add_middleware(
 @app.get("/")
 async def read_root():
     return {"message": "root endpoint"}
+

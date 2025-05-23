@@ -30,12 +30,34 @@
 #         print("Disconnected from MongoDB")
 
 
-from pymongo import MongoClient
+
+# # test_db_connection.py
+# from dotenv import load_dotenv
+#
+# # Load .env early
+# load_dotenv()
+#
+# from pymongo import MongoClient
+# from core.config import settings
+#
+# client = MongoClient(settings.ATLAS_MONGO_URI)
+# database = client[settings.MONGO_DB_NAME]
+
+
+
+
+# core/database.py
+from motor.motor_asyncio import AsyncIOMotorClient
+
+from dotenv import load_dotenv
+
+load_dotenv(override=True)
+
 from core.config import settings
 
-client = MongoClient(settings.ATLAS_MONGO_URI)
-database = client[settings.MONGO_DB_NAME]
 
+client = AsyncIOMotorClient(settings.ATLAS_MONGO_URI)
+db = client[settings.MONGO_DB_NAME]
 
-
-
+analysis_results = db.analysis_results  # async collection
+user_projects = db.user_projects  # async collection

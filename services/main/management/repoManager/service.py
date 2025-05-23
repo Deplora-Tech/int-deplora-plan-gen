@@ -22,7 +22,7 @@ class RepoService:
 
     async def clone_repo(self, repo_url: str, branch: str, session_id: str):
         """
-        Clone the repository to the root path using git. If the repository already exists, it pulls the latest changes.
+        Clone the repository to the root path using git. If the repository already exists, it pulls the latest changes. 
         If the repository is bare, it deletes the directory and clones again.
         
         Args:
@@ -38,15 +38,23 @@ class RepoService:
         SessionDataHandler.update_session_data(session_id, {"repo_path": repo_path})
         try:
             if os.path.exists(repo_path):
-                logger.info(f"The repository at {repo_path} is bare. Deleting and re-cloning...")
-                shutil.rmtree(repo_path, onerror=self.handle_remove_readonly)
-                logger.info(f"Deleted bare repository at {repo_path}.")
+                try:
+                    repo = Repo(repo_path)
+                    if repo.bare:
+                        logger.warning(f"The repository at {repo_path} is bare. Deleting and re-cloning...")
+                        shutil.rmtree(repo_path, onerror=self.handle_remove_readonly)
+                    else:
+                        logger.info(f"Repository already exists at {repo_path}. Returning existing repository.")
+                        return repo_path
+                except InvalidGitRepositoryError:
+                    logger.warning(f"The directory at {repo_path} is not a valid Git repository. Deleting and re-cloning...")
+                    shutil.rmtree(repo_path, onerror=self.handle_remove_readonly)
 
             # Clone the repository if it doesn't exist or was deleted
             logger.info(f"Cloning repository from {repo_url} to {repo_path}...")
             repo = Repo.clone_from(repo_url, repo_path, branch=branch)
             logger.info(f"Repository cloned successfully to {repo_path}.")
-            return repo
+            return repo_path
 
         except (InvalidGitRepositoryError, NoSuchPathError) as e:
             logger.error(f"Error: {e}")
@@ -60,7 +68,7 @@ class RepoService:
             logger.error(f"An unexpected error occurred: {e}")
             raise
 
-    async def create_files_in_repo(self, repo: Repo, file_objects: List[Dict[str, str]]):
+    async def create_files_in_repo(self, repo_path: str, file_objects: List[Dict[str, str]]):
         """
         Create the parsed files in the given repository.
 
@@ -68,7 +76,6 @@ class RepoService:
             repo (Repo): The GitPython Repo object for the repository.
             file_objects (List[Dict[str, str]]): A list of file objects containing file details.
         """
-        repo_path = repo.working_dir  # Get the root path of the cloned repository
         for file_object in file_objects:
             file_path = os.path.join(repo_path, file_object["path"])
             os.makedirs(os.path.dirname(file_path), exist_ok=True)  # Ensure the directory exists
