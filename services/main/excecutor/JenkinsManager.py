@@ -345,7 +345,7 @@ class JenkinsManager:
         return re.findall(stage_pattern, jenkinsfile_text)
 
     def get_logs_for_stage(self, folder_name, pipeline_name, build_id, stage_id):
-        stages_url = f"{self.jenkins_url}/job/{folder_name}/job/{pipeline_name}/{build_id}/pipeline-console/log?nodeId={stage_id}"
+        stages_url = f"{self.jenkins_url}/job/{folder_name}/job/{pipeline_name}/{build_id}/pipeline-overview/log?nodeId={stage_id}"
         response = requests.get(stages_url, auth=(self.username, self.api_token))
 
         if response.status_code == 200:
