@@ -196,15 +196,16 @@ class ManagementService:
         }
 
         # await asyncio.sleep(2)
+        logger.info(
+            f"User preferences retrieved: {preferences} for project_id: {project_id}"
+        )
         return preferences
 
     async def retrieve_project_details(self, project_id: str) -> dict:
         logger.debug("Retrieving project details...")
 
         # Await the async call to fetch full document
-        full_doc = await get_generated_template(project_id)
-        # Extract only the 'generated_template' part (the nested dictionary)
-        project_data = full_doc.get("generated_template", {})
+        project_data = await get_generated_template(project_id)
         print(f"Project data: {project_data} for {project_id}")
 
         return project_data

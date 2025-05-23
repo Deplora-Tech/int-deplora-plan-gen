@@ -38,14 +38,21 @@ async def get_github_branches(repo_url: str = Query(..., description="GitHub rep
             
         
         owner, repo = parts[-2], parts[-1].replace('.git', '')
-        api_url = f"https://api.github.com/repos/{owner}/{repo}/branches"
+        api_url = f"https://api.github.com/repos/{owner}/{repo}/branches?per_page=100"
+        branches = []
+        url = api_url
 
-        print(api_url)
+        while url:
+            response = requests.get(url)
+            response.raise_for_status()
+            data = response.json()
+            branches.extend([branch["name"] for branch in data])
+            # Check for pagination
+            if 'next' in response.links:
+                url = response.links['next']['url']
+            else:
+                url = None
 
-        response = requests.get(api_url)
-        response.raise_for_status()
-
-        branches = [branch["name"] for branch in response.json()]
         return JSONResponse(content={"branches": branches}, status_code=200)
 
     except requests.HTTPError as http_err:
