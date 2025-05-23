@@ -2,16 +2,21 @@ import os
 import json
 from services.main.utils.prompts.service import PromptManagerService
 from services.main.workers.llm_worker import LLMService
+from services.main.management.planGenerator.FileParser import FileParser
+from services.main.management.repoManager.service import RepoService
 from gitingest import ingest
+import asyncio
 
 
 class AnalyzerService:
     def __init__(self):
         self.llm_service = LLMService()
         self.prompt_manager = PromptManagerService()
+        self.file_parser = FileParser()
+        self.repo_service = RepoService(os.getenv("TEMP_REPO_PATH"))
 
     async def identify_deployment_files(
-        self, repo_path: str, template_path: str
+        self, repo_path: str, branch: str, template_path: str
     ) -> list:
         """
         Identifies files in the repository that may contain deployment-related information.
@@ -25,7 +30,9 @@ class AnalyzerService:
             template_content = file.read()
 
         # Use GitIngest to analyze the repository structure
-        summary, tree, content = ingest(repo_path)
+        repo_path = await self.repo_service.clone_repo(repo_url=repo_path, branch=branch, session_id="temp")
+        print(f"Repo path: {repo_path}")
+        summary, tree, content = ingest(repo_path, branch=branch)
 
         # Prepare the prompt for the LLM
         prompt = f"""
@@ -41,15 +48,25 @@ class AnalyzerService:
         Your task:
         - Identify and return a **JSON array** of file paths that may contain deployment-related information.
         - Only include file paths that are likely to help fill fields in the provided JSON structure.
-        - STRICTLY OUTPUT ONLY A VALID JSON ARRAY. Do not include explanations, comments, or any additional text.
+        - STRICTLY OUTPUT IN THE FOLLOWING FORMAT. Do not include explanations, comments, or any additional text.
+
+        <output>
+        {{
+            "files": [
+                "docker-compose.yml",
+                "dockerfile",
+                "package.json"
+                ]
+        }}
+        </output>
         """
 
         # Send the prompt to the LLM and get the response
         response = await self.llm_service.llm_request(prompt)
-
+        identified_files = self.file_parser.parse_json(response)["files"]
+        print(f"Identified files: {response} parsed: {identified_files}")  
         try:
             # Parse the response as JSON
-            identified_files = json.loads(response.strip())
             if not isinstance(identified_files, list):
                 raise ValueError("The LLM response is not a valid list.")
         except json.JSONDecodeError as e:
@@ -57,7 +74,7 @@ class AnalyzerService:
         except Exception as e:
             raise ValueError(f"Failed to process LLM response: {e}")
 
-        return identified_files
+        return identified_files, content
 
     async def fill_json_template(
         self,
@@ -182,7 +199,7 @@ class AnalyzerService:
         """
         files = {}
         sections = repo_contents.split(
-            "================================================"
+            "================================================\n"
         )
 
         for i in range(1, len(sections), 2):
@@ -195,6 +212,7 @@ class AnalyzerService:
                     .lstrip("/")
                     .replace("\\", "/")
                 )
+                print(f"File path: {file_path}")
                 file_content = sections[i + 1].strip()
                 files[file_path] = file_content
 
@@ -363,7 +381,7 @@ class AnalyzerService:
         return optimized_template
 
     async def process_files_and_update_template(
-        self, repo_path: str, described_template_path: str, empty_template_path: str
+        self, repo_path: str, branch: str, described_template_path: str, empty_template_path: str
     ) -> dict:
         """
         Processes files identified from the repository and updates the JSON template file by file.
@@ -382,43 +400,49 @@ class AnalyzerService:
             current_template = json.load(f)
 
         # Identify deployment-related files
-        files = await self.identify_deployment_files(repo_path, described_template_path)
+        files, repo_contents = await self.identify_deployment_files(
+            repo_path=repo_path, branch=branch, template_path=described_template_path
+  )
 
         if not files:
             print("No deployment-related files found.")
             return current_template
 
         print(f"Files identified: {files}")
-
-        # Use GitIngest to get the repository content
-        _, _, repo_contents = ingest(repo_path)
+        
+        with open("repo_contents.txt", "w", encoding="utf-8") as f:
+            f.write(repo_contents)
 
         # Parse the repository contents into a dictionary
         parsed_contents = self.parse_repo_contents(repo_contents)
+        # print(f"Repository contents: {parsed_contents}")
 
-        for file_name in files:
+        async def process_file(file_name):
             print(f"Processing file: {file_name}")
-
-            # Retrieve file content with exact or approximate matching
             file_content = self.find_matching_file(file_name, parsed_contents)
             if not file_content:
                 print(f"File {file_name} not found in repository contents. Skipping.")
-                continue
-
-            # Fill the JSON template using the current file
+                return None
             updated_template = await self.fill_json_template(
-                file_name=file_name,
-                file_content=file_content,
-                described_template=described_template,
-                current_template=current_template,
+            file_name=file_name,
+            file_content=file_content,
+            described_template=described_template,
+            current_template=current_template,
             )
+            return (file_name, updated_template)
 
-            # print(f"Updated template after processing {file_name}: {json.dumps(updated_template, indent=4)}")
-            # Merge the updated template into the current template
+        # Run fill_json_template for all files concurrently
+        tasks = [process_file(file_name) for file_name in files]
+        results = await asyncio.gather(*tasks)
+
+        # Filter out None results (files not found)
+        updated_templates = [tpl for _, tpl in results if _ is not None and tpl is not None]
+
+        # Merge all updated templates into current_template sequentially
+        for updated_template in updated_templates:
             current_template = await self.merge_templates(
-                current_template, updated_template, described_template
+            current_template, updated_template, described_template
             )
-            # print(f"Updated template after processing {file_name}: {json.dumps(current_template, indent=4)}")
 
         current_template = await self.optimize_template(
             current_template, described_template

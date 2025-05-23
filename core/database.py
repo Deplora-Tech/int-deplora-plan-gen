@@ -11,7 +11,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import os
 from services.main.communication.models import EnvType
 
-load_dotenv()
+load_dotenv(override=True)
 
 logger = logging.getLogger(__name__)
 
@@ -272,3 +272,4 @@ env_manager = EnvironmentManager()
 
 async def ping_database():
     return await mongodb.ping()
+

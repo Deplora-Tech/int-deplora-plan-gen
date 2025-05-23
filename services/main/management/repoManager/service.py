@@ -22,7 +22,7 @@ class RepoService:
 
     async def clone_repo(self, repo_url: str, branch: str, session_id: str):
         """
-        Clone the repository to the root path using git. If the repository already exists, it pulls the latest changes.
+        Clone the repository to the root path using git. If the repository already exists, it pulls the latest changes. 
         If the repository is bare, it deletes the directory and clones again.
         
         Args:
@@ -45,7 +45,7 @@ class RepoService:
                         shutil.rmtree(repo_path, onerror=self.handle_remove_readonly)
                     else:
                         logger.info(f"Repository already exists at {repo_path}. Returning existing repository.")
-                        return repo
+                        return repo_path
                 except InvalidGitRepositoryError:
                     logger.warning(f"The directory at {repo_path} is not a valid Git repository. Deleting and re-cloning...")
                     shutil.rmtree(repo_path, onerror=self.handle_remove_readonly)

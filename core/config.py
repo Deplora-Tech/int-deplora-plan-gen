@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str
     DEEPSEEK_API_KEY: str
     REPO_PATH: str
+    TEMP_REPO_PATH: str
     JENKINS_URL: str
     JENKINS_USERNAME: str
     JENKINS_PASSWORD: str
