@@ -49,6 +49,7 @@ async def get_chat_history(session_id: str):
     chat_history = SessionDataHandler.get_chat_history(session_id)
     return chat_history
 
+
 @router.post("/update-file")
 async def update_file(request: FileChangeRequest):
     try:
@@ -56,7 +57,7 @@ async def update_file(request: FileChangeRequest):
         return {
             "status": True,
             "message": "File updated successfully.",
-        } 
+        }
 
     except Exception as e:
         print("Error", e)
@@ -65,4 +66,19 @@ async def update_file(request: FileChangeRequest):
             "message": "An error occurred. Please try again.",
         }
 
-    
+
+@router.post("/get-chat-list/{client_id}")
+async def get_chat_list(client_id: str):
+    try:
+        chat_list = SessionDataHandler.get_chat_list(client_id)
+        return {
+            "status": True,
+            "chat_list": chat_list,
+        }
+
+    except Exception as e:
+        print("Error", e)
+        return {
+            "status": False,
+            "message": "An error occurred. Please try again.",
+        }

@@ -11,7 +11,13 @@ class SessionDataHandler:
     SESSION_TIMEOUT = int(os.getenv("SESSION_TIMEOUT", 3600 * 24 * 365))
 
     @staticmethod
-    def store_message_user(session_id: str, client_id: str, role: str, message: str, variation: str = "chat"):
+    def store_message_user(
+        session_id: str,
+        client_id: str,
+        role: str,
+        message: str,
+        variation: str = "chat",
+    ):
         try:
             redis_key = session_id
             # Fetch the existing session or initialize a new one
@@ -22,7 +28,15 @@ class SessionDataHandler:
 
             # Update chat history
             chat_history = session_object.get("chat_history", [])
-            chat_history.append({"role": role, "message": message, "state": None, variation: variation })
+            chat_history.append(
+                {
+                    "role": role,
+                    "message": message,
+                    "state": None,
+                    variation: variation,
+                    "created_At": str(datetime.now()),
+                }
+            )
 
             session_object["chat_history"] = chat_history
 
@@ -104,9 +118,7 @@ class SessionDataHandler:
 
             redis_session.set(redis_key, json.dumps(session_object))
             redis_session.expire(redis_key, SessionDataHandler.SESSION_TIMEOUT)
-            logger.debug(
-                f"Current plan stored in session: {redis_key}"
-            )
+            logger.debug(f"Current plan stored in session: {redis_key}")
             print(f"Current plan stored in session: {redis_key}")
         except Exception as e:
             logger.error(f"Error storing current plan: {e}")
@@ -137,6 +149,37 @@ class SessionDataHandler:
         except Exception as e:
             logger.error(f"Error retrieving chat history: {e}")
             return {"chat_history": None, "current_plan": None}
+
+    @staticmethod
+    def get_chat_list(client_id: str):
+        try:
+            all_sessions = redis_session.keys()
+            chat_list = []
+            for session_key in all_sessions:
+                session_data = redis_session.get(session_key)
+                if session_data:
+                    chats = json.loads(session_data)["chat_history"]
+                    if len(chats) > 0:
+                        first_chat = chats[-1]
+                        chat_list.append(
+                            {
+                                "session_id": session_key,
+                                "title": (
+                                    first_chat.get("message", "No message")
+                                    if isinstance(
+                                        first_chat.get("message", "No message"), str
+                                    )
+                                    else "Missing Information"
+                                ),
+                                "created_At": first_chat.get("created_At", None),
+                            }
+                        )
+            logger.info(f"get_chat_list Final chat list: {chat_list}")
+            return chat_list[::-1]
+
+        except Exception as e:
+            logger.error(f"Error retrieving chat list: {e}")
+            return []
 
     @staticmethod
     def get_client_data(session_id: str, client_id: str):
@@ -189,8 +232,8 @@ class SessionDataHandler:
         except Exception as e:
             logger.error(f"Error retrieving preconditions: {e}")
             return None
-        
-    @staticmethod  
+
+    @staticmethod
     def store_pipeline_data(session_id: str, build_id: str, data: dict):
         try:
             redis_key = session_id
