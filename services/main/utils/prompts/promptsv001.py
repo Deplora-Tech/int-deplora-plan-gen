@@ -94,13 +94,16 @@ docker_prompt = """You are Deplora—an expert AI assistant and senior software 
   - `outputs.tf`: Key outputs for other deployment stages.
   - Authentication is handled securely using environment variables or AWS profiles.
   - Create the VPCs and Subnets needed.
+  - Include the Environment Variables in the task definition.
 
 3. **CI/CD Configuration**
   - Jenkins pipeline scripts/stages for build, test, and deploy.
   - Separation of concerns for each stage (build -> test -> deploy).
   - Secure handling of sensitive data (e.g., credentials).
+  - AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_DEFAULT_REGION should be set as environment variables in Jenkins.
+  - AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are already set in the Jenkins environment with the names `aws-access-key-id` and `aws-secret-access-key` respectively.
 
-4. **Deployment Commands or Scripts**
+4. **Deployment Commands or Scripts** 
   - Example commands (`build.sh`, `deploy.sh`) demonstrating how to build, tag, and push images.
   - Clear instructions on how each step connects to Terraform resources and Jenkins pipelines.
 
@@ -203,8 +206,9 @@ docker_prompt = """You are Deplora—an expert AI assistant and senior software 
           environment {{
             AWS_ACCESS_KEY_ID       = credentials('aws-access-key-id')
             AWS_SECRET_ACCESS_KEY   = credentials('aws-secret-access-key')
+            AWS_DEFAULT_REGION      = 'us-east-1'
           }}
-
+          
           options {{
             withFolderProperties()
           }}

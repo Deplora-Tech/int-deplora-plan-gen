@@ -145,6 +145,7 @@ class SessionDataHandler:
                 "chat_history": session_data.get("chat_history", []),
                 "current_plan": session_data.get("current_plan", None),
                 "pipeline_data": session_data.get("pipeline_data", {}),
+                "project_data": session_data.get("project", {}),
             }
         except Exception as e:
             logger.error(f"Error retrieving chat history: {e}")
@@ -175,7 +176,7 @@ class SessionDataHandler:
                                 "created_At": first_chat.get("created_At", None),
                             }
                         )
-            logger.info(f"get_chat_list Final chat list: {chat_list}")
+            # logger.info(f"get_chat_list Final chat list: {chat_list}")
             return chat_list[::-1]
 
         except Exception as e:
