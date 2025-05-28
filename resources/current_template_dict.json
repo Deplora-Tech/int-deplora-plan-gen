@@ -49,18 +49,6 @@
       "automated": null
     }
   },
-  "artifacts": {
-    "build_artifacts": [
-      {"type": "", "purpose": ""}
-    ],
-    "pipeline_artifacts": [
-      {"type": "", "purpose": ""}
-    ],
-    "deployment_artifacts": [
-      {"type": "", "example": ""}
-    ],
-    "artifact_registry": []
-  },
   "security": {
     "authentication": [],
     "authorization": [],

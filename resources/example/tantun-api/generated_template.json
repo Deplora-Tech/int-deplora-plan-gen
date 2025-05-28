@@ -1,0 +1,257 @@
+{
+   "application": {
+      "name": "medicare-api",
+      "type": "API",
+      "description": "Medicare API",
+      "dependencies": [
+         {
+            "name": "python",
+            "version": "3.10",
+            "required": true
+         },
+         {
+            "name": "redis",
+            "version": "5.1.1",
+            "required": true
+         },
+         {
+            "name": "uvicorn",
+            "version": "0.30.6",
+            "required": true
+         },
+         {
+            "name": "bcrypt",
+            "version": "4.0.1",
+            "required": true
+         },
+         {
+            "name": "boto3",
+            "version": "1.35.20",
+            "required": true
+         },
+         {
+            "name": "fastapi",
+            "version": "0.114.0",
+            "required": true
+         },
+         {
+            "name": "openai",
+            "version": "1.50.2",
+            "required": true
+         },
+         {
+            "name": "PyJWT",
+            "version": "2.9.0",
+            "required": true
+         },
+         {
+            "name": "passlib",
+            "version": "1.7.4",
+            "required": true
+         },
+         {
+            "name": "pydantic",
+            "version": "2.9.2",
+            "required": true
+         },
+         {
+            "name": "pydantic[email]",
+            "version": "2.9.2",
+            "required": true
+         },
+         {
+            "name": "python-multipart",
+            "version": "0.0.9",
+            "required": true
+         },
+         {
+            "name": "docker",
+            "version": "",
+            "required": true
+         }
+      ],
+      "language": [
+         {
+            "name": "Python",
+            "version": "3.10"
+         }
+      ],
+      "framework": [
+         "FastAPI"
+      ],
+      "architecture": [
+         "microservice"
+      ],
+      "logging_and_monitoring": {
+         "enabled": "None",
+         "logging_format": [
+         ],
+         "monitoring_tool": [
+         ]
+      }
+   },
+   "environment": {
+      "deployment_type": [
+         "container"
+      ],
+      "cloud_provider": [
+         "AWS"
+      ],
+      "region": [
+         "us-east-1"
+      ],
+      "scaling": {
+         "type": [
+         ],
+         "min_units": "None",
+         "max_units": "None"
+      },
+      "runtime": [
+         "ECS",
+         "Docker"
+      ],
+      "configuration_management": [
+      ],
+      "environment_variables": [
+         "OPENAI_API_KEY"
+      ]
+   },
+   "infrastructure": {
+      "iac_tool": [
+      ],
+      "storage": [
+         {
+            "type": "NoSQL",
+            "example": "Redis"
+         }
+      ],
+      "networking": [
+         {
+            "component": "Port",
+            "purpose": "Application Access"
+         },
+         {
+            "component": "VPC/Subnet",
+            "purpose": "Network isolation"
+         },
+         {
+            "component": "Load Balancer",
+            "purpose": "Access rules"
+         },
+         {
+            "component": "Firewall/Security Group",
+            "purpose": "Access rules"
+         }
+      ],
+      "monitoring_and_alerting": [
+      ]
+   },
+   "ci_cd": {
+      "pipeline_tool": [
+         "GitHub Actions"
+      ],
+      "steps": [
+         {
+            "name": "build",
+            "artifact": "image"
+         },
+         {
+            "name": "Checkout",
+            "artifact": "Source Code"
+         },
+         {
+            "name": "Configure AWS credentials",
+            "artifact": "None"
+         },
+         {
+            "name": "Login to Amazon ECR",
+            "artifact": "None"
+         },
+         {
+            "name": "Build, tag, and push image to Amazon ECR",
+            "artifact": "Container Image"
+         },
+         {
+            "name": "Fill in the new image ID in the Amazon ECS task definition",
+            "artifact": "Task Definition"
+         },
+         {
+            "name": "Deploy Amazon ECS task definition",
+            "artifact": "None"
+         }
+      ],
+      "deployment_strategy": [
+      ],
+      "rollback_mechanism": {
+         "strategy": "",
+         "automated": "None"
+      }
+   },
+   "security": {
+      "authentication": [
+      ],
+      "authorization": [
+      ],
+      "encryption": [
+         "In-transit"
+      ],
+      "secret_management": [
+         "AWS Secrets Manager"
+      ]
+   },
+   "observability": {
+      "logging": {
+         "format": "",
+         "aggregation_tool": [
+         ]
+      },
+      "metrics": {
+         "system": "",
+         "custom": ""
+      },
+      "tracing": [
+      ]
+   },
+   "testing": {
+      "unit_tests": {
+         "tool": [
+         ],
+         "artifact": ""
+      },
+      "integration_tests": {
+         "tool": [
+         ],
+         "artifact": ""
+      },
+      "performance_tests": {
+         "tool": [
+         ],
+         "artifact": ""
+      },
+      "security_tests": {
+         "tool": [
+         ],
+         "artifact": ""
+      }
+   },
+   "notifications": {
+      "channels": [
+      ],
+      "alerts": [
+      ]
+   },
+   "documentation": {
+      "required_documents": [
+      ],
+      "storage_location": ""
+   },
+   "additional_info": {
+      "constraints": "",
+      "dependencies": "Redis",
+      "SLA_requirements": "",
+      "backup_and_recovery": {
+         "backup_frequency": "",
+         "recovery_time_objective": ""
+      }
+   }
+}

@@ -2,7 +2,7 @@
   "application": {
     "name": "The name of the application (e.g., medicare-app, chat-service, ecommerce-platform). This is a single-valued field.",
     "type": [
-      "The type of application. Possible values include 'client', 'server', 'microservice', 'web', 'API', 'CLI', 'desktop', 'IoT', 'serverless'. Multiple values can be included here if the application spans multiple types."
+      "The type of application. Possible values include 'client', 'server', 'microservice', 'web', 'API', 'CLI', 'desktop', 'IoT', 'serverless'.  This is a single-valued field."
     ],
     "description": "A brief summary of the application's purpose or functionality (e.g., 'A web application for medical consultations' or 'An API for financial data'). This is a single-valued field.",
     "dependencies": [
@@ -13,8 +13,12 @@
       }
     ],
     "language": [
-      "The programming languages used in the application (e.g., 'Python', 'JavaScript', 'Java'). This is a multi-valued field."
-    ],
+  {
+    "name": "The name of the programming language used in the application (e.g., 'Python', 'JavaScript', 'Java').",
+    "version": "The specific version of the programming language used (e.g., '3.9.7', 'ES6', '17'). This field may be empty if version information is unavailable."
+  }
+],
+
     "framework": [
       "The frameworks used in the application (e.g., 'Django', 'Express', 'Spring', 'React', 'Angular'). This is a multi-valued field."
     ],
@@ -93,29 +97,6 @@
       "strategy": "The rollback mechanism strategy (e.g., 'revert version', 'traffic shift'). This is a single-valued field.",
       "automated": "A boolean value indicating whether the rollback mechanism is automated (true or false)."
     }
-  },
-  "artifacts": {
-    "build_artifacts": [
-      {
-        "type": "The type of build artifact (e.g., 'Dockerfile', 'IaC template', 'Manifest'). This is a single-valued field for each artifact.",
-        "purpose": "The purpose of the build artifact (e.g., 'Build container image'). This is a single-valued field for each artifact."
-      }
-    ],
-    "pipeline_artifacts": [
-      {
-        "type": "The type of pipeline artifact (e.g., 'Pipeline config', 'Test report'). This is a single-valued field for each artifact.",
-        "purpose": "The purpose of the pipeline artifact (e.g., 'Results from automated tests'). This is a single-valued field for each artifact."
-      }
-    ],
-    "deployment_artifacts": [
-      {
-        "type": "The type of deployment artifact (e.g., 'Manifest', 'Binary or Image'). This is a single-valued field for each artifact.",
-        "example": "An example of the deployment artifact (e.g., 'Helm chart', 'Docker container'). This is a single-valued field for each artifact."
-      }
-    ],
-    "artifact_registry": [
-      "The artifact registry used (e.g., 'DockerHub', 'ECR', 'GCR', 'Custom Registry'). This is a multi-valued field."
-    ]
   },
   "security": {
     "authentication": [
