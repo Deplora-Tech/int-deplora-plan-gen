@@ -6,7 +6,9 @@
     "dependencies": [
       {"name": "", "version": "", "required": null}
     ],
-    "language": [],
+    "language": [
+      {"name": "", "version": "", "required": null}
+    ],
     "framework": [],
     "architecture": [],
     "logging_and_monitoring": {
@@ -48,18 +50,6 @@
       "strategy": "",
       "automated": null
     }
-  },
-  "artifacts": {
-    "build_artifacts": [
-      {"type": "", "purpose": ""}
-    ],
-    "pipeline_artifacts": [
-      {"type": "", "purpose": ""}
-    ],
-    "deployment_artifacts": [
-      {"type": "", "example": ""}
-    ],
-    "artifact_registry": []
   },
   "security": {
     "authentication": [],
