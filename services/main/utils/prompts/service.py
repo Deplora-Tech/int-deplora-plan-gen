@@ -43,9 +43,11 @@ class PromptManagerService:
         """
         Prepare the prompt for Docker deployment
         """
+        file_tree = project_details.get("repo_tree", "")
+        env_vars = project_details.get("environment", {}).get("environment_variables", "")
 
         PROMPT_TO_GENERATE = docker_prompt.format(
-            project_details, user_preferences, prompt, chat_history, terraform_docs
+            project_details, file_tree ,user_preferences, prompt, chat_history,  env_vars,terraform_docs
         )
 
         return PROMPT_TO_GENERATE

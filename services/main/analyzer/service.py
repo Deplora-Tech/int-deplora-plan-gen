@@ -476,10 +476,13 @@ class AnalyzerService:
             (r'os\.environ\.get\([\'"]([^\'"]+)[\'"]\)', 1),
             (r'os\.getenv\([\'"]([^\'"]+)[\'"]\)', 1),
             (r'os\.environ\[[\'"]([^\'"]+)[\'"]\]', 1),
-            
+
             # Node.js patterns
             (r'process\.env\.([a-zA-Z0-9_]+)', 1),
             (r'process\.env\[[\'"`]([^\'"`]+)[\'"`]\]', 1),
+
+            # Python/Node.js generic env() usage (e.g., url = env("DATABASE_URL"))
+            (r'env\(\s*[\'"]([^\'"]+)[\'"]\s*\)', 1),
         ]
 
         # Check all standard patterns

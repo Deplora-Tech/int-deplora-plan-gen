@@ -124,6 +124,9 @@ docker_prompt = """You are Deplora—an expert AI assistant and senior software 
 ### Project Data
 {}
 
+### File Structure
+{}
+
 ### User Preferences
 {}
 
@@ -131,6 +134,9 @@ docker_prompt = """You are Deplora—an expert AI assistant and senior software 
 {}
 
 ### Chat History
+{}
+
+Include the following environment variables in the variables.tf file as separate variables. Then set these variables in the deployed environment:
 {}
 
 ---

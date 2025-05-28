@@ -1,6 +1,7 @@
 from services.main.excecutor.JenkinsManager import JenkinsManager
 from services.main.utils.caching.redis_service import SessionDataHandler
 from services.main.communication.service import CommunicationService
+from services.main.management.planGenerator.FileParser import FileParser
 from core.logger import logger
 from services.main.enums import ExcecutionStatus
 import traceback, asyncio
@@ -8,6 +9,30 @@ import traceback, asyncio
 jenkins = JenkinsManager()
 communication_service = CommunicationService("PipelineService")
 
+
+async def check_env_variables(session_id: str):
+    try:
+        chat_history = SessionDataHandler.get_session_data(session_id)
+        logger.info(f"Checking environment variables for session: {session_id}")
+
+        current_plan = chat_history.get("current_plan", {})
+
+        variables_file = current_plan.get("terraform/variables.tf", "")
+        tfvars_file = current_plan.get("terraform/terraform.tfvars", "")
+
+        variables = FileParser.parse_terraform_variables(variables_file)
+        tfvars = FileParser.parse_terraform_simple_assignments(tfvars_file)
+
+        for tfvar in tfvars:
+            if tfvar in variables:
+                variables[tfvar]["default"] = tfvars[tfvar]
+        
+        return variables, {}
+
+
+    except Exception as e:
+        logger.error(f"Error checking environment variables: {traceback.format_exc()}")
+        return False 
 
 async def excecute_pipeline(session_id: str):
     try:
