@@ -1,4 +1,4 @@
-from core.database import analysis_results, user_projects
+from core.database import analysis_results
 from services.main.analyzer.service import AnalyzerService
 from core.config import settings
 import logging
@@ -155,7 +155,7 @@ async def get_projects_by_user_id(client_id: str) -> list:
     # print(f"Project IDs for client_id {client_id}: {project_ids}")
 
     # Step 2: Fetch details from analysis_results
-    cursor = analysis_results.find({"client_id": client_id, "status": "success"})
+    cursor = await analysis_results.find({"client_id": client_id, "status": "success"})
     projects = await cursor.to_list(length=None)
     
     for project in projects:

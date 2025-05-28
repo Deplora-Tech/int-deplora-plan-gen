@@ -1,4 +1,4 @@
-import os
+import os, re, ast
 import json
 from typing import List, Dict
 from core.logger import logger
@@ -122,6 +122,83 @@ class FileParser:
             if not in_code_block:
                 result.append(line)
         return "\n".join(result).strip()
+    
+    @staticmethod
+    def parse_terraform_variables(file_content: str) -> dict:
+      """
+      Parse Terraform variable declarations into a dictionary.
+      
+      Args:
+          file_content (str): The content of the Terraform variables file as a string.
+          
+      Returns:
+          dict: A dictionary with variable names as keys and argument dictionaries as values.
+      """
+      variables = {}
+      
+      # Regex to find variable blocks
+      var_blocks = re.findall(r'variable\s+"([^"]+)"\s*{([^}]+)}', file_content, re.DOTALL)
+      
+      for var_name, block_body in var_blocks:
+          arg_dict = {}
+          # Split by lines and parse key = value pairs
+          for line in block_body.strip().splitlines():
+              line = line.strip()
+              if not line or '=' not in line:
+                  continue
+              
+              # split key and value
+              key, value = map(str.strip, line.split('=', 1))
+              
+              # Try to safely parse value to python type
+              # Handle strings, numbers, bool, lists
+              try:
+                  # Replace Terraform style list and bool syntax to Python
+                  value_py = value.replace('true', 'True').replace('false', 'False')
+                  # ast.literal_eval can parse strings, numbers, lists, dicts safely
+                  parsed_value = ast.literal_eval(value_py)
+              except Exception:
+                  # Fallback to raw string without quotes
+                  parsed_value = value.strip('"').strip("'")
+              
+              arg_dict[key] = parsed_value
+            
+            # if type not set, detect type from value
+          if 'type' not in arg_dict:
+              if isinstance(arg_dict.get('default'), list):
+                  arg_dict['type'] = 'list'
+              elif isinstance(arg_dict.get('default'), bool):
+                  arg_dict['type'] = 'bool'
+              elif isinstance(arg_dict.get('default'), (int, float)):
+                  arg_dict['type'] = 'number'
+              else:
+                  arg_dict['type'] = 'string'
+          
+          variables[var_name] = arg_dict
+      
+      return variables
+    
+    @staticmethod
+    def parse_terraform_simple_assignments(file_content: str) -> dict:
+      """
+      Parse simple Terraform assignments of the form:
+      name = value
+      ignoring blocks.
+      Returns dict of {variable_name: value}.
+      """
+      # Remove blocks first to avoid parsing duplicates
+      no_blocks_content = re.sub(r'variable\s+"[^"]+"\s*{[^}]+}', '', file_content, flags=re.DOTALL)
+      variables = {}
+      simple_assignments = re.findall(r'^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*(.+)$', no_blocks_content, re.MULTILINE)
+      for var_name, raw_value in simple_assignments:
+          raw_value = raw_value.strip().split('#')[0].strip()  # remove inline comment
+          try:
+              value_py = raw_value.replace('true', 'True').replace('false', 'False')
+              value = ast.literal_eval(value_py)
+          except Exception:
+              value = raw_value.strip('"').strip("'")
+          variables[var_name] = value
+      return variables
 
 
 

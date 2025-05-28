@@ -5,7 +5,7 @@ from services.main.workers.llm_worker import LLMService
 from services.main.management.planGenerator.FileParser import FileParser
 from services.main.management.repoManager.service import RepoService
 from gitingest import ingest
-import asyncio
+import asyncio, re
 
 
 class AnalyzerService:
@@ -34,6 +34,8 @@ class AnalyzerService:
         print(f"Repo path: {repo_path}")
         summary, tree, content = ingest(repo_path, branch=branch)
 
+        print("\n".join(tree.split("\n")[1:]))
+
         # Prepare the prompt for the LLM
         prompt = f"""
         You are an intelligent assistant tasked with analyzing a Git repository structure to identify files
@@ -43,12 +45,13 @@ class AnalyzerService:
 
         Here is the Git repository structure:
 
-        {tree}
+        {"\n".join(tree.split("\n")[1:])}
 
         Your task:
         - Identify and return a **JSON array** of file paths that may contain deployment-related information.
         - Only include file paths that are likely to help fill fields in the provided JSON structure.
         - STRICTLY OUTPUT IN THE FOLLOWING FORMAT. Do not include explanations, comments, or any additional text.
+        - Do not include the root directory in the file paths.
 
         <output>
         {{
@@ -74,7 +77,7 @@ class AnalyzerService:
         except Exception as e:
             raise ValueError(f"Failed to process LLM response: {e}")
 
-        return identified_files, content
+        return identified_files, content, tree
 
     async def fill_json_template(
         self,
@@ -400,7 +403,7 @@ class AnalyzerService:
             current_template = json.load(f)
 
         # Identify deployment-related files
-        files, repo_contents = await self.identify_deployment_files(
+        files, repo_contents, tree = await self.identify_deployment_files(
             repo_path=repo_path, branch=branch, template_path=described_template_path
   )
 
@@ -409,13 +412,11 @@ class AnalyzerService:
             return current_template
 
         print(f"Files identified: {files}")
-        
-        with open("repo_contents.txt", "w", encoding="utf-8") as f:
-            f.write(repo_contents)
 
         # Parse the repository contents into a dictionary
         parsed_contents = self.parse_repo_contents(repo_contents)
-        # print(f"Repository contents: {parsed_contents}")
+        dockerfile = parsed_contents.get("Dockerfile", None)
+        print(f"Dockerfile contents: {dockerfile}")
 
         async def process_file(file_name):
             print(f"Processing file: {file_name}")
@@ -448,4 +449,56 @@ class AnalyzerService:
             current_template, described_template
         )
 
+        if dockerfile:
+            current_template["dockerfile"] = dockerfile
+        
+        if tree:
+            current_template["repo_tree"] = f"\n{tree}\n"
+
+        # Find and add environment variables used in the codebase
+        env_vars = self.find_environment_variables(repo_contents)
+        if env_vars:
+            current_template["environment"]["environment_variables"] = env_vars
+
         return current_template
+    
+
+    def find_environment_variables(self, code_text):
+        """
+        Identifies environment variables used in a codebase (supports Python and Node.js).
+        Returns a sorted list of unique environment variable names.
+        """
+        env_vars = set()
+
+        # Common patterns for both Python and Node.js
+        patterns = [
+            # Python patterns
+            (r'os\.environ\.get\([\'"]([^\'"]+)[\'"]\)', 1),
+            (r'os\.getenv\([\'"]([^\'"]+)[\'"]\)', 1),
+            (r'os\.environ\[[\'"]([^\'"]+)[\'"]\]', 1),
+
+            # Node.js patterns
+            (r'process\.env\.([a-zA-Z0-9_]+)', 1),
+            (r'process\.env\[[\'"`]([^\'"`]+)[\'"`]\]', 1),
+
+            # Python/Node.js generic env() usage (e.g., url = env("DATABASE_URL"))
+            (r'env\(\s*[\'"]([^\'"]+)[\'"]\s*\)', 1),
+        ]
+
+        # Check all standard patterns
+        for pattern, group in patterns:
+            for match in re.finditer(pattern, code_text, re.IGNORECASE):
+                env_vars.add(match.group(group))
+
+        # Handle Node.js destructuring patterns (e.g., const { VAR1, VAR2 } = process.env)
+        destructuring_pattern = r'(?:const|let|var)\s*{\s*([^}]+?)\s*}\s*=\s*process\.env'
+        for match in re.finditer(destructuring_pattern, code_text, re.IGNORECASE):
+            variables = match.group(1).split(',')
+            for var in variables:
+                # Remove comments and split aliases (e.g., VAR: alias)
+                var = re.sub(r'//.*', '', var).strip()  # Remove inline comments
+                var_name = var.split(':')[0].strip()
+                if var_name:
+                    env_vars.add(var_name)
+
+        return list(sorted(env_vars))

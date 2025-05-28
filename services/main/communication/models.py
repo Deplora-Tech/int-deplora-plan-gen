@@ -53,10 +53,10 @@ class FileChangeRequest(BaseModel):
 
 
 class OrganizationRequest(BaseModel):
-    organization_id: str
+    id: str
     client_id: str
-    organization_name: str
-    organization_description: str
+    name: str
+    description: str
 
 
 class ProjectRequest(BaseModel):

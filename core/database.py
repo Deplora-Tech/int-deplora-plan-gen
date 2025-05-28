@@ -11,7 +11,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import os
 from services.main.communication.models import EnvType
 
-load_dotenv(override=True)
+
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +28,7 @@ class MongoDBConnection:
 
     def __init__(self):
         if not self._initialized:
+            logger.info("Initializing MongoDB connection")
             self._client: Optional[AsyncIOMotorClient] = None
             self._db: Optional[AsyncIOMotorDatabase] = None
             self._initialized = True
@@ -36,6 +37,7 @@ class MongoDBConnection:
     async def connect(self) -> None:
         if self._client is None:
             try:
+                logger.info(f"Connecting to MongoDB database: {settings.ATLAS_MONGO_URI}")
                 self._client = AsyncIOMotorClient(
                     settings.ATLAS_MONGO_URI,
                     serverSelectionTimeoutMS=5000,  # 5 second timeout
@@ -110,8 +112,9 @@ class CollectionWrapper:
         self.collection_name = collection_name
 
     async def find(self, *args, **kwargs):
+        logger.info(f"Finding in {self.collection_name} with args: {args}, kwargs: {kwargs}")
         await mongodb.connect()
-        return await mongodb.collection(self.collection_name).find(*args, **kwargs)
+        return mongodb.collection(self.collection_name).find(*args, **kwargs)
 
     async def insert_one(self, *args, **kwargs):
         await mongodb.connect()
@@ -149,7 +152,7 @@ class CollectionWrapper:
 analysis_results = CollectionWrapper("analysis_results")
 organizations = CollectionWrapper("organizations")
 org_env_variables = CollectionWrapper("org_env_variables")
-projects = CollectionWrapper("projects")
+projects = CollectionWrapper("user_projects")
 project_env_variables = CollectionWrapper("project_env_variables")
 
 

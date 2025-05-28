@@ -3,7 +3,6 @@ import os, time, re, json
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 import xml.etree.ElementTree as ET
-from xml.sax.saxutils import escape
 
 class JenkinsManager:
     def __init__(self):

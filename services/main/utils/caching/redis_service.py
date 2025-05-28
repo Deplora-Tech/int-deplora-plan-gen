@@ -145,6 +145,7 @@ class SessionDataHandler:
                 "chat_history": session_data.get("chat_history", []),
                 "current_plan": session_data.get("current_plan", None),
                 "pipeline_data": session_data.get("pipeline_data", {}),
+                "project_data": session_data.get("project", {}),
             }
         except Exception as e:
             logger.error(f"Error retrieving chat history: {e}")
@@ -158,8 +159,9 @@ class SessionDataHandler:
             for session_key in all_sessions:
                 session_data = redis_session.get(session_key)
                 if session_data:
-                    chats = json.loads(session_data)["chat_history"]
-                    if len(chats) > 0:
+                    chats = json.loads(session_data).get("chat_history", [])
+                    current_plan = json.loads(session_data).get("current_plan", None)
+                    if len(chats) > 0 and current_plan:
                         first_chat = chats[-1]
                         chat_list.append(
                             {
@@ -174,7 +176,7 @@ class SessionDataHandler:
                                 "created_At": first_chat.get("created_At", None),
                             }
                         )
-            logger.info(f"get_chat_list Final chat list: {chat_list}")
+            # logger.info(f"get_chat_list Final chat list: {chat_list}")
             return chat_list[::-1]
 
         except Exception as e:
