@@ -25,7 +25,7 @@ async def upload_image(session_id: str, file: UploadFile = File(...)):
         encoded_image = base64.b64encode(file_content).decode("utf-8")
 
         await communication_service.publisher(
-            "1",
+            session_id,
             GraphStatus.COMPLETED.value,
             {
                 "filename": file.filename,

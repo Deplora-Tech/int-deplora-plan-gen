@@ -15,7 +15,8 @@ from services.main.communication.models import GitRepo
 import asyncio, os
 import traceback
 from dotenv import load_dotenv
-
+import asyncio
+import httpx
 
 class ManagementService:
     def __init__(self):
@@ -179,28 +180,34 @@ class ManagementService:
         chat_history: dict,
     ) -> dict:
         logger.debug("Retrieving user preferences...")
-        preferences = {
-            "positive_preferences": [
-                ["CloudProvider", "AWS", 0.81809013001114, "High"],
-                ["ObjectStorageService", "S3", 0.6786340000000001, "Low"],
-                ["ComputeService", "Lambda", 0.6722666666666667, "Low"],
-                ["IdentityAndAccessManagementService", "IAM", 0.6571, "Low"],
-                ["DatabaseService", "RDS", 0.649, "Low"],
-                ["ContainerOrchestrationPlatform", "ECS", 0.64, "Low"],
-                ["OtherService", "VPC", 0.64, "Low"],
-                ["MessageQueueService", "Pub/Sub", 0.63, "Low"],
-                ["NoSQLDatabaseService", "Firestore", 0.63, "Low"],
-                ["ContentDeliveryNetwork", "CloudFront", 0.626, "Low"],
-                ["MonitoringService", "CloudWatch", 0.61, "Low"],
-            ],
-            "negative_preferences": [],
+        params = {
+            "username": user_id,
+            "project": project_id,
+            "organization": organization_id
         }
+        BASE_URL = os.getenv("PREFERENCES_SERVICE_URL", "http://localhost:8002")
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(f"{BASE_URL}/search", params=params)
+                print("Search response:", response.json())
+                preferences = response.json()
+                if not preferences:
+                    logger.warning(
+                        f"No user preferences found for project_id: {project_id}, organization_id: {organization_id}, user_id: {user_id}"
+                    )
+                    return {}
+                
+                preferences = preferences.get("data", {})
 
-        # await asyncio.sleep(2)
-        logger.info(
-            f"User preferences retrieved: {preferences} for project_id: {project_id}"
-        )
-        return preferences
+                # await asyncio.sleep(2)
+                logger.info(
+                    f"User preferences retrieved: {preferences} for project_id: {project_id}"
+                )
+                return preferences
+        
+        except httpx.RequestError as e:
+            logger.error(f"Request error while retrieving preferences: {e}")
+            # raise e
 
     async def retrieve_project_details(self, project_id: str) -> dict:
         logger.info("Retrieving project details... for project_id: %s", project_id)

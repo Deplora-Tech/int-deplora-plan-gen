@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     GRAPH_GENERATOR_URL: str
     GEMINI_API_KEY: str
     OPENAI_API_KEY: str
+    PREFERENCES_SERVICE_URL: str
 
     MONGO_URI: str
     MONGO_DB_NAME: str

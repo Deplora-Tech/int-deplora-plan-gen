@@ -1,0 +1,162 @@
+{
+   "application": {
+      "name": "backend",
+      "type": [
+         "server"
+      ],
+      "description": "",
+      "dependencies": [
+         {
+            "name": "cors",
+            "version": "^2.8.5",
+            "required": true
+         },
+         {
+            "name": "dotenv",
+            "version": "^16.5.0",
+            "required": true
+         },
+         {
+            "name": "express",
+            "version": "^4.18.2",
+            "required": true
+         },
+         {
+            "name": "mongoose",
+            "version": "^6.9.2",
+            "required": true
+         }
+      ],
+      "language": [
+         {
+            "name": "JavaScript",
+            "version": "None"
+         }
+      ],
+      "framework": [
+         "Express"
+      ],
+      "architecture": [
+      ],
+      "logging_and_monitoring": {
+         "enabled": "None",
+         "logging_format": [
+         ],
+         "monitoring_tool": [
+         ]
+      }
+   },
+   "environment": {
+      "deployment_type": [
+      ],
+      "cloud_provider": [
+      ],
+      "region": [
+      ],
+      "scaling": {
+         "type": [
+         ],
+         "min_units": "None",
+         "max_units": "None"
+      },
+      "runtime": [
+      ],
+      "configuration_management": [
+      ],
+      "environment_variables": [
+         "MONGODB_URI",
+         "PORT"
+      ]
+   },
+   "infrastructure": {
+      "iac_tool": [
+      ],
+      "storage": [
+         {
+            "type": "NoSQL",
+            "example": "MongoDB"
+         }
+      ],
+      "networking": [
+      ],
+      "monitoring_and_alerting": [
+      ]
+   },
+   "ci_cd": {
+      "pipeline_tool": [
+      ],
+      "steps": [
+      ],
+      "deployment_strategy": [
+      ],
+      "rollback_mechanism": {
+         "strategy": "",
+         "automated": "None"
+      }
+   },
+   "security": {
+      "authentication": [
+      ],
+      "authorization": [
+      ],
+      "encryption": [
+      ],
+      "secret_management": [
+      ]
+   },
+   "observability": {
+      "logging": {
+         "format": "",
+         "aggregation_tool": [
+         ]
+      },
+      "metrics": {
+         "system": "",
+         "custom": ""
+      },
+      "tracing": [
+      ]
+   },
+   "testing": {
+      "unit_tests": {
+         "tool": [
+         ],
+         "artifact": ""
+      },
+      "integration_tests": {
+         "tool": [
+         ],
+         "artifact": ""
+      },
+      "performance_tests": {
+         "tool": [
+         ],
+         "artifact": ""
+      },
+      "security_tests": {
+         "tool": [
+         ],
+         "artifact": ""
+      }
+   },
+   "notifications": {
+      "channels": [
+      ],
+      "alerts": [
+      ]
+   },
+   "documentation": {
+      "required_documents": [
+      ],
+      "storage_location": ""
+   },
+   "additional_info": {
+      "constraints": "",
+      "dependencies": "",
+      "SLA_requirements": "",
+      "backup_and_recovery": {
+         "backup_frequency": "",
+         "recovery_time_objective": ""
+      }
+   }
+}

@@ -7,6 +7,8 @@ from services.main.communication.service import CommunicationService
 from services.main.enums import LoraStatus
 from services.main.management.api import handle_message, handle_file_change
 from services.main.utils.caching.redis_service import SessionDataHandler
+import asyncio
+import httpx, os
 
 router = APIRouter()
 communication_service = CommunicationService("ChatService")
@@ -17,6 +19,25 @@ pipeline_communication_service = CommunicationService("PipelineService")
 async def send_message(request: MessageRequest):
     try:
         logger.info(f"Received message: {request}")
+
+        # send to kb
+        params = {
+            "username": request.client_id,
+            "project": request.project.id,
+            "organization": request.organization_id,
+            "prompt": request.message,
+        }
+        BASE_URL = os.getenv("PREFERENCES_SERVICE_URL", "http://localhost:8002")
+        
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(f"{BASE_URL}/update", params=params)
+                print("Update response:", response.json())
+        except httpx.RequestError as e:
+            logger.error(f"Request error: {e}")
+
+
+
         message = await handle_message(request, communication_service)
         await communication_service.publisher(
             request.session_id,
