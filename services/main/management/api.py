@@ -62,12 +62,13 @@ async def handle_message(
         )
 
         # Send the files to the graph generator
-        logger.info("Sending files to the graph generator")
+        # logger.info("Sending files to the graph generator")
         # load_dotenv()
         # requests.post(
         #     os.environ.get("GRAPH_GENERATOR_URL"),
         #     json={"id": request.session_id, "files": dep_plan["file_contents"]},
         # )
+        await handle_graph_generation(request.session_id)
 
         return dep_plan
 
@@ -84,6 +85,8 @@ async def handle_message(
             LoraStatus.COMPLETED.value,
             "Your deployment plan has been modified.",
         )
+
+        await handle_graph_generation(request.session_id)
 
     elif "greeting" in intent or "insult" in intent:
         logger.info("Detected other intent")
@@ -113,3 +116,36 @@ async def handle_message(
 async def handle_file_change(request: FileChangeRequest):
 
     return await managementService.update_file(request=request)
+
+
+async def handle_graph_generation(session_id: str):
+    """
+    Handle the graph generation request by retrieving the files from the session data
+    and sending them to the graph generator service.
+    """
+    try:
+        logger.info(f"Handling graph generation for session_id: {session_id}")
+        
+        # Retrieve files from session data
+        files = SessionDataHandler.get_session_data(session_id).get("current_plan", {})
+        
+        if not files:
+            logger.error(f"No files found for session_id: {session_id}")
+            return {"status": "error", "message": "No files to generate graph."}
+        
+        # Send files to the graph generator service
+        load_dotenv()
+        response = requests.post(
+            os.environ.get("GRAPH_GENERATOR_URL"),
+            json={"id": session_id, "files": files},
+        )
+        
+        if response.status_code == 200:
+            logger.info("Graph generation request sent successfully.")
+            return {"status": "success", "message": "Graph generation initiated."}
+        else:
+            logger.error(f"Failed to send graph generation request: {response.text}")
+            return {"status": "error", "message": "Failed to initiate graph generation."}
+    except Exception as e:
+        logger.error(f"Exception during graph generation: {e}")
+        return {"status": "error", "message": f"Exception occurred: {str(e)}"}
