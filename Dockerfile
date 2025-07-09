@@ -56,4 +56,4 @@ uvicorn main:app --host 0.0.0.0 --port 8000\n\
 ' > /app/start.sh && chmod +x /app/start.sh
 
 # Command to run the startup script
-CMD uvicorn main:app --host 0.0.0.0 --loop asyncio --port 80
+CMD ["/app/start.sh"]

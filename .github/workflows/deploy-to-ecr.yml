@@ -8,7 +8,7 @@ on:
 
 env:
   AWS_REGION: us-east-1 # Change this to your region
-  ECR_REPOSITORY: int-deplora-knowledgegraph
+  ECR_REPOSITORY: int-deplora-plan-gen
   IMAGE_TAG: ${{ github.sha }}
 
 jobs:
