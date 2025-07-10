@@ -141,7 +141,7 @@ async def get_generated_template(project_id: str) -> dict:
         logging.error(
             f"Error fetching generated template for project_id={project_id}: {e}"
         )
-        raise
+        # raise
 
 
 async def get_projects_by_user_id(client_id: str) -> list:
