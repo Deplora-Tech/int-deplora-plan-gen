@@ -59,4 +59,4 @@ app.add_middleware(
 # Root endpoint
 @app.get("/")
 async def read_root():
-    return {"message": "root endpoint!!"}
+    return {"message": "root endpoint!"}
