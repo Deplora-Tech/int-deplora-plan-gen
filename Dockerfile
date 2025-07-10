@@ -46,15 +46,18 @@ ENV REPO_PATH=/app/repo-clones \
 
 # Expose ports for the API, Jenkins, and Redis
 EXPOSE 80
+EXPOSE 8080
 
 
+# Create the startup script
 RUN echo '#!/bin/bash\n\
 service jenkins start\n\
 service redis-server start\n\
 echo "Jenkins and Redis services started"\n\
-# Use our patched main module\n\
+echo "Jenkins initial admin password:"\n\
+sleep 5\n\
+cat /var/lib/jenkins/secrets/initialAdminPassword\n\
 uvicorn main:app --host 0.0.0.0 --port 80 --loop asyncio\n\
 ' > /app/start.sh && chmod +x /app/start.sh
 
-# Command to run the startup script
 CMD ["/app/start.sh"]
