@@ -38,7 +38,7 @@ RUN pip install playwright && playwright install --with-deps chromium
 COPY . .
 
 # Create directories for repos and patches if they don't exist
-RUN mkdir -p /app/repo-clones /app/temp-repos /app/patches
+RUN mkdir -p /app/repo-clones /app/temp-repos /app/redis-data
 
 # Set environment variables for directories
 ENV REPO_PATH=/app/repo-clones \
@@ -52,7 +52,7 @@ EXPOSE 8080
 # Create the startup script
 RUN echo '#!/bin/bash\n\
 service jenkins start\n\
-service redis-server start\n\
+service redis-server --appendonly yes --dir /app/redis-data\n\
 echo "Jenkins and Redis services started"\n\
 echo "Jenkins initial admin password:"\n\
 sleep 5\n\
