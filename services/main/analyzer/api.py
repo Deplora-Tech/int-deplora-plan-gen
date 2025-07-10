@@ -116,7 +116,7 @@ async def get_generated_template(project_id: str) -> dict:
             raise ValueError(f"No generated template found for project_id={project_id}")
         
         if result.get("status") == "error":
-            logger.error(
+            logger.info(
                 f"Error occurred during analysis for project_id={project_id}: {result.get('error_message')}"
             )
             logger.info(
