@@ -119,6 +119,10 @@ async def get_generated_template(project_id: str) -> dict:
             logger.error(
                 f"Error occurred during analysis for project_id={project_id}: {result.get('error_message')}"
             )
+            logger.info(
+                f"Returning empty document for project_id={project_id} due to error status."
+            )
+            return {}
         
         doc = result.get("generated_template", {})
 
