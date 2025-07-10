@@ -8,11 +8,15 @@ logging.basicConfig(level=logging.DEBUG)
 
 class ProjectService:
     async def retrieve_project_details(self, project_id: str) -> dict:
-        logging.debug("Retrieving project details...")
-        full_doc = await get_generated_template(project_id)
-        project_data = full_doc.get("generated_template", {})
-        await asyncio.sleep(3)
-        return project_data
+        try:
+            logging.debug("Retrieving project details...")
+            full_doc = await get_generated_template(project_id)
+            project_data = full_doc.get("generated_template", {})
+            await asyncio.sleep(3)
+            return project_data
+        except Exception as e:
+            logging.error(f"Error retrieving project details: {e}")
+            return {}
 
 
 async def main():
