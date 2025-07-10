@@ -437,7 +437,7 @@ class AnalyzerService:
         results = await asyncio.gather(*tasks)
 
         # Filter out None results (files not found)
-        updated_templates = [tpl for _, tpl in results if _ is not None and tpl is not None]
+        updated_templates = [tpl for res in results if res is not None for _, tpl in [res]]
 
         # Merge all updated templates into current_template sequentially
         for updated_template in updated_templates:

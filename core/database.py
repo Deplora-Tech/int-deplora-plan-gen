@@ -105,7 +105,6 @@ class MongoDBConnection:
 
 
 mongodb = MongoDBConnection()
-mongodb.connect()
 
 
 class CollectionWrapper:

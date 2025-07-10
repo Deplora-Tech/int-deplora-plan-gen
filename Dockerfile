@@ -37,8 +37,8 @@ RUN pip install playwright && playwright install --with-deps chromium
 # Copy application code
 COPY . .
 
-# Create directories for repos if they don't exist
-RUN mkdir -p /app/repo-clones /app/temp-repos
+# Create directories for repos and patches if they don't exist
+RUN mkdir -p /app/repo-clones /app/temp-repos /app/patches
 
 # Set environment variables for directories
 ENV REPO_PATH=/app/repo-clones \
@@ -47,12 +47,13 @@ ENV REPO_PATH=/app/repo-clones \
 # Expose ports for the API, Jenkins, and Redis
 EXPOSE 80
 
-# Create startup script to run services
+
 RUN echo '#!/bin/bash\n\
 service jenkins start\n\
 service redis-server start\n\
 echo "Jenkins and Redis services started"\n\
-uvicorn main:app --host 0.0.0.0 --port 8000\n\
+# Use our patched main module\n\
+uvicorn main:app --host 0.0.0.0 --port 80 --loop asyncio\n\
 ' > /app/start.sh && chmod +x /app/start.sh
 
 # Command to run the startup script
