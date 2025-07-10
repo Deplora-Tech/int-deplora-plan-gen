@@ -210,13 +210,17 @@ class ManagementService:
             # raise e
 
     async def retrieve_project_details(self, project_id: str) -> dict:
-        logger.info("Retrieving project details... for project_id: %s", project_id)
+        try:
+            logger.info("Retrieving project details... for project_id: %s", project_id)
 
-        # Await the async call to fetch full document
-        project_data = await get_generated_template(project_id)
-        print(f"Project data: {project_data} for {project_id}")
+            # Await the async call to fetch full document
+            project_data = await get_generated_template(project_id)
+            print(f"Project data: {project_data} for {project_id}")
 
-        return project_data
+            return project_data
+        except Exception as e:
+            logger.error(f"Error occurred while retrieving project details: {traceback.print_exc()}")
+            return {}
 
       
     async def update_file(
