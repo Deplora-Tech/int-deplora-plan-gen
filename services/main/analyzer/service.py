@@ -412,11 +412,12 @@ class AnalyzerService:
             return current_template
 
         print(f"Files identified: {files}")
+        print(f"Repository contents:\n{repo_contents}")
         # Parse the repository contents into a dictionary
         parsed_contents = self.parse_repo_contents(repo_contents)
         dockerfile = parsed_contents.get("Dockerfile", None)
         print(f"Dockerfile contents: {dockerfile}")
-        print(f"Parsed repository contents: {parsed_contents}")
+        # print(f"Parsed repository contents: {parsed_contents}")
 
         async def process_file(file_name):
             print(f"Processing file: {file_name}")
