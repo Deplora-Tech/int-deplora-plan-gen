@@ -207,6 +207,7 @@ class AnalyzerService:
 
         for i in range(1, len(sections), 2):
             file_header = sections[i].strip()
+            file_header = file_header.replace("FILE:", "File:")
             if file_header.startswith("File:"):
                 # Normalize the file path (remove leading slashes and backslashes)
                 file_path = (
