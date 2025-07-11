@@ -102,7 +102,8 @@ docker_prompt = """You are Deplora—an expert AI assistant and senior software 
   - Secure handling of sensitive data (e.g., credentials).
   - AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_DEFAULT_REGION should be set as environment variables in Jenkins.
   - AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are already set in the Jenkins environment with the names `aws-access-key-id` and `aws-secret-access-key` respectively.
-
+  - DO  NOT share variables between stages. All the steps that require common variables should be in the same stage.
+  
 4. **Deployment Commands or Scripts** 
   - Example commands (`build.sh`, `deploy.sh`) demonstrating how to build, tag, and push images.
   - Clear instructions on how each step connects to Terraform resources and Jenkins pipelines.
